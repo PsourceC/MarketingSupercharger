@@ -24,7 +24,9 @@ const metrics: Metric[] = [
     changeType: 'positive',
     icon: '🎯',
     target: 'Goal: Top 8',
-    priority: 'high'
+    priority: 'high',
+    explanation: 'Where your business appears when people search for solar companies in Austin',
+    whyItMatters: 'Higher rankings (lower numbers) mean more customers find you first'
   },
   {
     id: 'visibility-score',
@@ -34,7 +36,9 @@ const metrics: Metric[] = [
     changeType: 'positive',
     icon: '👁️',
     target: 'Goal: 60%+',
-    priority: 'medium'
+    priority: 'medium',
+    explanation: 'How often your business shows up when people search for solar services',
+    whyItMatters: 'More visibility = more potential customers see your business'
   },
   {
     id: 'gmb-reviews',
@@ -44,7 +48,9 @@ const metrics: Metric[] = [
     changeType: 'negative',
     icon: '⭐',
     target: 'Goal: 150+',
-    priority: 'critical'
+    priority: 'critical',
+    explanation: 'Customer reviews on your Google Business listing',
+    whyItMatters: 'More reviews build trust and help you rank higher in searches'
   },
   {
     id: 'citations',
@@ -54,7 +60,9 @@ const metrics: Metric[] = [
     changeType: 'negative',
     icon: '🔗',
     target: 'Goal: 50+',
-    priority: 'critical'
+    priority: 'critical',
+    explanation: 'How many online directories list your business (Yelp, Yellow Pages, etc.)',
+    whyItMatters: 'More listings help Google trust your business and improve local search ranking'
   },
   {
     id: 'backlinks',
@@ -64,7 +72,9 @@ const metrics: Metric[] = [
     changeType: 'positive',
     icon: '🌐',
     target: 'Doing great!',
-    priority: 'low'
+    priority: 'low',
+    explanation: 'How many other websites link to your website',
+    whyItMatters: 'Quality links show Google your website is trustworthy and authoritative'
   },
   {
     id: 'gmb-photos',
@@ -74,7 +84,9 @@ const metrics: Metric[] = [
     changeType: 'negative',
     icon: '📸',
     target: 'Goal: 150+',
-    priority: 'medium'
+    priority: 'medium',
+    explanation: 'Photos of your work, team, and business on Google',
+    whyItMatters: 'More photos attract customers and improve your Google Business ranking'
   }
 ]
 
