@@ -1,0 +1,614 @@
+/* Enhanced Geo Grid Styles */
+.enhanced-geo-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Loading State */
+.map-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.loading-content {
+  text-align: center;
+  color: #6b7280;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Enhanced Controls */
+.geo-controls-enhanced {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.control-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.enhanced-select {
+  padding: 0.75rem 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+  min-width: 220px;
+  transition: all 0.3s ease;
+}
+
+.enhanced-select:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.toggle-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.toggle-control input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.toggle-text {
+  font-size: 0.9rem;
+}
+
+.refresh-button {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.refresh-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Map Section Layout */
+.map-section {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+  height: 500px;
+}
+
+.map-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+.map-container-enhanced {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border: 2px solid #e5e7eb;
+}
+
+/* Leaflet Map Customization */
+.austin-map-leaflet .leaflet-container {
+  background: #f8fafc;
+  font-family: inherit;
+}
+
+.austin-map-leaflet .leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  padding: 0;
+}
+
+.austin-map-leaflet .leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+}
+
+.austin-map-leaflet .leaflet-tooltip {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+}
+
+/* Performance Legend */
+.performance-legend {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.performance-legend h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1rem;
+}
+
+.legend-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.legend-item {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background 0.3s;
+}
+
+.legend-item:hover {
+  background: #f9fafb;
+}
+
+.legend-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.legend-item span:nth-child(2) {
+  font-size: 0.85rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.legend-desc {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* Competitor Legend */
+.competitor-legend {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.competitor-legend h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1rem;
+}
+
+.competitor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.competitor-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 6px;
+  transition: background 0.3s;
+}
+
+.competitor-item:hover {
+  background: #f3f4f6;
+}
+
+.competitor-marker {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.competitor-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.competitor-name {
+  font-size: 0.85rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+.competitor-score {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Map Stats */
+.map-stats {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.map-stats h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1rem;
+}
+
+.stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: #f9fafb;
+  border-radius: 6px;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 0.8rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+/* Map Tooltips and Popups */
+.map-tooltip {
+  text-align: center;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.location-popup {
+  padding: 1.5rem;
+  min-width: 280px;
+}
+
+.location-popup h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.popup-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.popup-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.popup-stat:last-child {
+  border-bottom: none;
+}
+
+.popup-label {
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.popup-value {
+  font-size: 0.85rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+.popup-value.rank-excellent {
+  color: #10b981;
+}
+
+.popup-value.rank-good {
+  color: #3b82f6;
+}
+
+.popup-value.rank-poor {
+  color: #ef4444;
+}
+
+.popup-trends {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.popup-trends h4 {
+  margin-bottom: 0.75rem;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.trend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.trend-item.positive {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.trend-item.negative {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.trend-item.neutral {
+  background: #f9fafb;
+  color: #6b7280;
+}
+
+.trend-icon {
+  font-size: 1rem;
+}
+
+.trend-text {
+  font-weight: 500;
+}
+
+.competitor-tooltip {
+  text-align: center;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* Enhanced Insights */
+.insights-enhanced {
+  margin-top: 2rem;
+}
+
+.insights-enhanced h3 {
+  margin-bottom: 1.5rem;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.insights-grid-enhanced {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.insight-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.insight-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.insight-card.opportunity {
+  border-left: 4px solid #10b981;
+}
+
+.insight-card.warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.insight-card.success {
+  border-left: 4px solid #3b82f6;
+}
+
+.insight-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.insight-icon {
+  font-size: 1.5rem;
+}
+
+.insight-card h4 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.insight-card p {
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.insight-action {
+  margin-top: 1rem;
+}
+
+.insight-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.insight-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.insight-card.opportunity .insight-btn {
+  background: #10b981;
+}
+
+.insight-card.opportunity .insight-btn:hover {
+  background: #059669;
+}
+
+.insight-card.warning .insight-btn {
+  background: #f59e0b;
+}
+
+.insight-card.warning .insight-btn:hover {
+  background: #d97706;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .map-section {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    height: auto;
+  }
+  
+  .map-sidebar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    overflow-y: visible;
+  }
+  
+  .map-container-enhanced {
+    height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .geo-controls-enhanced {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .control-group {
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .enhanced-select {
+    min-width: auto;
+    flex: 1;
+  }
+  
+  .map-sidebar {
+    grid-template-columns: 1fr;
+  }
+  
+  .insights-grid-enhanced {
+    grid-template-columns: 1fr;
+  }
+  
+  .location-popup {
+    min-width: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .enhanced-geo-grid {
+    gap: 1rem;
+  }
+  
+  .geo-controls-enhanced {
+    padding: 1rem;
+  }
+  
+  .map-container-enhanced {
+    height: 300px;
+  }
+  
+  .performance-legend,
+  .competitor-legend,
+  .map-stats {
+    padding: 1rem;
+  }
+  
+  .insight-card {
+    padding: 1.5rem;
+  }
+}
