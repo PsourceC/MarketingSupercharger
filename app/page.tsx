@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import GeoGrid from './components/GeoGrid'
+import EnhancedGeoGrid from './components/EnhancedGeoGrid'
 import MetricsOverview from './components/MetricsOverview'
 import AutomationToolsGrid from './components/AutomationToolsGrid'
 import PriorityActionsPanel from './components/PriorityActionsPanel'
