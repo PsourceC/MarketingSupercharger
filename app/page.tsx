@@ -32,17 +32,17 @@ export default function Home() {
           {/* Geographic Performance Map */}
           <section className="geo-section">
             <div className="section-header">
-              <h2>🗺️ Local Search Performance Map</h2>
+              <h2>🗺️ Where Customers Find You</h2>
               <div className="geo-controls">
                 <select className="keyword-filter">
-                  <option>All Keywords</option>
+                  <option>All Search Terms</option>
                   <option>Solar panels near Austin</option>
                   <option>Best solar company near me</option>
                   <option>Cheap solar near me</option>
                   <option>Top rated solar installers</option>
                   <option>Affordable solar near me</option>
                 </select>
-                <button className="refresh-btn">🔄 Refresh Data</button>
+                <button className="refresh-btn">🔄 Update Map</button>
               </div>
             </div>
             <EnhancedGeoGrid />
@@ -50,7 +50,7 @@ export default function Home() {
 
           {/* Automation Tools */}
           <section className="tools-section">
-            <h2>🚀 Marketing Automation Hub</h2>
+            <h2>🚀 Tools to Get More Customers</h2>
             <AutomationToolsGrid />
           </section>
         </main>
