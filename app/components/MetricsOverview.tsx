@@ -11,6 +11,8 @@ interface Metric {
   icon: string
   target?: string
   priority: 'critical' | 'high' | 'medium' | 'low'
+  explanation: string
+  whyItMatters: string
 }
 
 const metrics: Metric[] = [
