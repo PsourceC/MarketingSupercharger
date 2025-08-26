@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import './gmb-automation/gmb-styles.css'
 
 export const metadata: Metadata = {
   title: 'Astrawatt Solar Marketing Automation',
