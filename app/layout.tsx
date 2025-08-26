@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './gmb-automation/gmb-styles.css'
 import './seo-tracking/seo-styles.css'
 import './review-management/review-styles.css'
+import './recommendations/recommendations-styles.css'
 
 export const metadata: Metadata = {
   title: 'Astrawatt Solar Marketing Automation',
