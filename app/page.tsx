@@ -74,6 +74,12 @@ export default function Home() {
             <p>Monitor 512 Solar, ATX Solar, and Cool Solar</p>
             <div className="tool-status good">3 competitors tracked</div>
           </Link>
+
+          <Link href="/recommendations" className="tool-card">
+            <h3>💡 Strategic Recommendations</h3>
+            <p>Complete analysis and 90-day implementation roadmap</p>
+            <div className="tool-status good">9 actionable recommendations</div>
+          </Link>
         </div>
       </div>
 
