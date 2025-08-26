@@ -44,7 +44,7 @@ export default function Home() {
                 <button className="refresh-btn">🔄 Refresh Data</button>
               </div>
             </div>
-            <GeoGrid />
+            <EnhancedGeoGrid />
           </section>
 
           {/* Automation Tools */}
