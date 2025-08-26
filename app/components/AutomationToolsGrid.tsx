@@ -224,8 +224,8 @@ export default function AutomationToolsGrid() {
       {goodTools.length > 0 && (
         <div className="tools-section good-section">
           <div className="section-header">
-            <h3>✅ Performing Well</h3>
-            <span className="tool-count">{goodTools.length} tools</span>
+            <h3>✅ Working Great!</h3>
+            <span className="tool-count">{goodTools.length} tools running smoothly</span>
           </div>
           <div className="tools-grid">
             {goodTools.map(tool => {
