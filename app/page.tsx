@@ -57,6 +57,8 @@ export default function Home() {
 
         {/* Right Panel - Live Updates */}
         <aside className="updates-sidebar">
+          <DataRefreshSystem />
+
           <div className="live-updates">
             <h3>📈 Live Performance Feed</h3>
             <div className="update-stream">
