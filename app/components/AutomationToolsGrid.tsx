@@ -142,8 +142,8 @@ export default function AutomationToolsGrid() {
       {urgentTools.length > 0 && (
         <div className="tools-section urgent-section">
           <div className="section-header">
-            <h3>🚨 Needs Immediate Attention</h3>
-            <span className="tool-count">{urgentTools.length} tools</span>
+            <h3>🚨 Fix These First!</h3>
+            <span className="tool-count">{urgentTools.length} critical issues</span>
           </div>
           <div className="tools-grid">
             {urgentTools.map(tool => {
@@ -156,7 +156,7 @@ export default function AutomationToolsGrid() {
                       <h4>{tool.title}</h4>
                     </div>
                     <div className="tool-badges">
-                      {tool.automation && <span className="automation-badge">���� AUTO</span>}
+                      {tool.automation && <span className="automation-badge">🤖 AUTO</span>}
                       <span className={`impact-badge ${impact.class}`}>{impact.text}</span>
                     </div>
                   </div>
