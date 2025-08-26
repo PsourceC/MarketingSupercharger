@@ -109,6 +109,9 @@ export default function Home() {
           </div>
         </aside>
       </div>
+
+      {/* Help System */}
+      <HelpSystem />
     </div>
   )
 }
