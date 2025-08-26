@@ -11,11 +11,11 @@ export default function Home() {
     <div className="enhanced-dashboard">
       <header className="main-header">
         <div className="header-content">
-          <h1>🌞 Astrawatt Solar Marketing Command Center</h1>
-          <p>Real-time local search performance across Austin metro area</p>
+          <h1>🌞 Your Solar Business Dashboard</h1>
+          <p>See how customers find your solar business online across Austin</p>
           <div className="last-updated">
             <span className="update-indicator">🔄</span>
-            Last updated: {new Date().toLocaleString()} • Auto-refresh: ON
+            Updated: {new Date().toLocaleString()} • Fresh data every 15 minutes
           </div>
         </div>
       </header>
