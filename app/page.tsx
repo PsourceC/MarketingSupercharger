@@ -3,6 +3,7 @@ import GeoGrid from './components/GeoGrid'
 import MetricsOverview from './components/MetricsOverview'
 import AutomationToolsGrid from './components/AutomationToolsGrid'
 import PriorityActionsPanel from './components/PriorityActionsPanel'
+import HelpSystem from './components/HelpSystem'
 
 export default function Home() {
   return (
