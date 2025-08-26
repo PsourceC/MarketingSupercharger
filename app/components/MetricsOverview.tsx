@@ -130,28 +130,48 @@ export default function MetricsOverview() {
 
       <div className="metrics-grid">
         {metrics.map(metric => (
-          <div 
-            key={metric.id} 
+          <div
+            key={metric.id}
             className={`metric-card priority-${metric.priority}`}
             style={{ borderLeftColor: getPriorityColor(metric.priority) }}
           >
             <div className="metric-header">
               <span className="metric-icon">{metric.icon}</span>
-              <span className="metric-title">{metric.title}</span>
+              <div className="metric-title-section">
+                <span className="metric-title">{metric.title}</span>
+                <button
+                  className="help-button"
+                  onClick={() => setShowTooltip(showTooltip === metric.id ? null : metric.id)}
+                  title="Click for explanation"
+                >
+                  💡
+                </button>
+              </div>
             </div>
-            
+
             <div className="metric-value">
               {metric.value}
             </div>
-            
+
             <div className={`metric-change ${metric.changeType}`}>
               <span className="change-icon">{getChangeIcon(metric.changeType)}</span>
               <span className="change-text">{metric.change}</span>
             </div>
-            
+
             {metric.target && (
               <div className="metric-target">
                 {metric.target}
+              </div>
+            )}
+
+            {showTooltip === metric.id && (
+              <div className="metric-tooltip">
+                <div className="tooltip-content">
+                  <h4>What this means:</h4>
+                  <p>{metric.explanation}</p>
+                  <h4>Why it matters:</h4>
+                  <p>{metric.whyItMatters}</p>
+                </div>
               </div>
             )}
           </div>
