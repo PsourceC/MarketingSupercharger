@@ -18,11 +18,11 @@ interface AutomationTool {
 const automationTools: AutomationTool[] = [
   {
     id: 'gmb-automation',
-    title: 'GMB Content Engine',
+    title: 'Google Business Posts',
     icon: '📱',
-    description: 'Auto-generate and schedule GMB posts, products, and services',
+    description: 'Automatically post updates to your Google Business listing to stay visible',
     status: 'urgent',
-    statusText: 'Last post 1 month ago - Needs immediate attention',
+    statusText: 'No posts in 1 month - customers might think you\'re closed!',
     href: '/gmb-automation',
     automation: true,
     lastActivity: '30 days ago',
@@ -30,11 +30,11 @@ const automationTools: AutomationTool[] = [
   },
   {
     id: 'seo-tracking',
-    title: 'SEO Performance Monitor',
+    title: 'Search Position Tracker',
     icon: '📊',
-    description: 'Real-time keyword tracking and competitor analysis',
+    description: 'See where you rank when customers search for solar companies',
     status: 'good',
-    statusText: 'Tracking 5 keywords across 7 locations',
+    statusText: 'Watching 5 search terms in 7 Austin areas',
     href: '/seo-tracking',
     automation: true,
     lastActivity: '2 minutes ago',
@@ -42,11 +42,11 @@ const automationTools: AutomationTool[] = [
   },
   {
     id: 'review-management',
-    title: 'Review Automation Hub',
+    title: 'Customer Review Helper',
     icon: '⭐',
-    description: 'AI-powered review responses and collection campaigns',
+    description: 'Get more reviews and respond to customers automatically',
     status: 'warning',
-    statusText: '25% response rate - Industry avg: 89%',
+    statusText: 'Only replying to 25% of reviews - competitors reply to 89%',
     href: '/review-management',
     automation: true,
     lastActivity: '3 days ago',
@@ -54,11 +54,11 @@ const automationTools: AutomationTool[] = [
   },
   {
     id: 'citation-builder',
-    title: 'Citation Building Engine',
+    title: 'Directory Listings Manager',
     icon: '🔗',
-    description: 'Automated local directory submissions and citation management',
+    description: 'Get your business listed on Yelp, Yellow Pages, and 100+ directories',
     status: 'urgent',
-    statusText: 'Only 2/100 citations - Critical for local SEO',
+    statusText: 'Only listed in 2 directories - need 50+ to compete',
     href: '/citation-builder',
     automation: true,
     lastActivity: 'Never',
@@ -66,11 +66,11 @@ const automationTools: AutomationTool[] = [
   },
   {
     id: 'content-calendar',
-    title: 'Content Scheduling System',
+    title: 'Social Media Scheduler',
     icon: '📅',
-    description: 'Plan and automate content across all marketing channels',
+    description: 'Plan and schedule posts across Facebook, Instagram, and other platforms',
     status: 'warning',
-    statusText: 'Inconsistent posting schedule detected',
+    statusText: 'Posting schedule is inconsistent - customers need regular updates',
     href: '/content-calendar',
     automation: true,
     lastActivity: '1 week ago',
@@ -78,11 +78,11 @@ const automationTools: AutomationTool[] = [
   },
   {
     id: 'competitor-intel',
-    title: 'Competitor Intelligence',
+    title: 'Competitor Watcher',
     icon: '🕵️',
-    description: 'Monitor competitors and identify market opportunities',
+    description: 'Monitor what your competitors are doing to stay ahead',
     status: 'good',
-    statusText: 'Tracking 3 main competitors actively',
+    statusText: 'Watching 3 main competitors for new moves',
     href: '/competitor-intel',
     automation: true,
     lastActivity: '1 hour ago',
@@ -90,11 +90,11 @@ const automationTools: AutomationTool[] = [
   },
   {
     id: 'recommendations',
-    title: 'Strategic Insights',
+    title: 'Smart Suggestions',
     icon: '💡',
-    description: 'AI-powered recommendations and implementation roadmap',
+    description: 'Get specific recommendations on how to get more customers',
     status: 'good',
-    statusText: '9 actionable recommendations ready',
+    statusText: '9 ways to improve your business ready to review',
     href: '/recommendations',
     automation: false,
     lastActivity: 'Real-time',
@@ -102,11 +102,11 @@ const automationTools: AutomationTool[] = [
   },
   {
     id: 'reporting',
-    title: 'Analytics Dashboard',
+    title: 'Progress Reports',
     icon: '📈',
-    description: 'Comprehensive performance reporting and insights',
+    description: 'Easy-to-understand reports showing how your business is performing',
     status: 'good',
-    statusText: 'Daily automated reports active',
+    statusText: 'Fresh reports generated daily',
     href: '/analytics',
     automation: true,
     lastActivity: 'Daily',
@@ -156,7 +156,7 @@ export default function AutomationToolsGrid() {
                       <h4>{tool.title}</h4>
                     </div>
                     <div className="tool-badges">
-                      {tool.automation && <span className="automation-badge">🤖 AUTO</span>}
+                      {tool.automation && <span className="automation-badge">���� AUTO</span>}
                       <span className={`impact-badge ${impact.class}`}>{impact.text}</span>
                     </div>
                   </div>
