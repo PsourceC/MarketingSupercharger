@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import './globals.css'
+import './enhanced-dashboard.css'
 import './gmb-automation/gmb-styles.css'
 import './seo-tracking/seo-styles.css'
 import './review-management/review-styles.css'
