@@ -183,8 +183,8 @@ export default function AutomationToolsGrid() {
       {warningTools.length > 0 && (
         <div className="tools-section warning-section">
           <div className="section-header">
-            <h3>⚠️ Needs Optimization</h3>
-            <span className="tool-count">{warningTools.length} tools</span>
+            <h3>⚠️ Could Be Better</h3>
+            <span className="tool-count">{warningTools.length} areas to improve</span>
           </div>
           <div className="tools-grid">
             {warningTools.map(tool => {
