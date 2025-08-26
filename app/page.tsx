@@ -60,23 +60,23 @@ export default function Home() {
           <DataRefreshSystem />
 
           <div className="live-updates">
-            <h3>📈 Live Performance Feed</h3>
+            <h3>📈 What's Happening Now</h3>
             <div className="update-stream">
               <div className="update-item positive">
                 <span className="update-time">2m ago</span>
-                <span className="update-text">"Affordable solar near me" jumped +2 positions in Cedar Park</span>
+                <span className="update-text">Good news! You moved up 2 spots in Cedar Park for "affordable solar"</span>
               </div>
               <div className="update-item negative">
                 <span className="update-time">15m ago</span>
-                <span className="update-text">"Solar installation Austin" dropped 1 position in Georgetown</span>
+                <span className="update-text">You dropped 1 spot in Georgetown - let's fix this!</span>
               </div>
               <div className="update-item neutral">
                 <span className="update-time">1h ago</span>
-                <span className="update-text">New competitor review detected: ATX Solar (+1 review)</span>
+                <span className="update-text">ATX Solar got a new review - they're at 187 total</span>
               </div>
               <div className="update-item positive">
                 <span className="update-time">2h ago</span>
-                <span className="update-text">GMB post engagement +15% in Round Rock area</span>
+                <span className="update-text">Your Google post got 15% more views in Round Rock</span>
               </div>
             </div>
           </div>
@@ -84,28 +84,28 @@ export default function Home() {
           <div className="quick-actions">
             <h3>⚡ Quick Actions</h3>
             <div className="action-buttons">
-              <button className="quick-btn urgent">🚨 Emergency Citation Boost</button>
-              <button className="quick-btn primary">📱 Post GMB Update</button>
-              <button className="quick-btn secondary">⭐ Send Review Request</button>
-              <button className="quick-btn">📊 Generate Report</button>
+              <button className="quick-btn urgent">🚨 Fix Critical Issues</button>
+              <button className="quick-btn primary">📱 Post on Google</button>
+              <button className="quick-btn secondary">⭐ Ask for Reviews</button>
+              <button className="quick-btn">📊 Download Report</button>
             </div>
           </div>
 
           <div className="performance-alerts">
-            <h3>🎯 Smart Alerts</h3>
+            <h3>🎯 Important Alerts</h3>
             <div className="alert-list">
               <div className="alert urgent">
                 <span className="alert-icon">🚨</span>
                 <div>
-                  <strong>Ranking Drop Alert</strong>
-                  <p>"Best solar company" dropped 3 positions citywide</p>
+                  <strong>You're losing ground!</strong>
+                  <p>Your ranking for "best solar company" dropped 3 spots citywide</p>
                 </div>
               </div>
               <div className="alert opportunity">
                 <span className="alert-icon">💡</span>
                 <div>
-                  <strong>Opportunity Detected</strong>
-                  <p>Competitor weak in Pflugerville - chance to rank higher</p>
+                  <strong>Great opportunity!</strong>
+                  <p>Your competitor is weak in Pflugerville - you can rank higher here</p>
                 </div>
               </div>
             </div>
