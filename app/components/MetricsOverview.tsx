@@ -92,6 +92,7 @@ const metrics: Metric[] = [
 
 export default function MetricsOverview() {
   const [selectedPeriod, setSelectedPeriod] = useState('30d')
+  const [showTooltip, setShowTooltip] = useState<string | null>(null)
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
