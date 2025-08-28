@@ -1,128 +1,58 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { fetchPriorityActions, type PriorityAction } from '../services/api'
 
-interface PriorityAction {
-  id: string
-  priority: 'critical' | 'high' | 'medium'
-  title: string
-  description: string
-  impact: string
-  effort: 'Low' | 'Medium' | 'High'
-  timeline: string
-  automatable: boolean
-  category: 'GMB' | 'SEO' | 'Reviews' | 'Content' | 'Technical'
-  completionPercentage?: number
-  nextSteps: string[]
-}
-
-const priorityActions: PriorityAction[] = [
-  {
-    id: 'resume-gmb-posting',
-    priority: 'critical',
-    title: 'Resume GMB Posting Schedule',
-    description: 'Last post was 1 month ago. Competitors post weekly.',
-    impact: 'Immediate improvement in local search visibility',
-    effort: 'Low',
-    timeline: 'Today',
-    automatable: true,
-    category: 'GMB',
-    completionPercentage: 0,
-    nextSteps: [
-      'Activate GMB content automation',
-      'Schedule 3-4 posts for this week',
-      'Set up automated posting calendar'
-    ]
-  },
-  {
-    id: 'citation-emergency',
-    priority: 'critical',
-    title: 'Emergency Citation Building',
-    description: 'Only 2/100 citations complete. Major ranking factor.',
-    impact: 'Significant local search ranking improvement',
-    effort: 'Medium',
-    timeline: '2-4 weeks',
-    automatable: true,
-    category: 'SEO',
-    completionPercentage: 2,
-    nextSteps: [
-      'Submit to top 20 directories immediately',
-      'Set up automated citation monitoring',
-      'Target 50+ citations in 90 days'
-    ]
-  },
-  {
-    id: 'review-response-system',
-    priority: 'high',
-    title: 'Implement Review Response Automation',
-    description: 'Only 25% response rate vs 89% industry average.',
-    impact: 'Better customer relations and local SEO signals',
-    effort: 'Low',
-    timeline: 'This week',
-    automatable: true,
-    category: 'Reviews',
-    completionPercentage: 25,
-    nextSteps: [
-      'Activate AI response system',
-      'Respond to all unresponded reviews',
-      'Set up auto-responses for new reviews'
-    ]
-  },
-  {
-    id: 'page-speed-optimization',
-    priority: 'high',
-    title: 'Critical Page Speed Fix',
-    description: 'Mobile: 42, Desktop: 66. Affecting rankings and UX.',
-    impact: 'Better user experience and improved search rankings',
-    effort: 'High',
-    timeline: '2-4 weeks',
-    automatable: false,
-    category: 'Technical',
-    completionPercentage: 0,
-    nextSteps: [
-      'Optimize images and reduce file sizes',
-      'Minify CSS and JavaScript',
-      'Implement CDN and caching'
-    ]
-  },
-  {
-    id: 'schema-markup',
-    priority: 'high',
-    title: 'Add Local Business Schema',
-    description: 'Missing structured data markup for rich snippets.',
-    impact: 'Enhanced SERP features and better local SEO',
-    effort: 'Low',
-    timeline: '1 week',
-    automatable: true,
-    category: 'Technical',
-    completionPercentage: 0,
-    nextSteps: [
-      'Implement LocalBusiness schema',
-      'Add service-specific markup',
-      'Test with Google Rich Results tool'
-    ]
-  },
-  {
-    id: 'review-collection-campaign',
-    priority: 'medium',
-    title: 'Launch Review Collection Campaign',
-    description: 'Need 422 more reviews to match top competitor.',
-    impact: 'Improved trust signals and ranking boost',
-    effort: 'Medium',
-    timeline: '6-12 months',
-    automatable: true,
-    category: 'Reviews',
-    completionPercentage: 7,
-    nextSteps: [
-      'Set up automated review requests',
-      'Target 10+ new reviews monthly',
-      'Create review incentive program'
-    ]
-  }
-]
 
 export default function PriorityActionsPanel() {
   const [expandedAction, setExpandedAction] = useState<string | null>(null)
+  const [priorityActions, setPriorityActions] = useState<PriorityAction[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+
+  // Load priority actions from API
+  useEffect(() => {
+    const loadActions = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await fetchPriorityActions()
+        setPriorityActions(data)
+        setLastUpdated(new Date())
+      } catch (err) {
+        setError('Failed to load priority actions. Please check your API connection.')
+        console.error('Error loading priority actions:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadActions()
+
+    // Auto-refresh every 15 minutes
+    const interval = setInterval(loadActions, 15 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Listen for global data refresh events
+  useEffect(() => {
+    const handleDataRefresh = () => {
+      const loadActions = async () => {
+        try {
+          const data = await fetchPriorityActions()
+          setPriorityActions(data)
+          setLastUpdated(new Date())
+        } catch (err) {
+          console.error('Error refreshing priority actions:', err)
+        }
+      }
+      loadActions()
+    }
+
+    window.addEventListener('dataRefresh', handleDataRefresh)
+    return () => window.removeEventListener('dataRefresh', handleDataRefresh)
+  }, [])
 
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
@@ -160,6 +90,65 @@ export default function PriorityActionsPanel() {
     }
   }
 
+  // Handle loading state
+  if (loading) {
+    return (
+      <div className="priority-actions-panel loading">
+        <div className="panel-header">
+          <h3>🎯 Priority Action Queue</h3>
+          <div className="loading-indicator">
+            <span className="spinner">⏳</span>
+            <span>Loading real action data...</span>
+          </div>
+        </div>
+        <div className="actions-loading">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="action-item loading-skeleton">
+              <div className="skeleton-line"></div>
+              <div className="skeleton-line short"></div>
+              <div className="skeleton-line medium"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="priority-actions-panel error">
+        <div className="panel-header">
+          <h3>🎯 Priority Action Queue</h3>
+          <div className="error-indicator">
+            <span className="error-icon">⚠️</span>
+            <span>Connection Issue</span>
+          </div>
+        </div>
+        <div className="error-message">
+          <p>{error}</p>
+          <div className="error-actions">
+            <button
+              onClick={() => window.location.reload()}
+              className="retry-btn"
+            >
+              🔄 Retry Connection
+            </button>
+            <div className="setup-hint">
+              <h4>💡 To enable real priority actions:</h4>
+              <ul>
+                <li>Connect to project management APIs</li>
+                <li>Set up automated task tracking</li>
+                <li>Configure SEO monitoring tools</li>
+                <li>Link business analytics platforms</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const criticalActions = priorityActions.filter(a => a.priority === 'critical')
   const highActions = priorityActions.filter(a => a.priority === 'high')
   const mediumActions = priorityActions.filter(a => a.priority === 'medium')
@@ -168,10 +157,16 @@ export default function PriorityActionsPanel() {
     <div className="priority-actions-panel">
       <div className="panel-header">
         <h3>🎯 Priority Action Queue</h3>
-        <div className="queue-stats">
-          <span className="stat-item critical">{criticalActions.length} Critical</span>
-          <span className="stat-item high">{highActions.length} High</span>
-          <span className="stat-item medium">{mediumActions.length} Medium</span>
+        <div className="header-info">
+          <div className="queue-stats">
+            <span className="stat-item critical">{criticalActions.length} Critical</span>
+            <span className="stat-item high">{highActions.length} High</span>
+            <span className="stat-item medium">{mediumActions.length} Medium</span>
+          </div>
+          <div className="data-status">
+            <span className="data-indicator live">🟢</span>
+            <span className="data-time">Updated: {lastUpdated.toLocaleTimeString()}</span>
+          </div>
         </div>
       </div>
 
@@ -420,25 +415,42 @@ export default function PriorityActionsPanel() {
         )}
       </div>
 
-      <div className="action-summary">
-        <h4>📊 Action Summary</h4>
-        <div className="summary-stats">
-          <div className="summary-stat">
-            <span className="stat-number">{priorityActions.filter(a => a.automatable).length}</span>
-            <span className="stat-label">Automatable</span>
+      {priorityActions.length > 0 ? (
+        <div className="action-summary">
+          <h4>📊 Live Action Summary</h4>
+          <div className="summary-stats">
+            <div className="summary-stat">
+              <span className="stat-number">{priorityActions.filter(a => a.automatable).length}</span>
+              <span className="stat-label">Automatable</span>
+            </div>
+            <div className="summary-stat">
+              <span className="stat-number">
+                {priorityActions.length > 0
+                  ? Math.round(priorityActions.reduce((sum, a) => sum + (a.completionPercentage || 0), 0) / priorityActions.length)
+                  : 0}%
+              </span>
+              <span className="stat-label">Avg Complete</span>
+            </div>
+            <div className="summary-stat">
+              <span className="stat-number">{priorityActions.filter(a => a.effort === 'Low').length}</span>
+              <span className="stat-label">Quick Wins</span>
+            </div>
+            <div className="summary-stat">
+              <span className="stat-number">{priorityActions.length}</span>
+              <span className="stat-label">Total Actions</span>
+            </div>
           </div>
-          <div className="summary-stat">
-            <span className="stat-number">
-              {Math.round(priorityActions.reduce((sum, a) => sum + (a.completionPercentage || 0), 0) / priorityActions.length)}%
-            </span>
-            <span className="stat-label">Avg Complete</span>
-          </div>
-          <div className="summary-stat">
-            <span className="stat-number">{priorityActions.filter(a => a.effort === 'Low').length}</span>
-            <span className="stat-label">Quick Wins</span>
+          <div className="data-source-info">
+            <p>📊 Actions generated from live business data and API monitoring</p>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="no-actions">
+          <h4>🎯 No Actions Available</h4>
+          <p>Connect your business APIs to generate personalized priority actions.</p>
+          <button className="setup-actions-btn">⚙️ Setup Action Tracking</button>
+        </div>
+      )}
     </div>
   )
 }
