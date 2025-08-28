@@ -197,6 +197,24 @@ export default function DevProfilePage() {
     }
   }
 
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'connected': return 'Connected'
+      case 'error': return 'Error'
+      case 'pending': return 'Pending'
+      case 'disconnected': return 'Not Connected'
+      default: return 'Unknown'
+    }
+  }
+
+  const getSetupActionText = (connection: ConnectionStatus) => {
+    if (connection.status === 'connected') return 'Manage'
+    if (connection.status === 'error') return 'Fix Connection'
+    if (connection.priority === 'critical') return 'Setup Now (Critical)'
+    if (connection.priority === 'high') return 'Setup (High Priority)'
+    return 'Setup'
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'connected': return '#10b981'
