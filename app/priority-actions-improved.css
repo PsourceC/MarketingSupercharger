@@ -290,23 +290,29 @@
 }
 
 .action-description {
-  color: #4b5563;
-  font-size: 0.8rem;
-  line-height: 1.5;
-  margin-bottom: 0.75rem;
+  color: #374151;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
   font-weight: 400;
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
-  padding-left: 1.5rem; /* Align with title */
+  padding-left: 0.5rem; /* Minimal padding to prevent squishing */
+  margin-top: 0.5rem;
 }
 
 .progress-section {
-  margin-bottom: 1rem;
-  padding: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
   background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
   border-radius: 8px;
   border: 1px solid #bae6fd;
+  margin-top: 0.75rem;
+  min-height: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .progress-bar {
@@ -325,10 +331,12 @@
 }
 
 .progress-text {
-  font-size: 0.7rem;
-  color: #0369a1;
-  font-weight: 600;
+  font-size: 0.8rem;
+  color: #0c4a6e;
+  font-weight: 700;
   text-align: center;
+  margin-top: 0.25rem;
+  letter-spacing: 0.3px;
 }
 
 .action-details {
