@@ -118,7 +118,13 @@ export async function fetchPriorityActions(): Promise<PriorityAction[]> {
 // Real-time updates API calls
 export async function fetchRecentUpdates(): Promise<DataUpdate[]> {
   try {
-    return await apiFetch<DataUpdate[]>('/updates/recent')
+    const updates = await apiFetch<any[]>('/updates/recent')
+
+    // Convert timestamp strings to Date objects
+    return updates.map(update => ({
+      ...update,
+      timestamp: typeof update.timestamp === 'string' ? new Date(update.timestamp) : update.timestamp
+    }))
   } catch (error) {
     console.error('Failed to fetch recent updates:', error)
     return []
