@@ -6,6 +6,7 @@ import GoogleAuthButton from '../components/GoogleAuthButton'
 import DataSourceIndicator from '../components/DataSourceIndicator'
 import TempDataButton from '../components/TempDataButton'
 import ManualDataImport from '../components/ManualDataImport'
+import '../dev-profile-enhanced.css'
 
 interface ConnectionStatus {
   id: string
@@ -38,17 +39,17 @@ export default function DevProfilePage() {
       {
         id: 'database',
         name: 'Database (Neon)',
-        description: 'PostgreSQL database for storing rankings, metrics, and business data',
+        description: 'PostgreSQL database for storing rankings, metrics, and business data. Click "Connect to Neon" in MCP Settings to get started.',
         status: 'disconnected',
         category: 'core',
         priority: 'critical',
-        setupUrl: '/connect/neon',
+        setupUrl: '#open-mcp-popover',
         docsUrl: 'https://neon.tech/docs'
       },
       {
         id: 'google-oauth',
         name: 'Google Search Console',
-        description: 'OAuth connection for real search ranking and performance data',
+        description: 'OAuth connection for real search ranking and performance data. Scroll down to the Google Auth section to connect.',
         status: 'disconnected',
         category: 'core',
         priority: 'critical',
@@ -196,6 +197,24 @@ export default function DevProfilePage() {
     }
   }
 
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'connected': return 'Connected'
+      case 'error': return 'Error'
+      case 'pending': return 'Pending'
+      case 'disconnected': return 'Not Connected'
+      default: return 'Unknown'
+    }
+  }
+
+  const getSetupActionText = (connection: ConnectionStatus) => {
+    if (connection.status === 'connected') return 'Manage'
+    if (connection.status === 'error') return 'Fix Connection'
+    if (connection.priority === 'critical') return 'Setup Now (Critical)'
+    if (connection.priority === 'high') return 'Setup (High Priority)'
+    return 'Setup'
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'connected': return '#10b981'
@@ -264,6 +283,28 @@ export default function DevProfilePage() {
           <div className="status-info">
             <h2>Overall Status: {overallStatus.charAt(0).toUpperCase() + overallStatus.slice(1)}</h2>
             <p>{connectedCount} of {totalCount} connections active</p>
+
+            {/* Action Guidance */}
+            {overallStatus === 'disconnected' && (
+              <div className="status-guidance urgent">
+                🚨 <strong>Action Required:</strong> Connect critical services to get started
+              </div>
+            )}
+            {overallStatus === 'partial' && (
+              <div className="status-guidance warning">
+                ⚠️ <strong>Setup In Progress:</strong> Connect remaining services for full functionality
+              </div>
+            )}
+            {overallStatus === 'connected' && (
+              <div className="status-guidance success">
+                ✅ <strong>All Set:</strong> All connections are working properly
+              </div>
+            )}
+            {overallStatus === 'error' && (
+              <div className="status-guidance error">
+                ❌ <strong>Issues Detected:</strong> Fix connection errors below
+              </div>
+            )}
           </div>
         </div>
         <div className="status-stats">
@@ -279,8 +320,69 @@ export default function DevProfilePage() {
             <span className="stat-number">{connections.filter(c => c.priority === 'critical').length}</span>
             <span className="stat-label">Critical</span>
           </div>
+          <div className="stat">
+            <span className="stat-number">{connections.filter(c => c.status === 'disconnected' && c.priority === 'critical').length}</span>
+            <span className="stat-label">Need Setup</span>
+          </div>
         </div>
       </div>
+
+      {/* Quick Actions for Critical Setup */}
+      {overallStatus !== 'connected' && (
+        <div className="quick-actions-section">
+          <h3>🚀 Quick Setup Actions</h3>
+          <div className="quick-actions-grid">
+            {connections.filter(c => c.priority === 'critical' && c.status !== 'connected').length > 0 && (
+              <div className="quick-action-card critical">
+                <div className="action-icon">🚨</div>
+                <div className="action-content">
+                  <h4>Connect Critical Services</h4>
+                  <p>Database and Google Search Console are required for core functionality</p>
+                  <div className="action-buttons">
+                    <button
+                      className="action-btn database"
+                      onClick={() => alert('To connect Database:\n\n1. Click "Connect" in top menu\n2. Find "Neon" in MCP list\n3. Connect your Neon database\n4. Configure connection settings')}
+                    >
+                      Connect Database
+                    </button>
+                    <button
+                      className="action-btn google"
+                      onClick={() => {
+                        const googleSection = document.querySelector('#google-auth')
+                        if (googleSection) {
+                          window.location.href = '/#google-auth'
+                        } else {
+                          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+                        }
+                      }}
+                    >
+                      Connect Google
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="quick-action-card">
+              <div className="action-icon">📊</div>
+              <div className="action-content">
+                <h4>Load Sample Data</h4>
+                <p>Explore the dashboard with sample data while setting up connections</p>
+                <TempDataButton />
+              </div>
+            </div>
+
+            <div className="quick-action-card">
+              <div className="action-icon">📁</div>
+              <div className="action-content">
+                <h4>Import Data</h4>
+                <p>Upload CSV files from Google Search Console for instant analysis</p>
+                <ManualDataImport />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Data Import & Connection Section */}
       <div className="data-import-section">
@@ -332,40 +434,57 @@ export default function DevProfilePage() {
                   <div key={connection.id} className={`connection-card ${connection.status} priority-${connection.priority}`}>
                     <div className="connection-header">
                       <div className="connection-title">
-                        <span className="status-indicator">{getStatusIcon(connection.status)}</span>
+                        <span
+                          className="status-indicator"
+                          title={`Status: ${getStatusText(connection.status)}`}
+                        >
+                          {getStatusIcon(connection.status)}
+                        </span>
                         <h4>{connection.name}</h4>
                         <span className={`priority-badge priority-${connection.priority}`}>
                           {connection.priority}
                         </span>
                       </div>
+                      <div className="status-text">
+                        <span className={`status-label status-${connection.status}`}>
+                          {getStatusText(connection.status)}
+                        </span>
+                      </div>
                     </div>
-                    
+
                     <p className="connection-description">{connection.description}</p>
-                    
-                    {connection.errorMessage && (
-                      <div className="error-message">
-                        ⚠️ {connection.errorMessage}
+
+                    {connection.status === 'connected' && (
+                      <div className="success-message">
+                        ✅ Connection is active and working properly
                       </div>
                     )}
-                    
+
+                    {connection.errorMessage && (
+                      <div className="error-message">
+                        {connection.errorMessage}
+                      </div>
+                    )}
+
                     <div className="connection-footer">
                       <div className="connection-actions">
-                        {connection.status !== 'connected' && (
-                          <button 
-                            className="setup-btn"
-                            onClick={() => {
-                              if (connection.setupUrl.startsWith('#')) {
-                                // Navigate back to dashboard and scroll to element
-                                window.location.href = `/${connection.setupUrl}`
-                              } else {
-                                window.open(connection.setupUrl, '_blank')
-                              }
-                            }}
-                          >
-                            Setup
-                          </button>
-                        )}
-                        <button 
+                        <button
+                          className={`setup-btn ${connection.priority === 'critical' ? 'critical' : ''}`}
+                          onClick={() => {
+                            if (connection.setupUrl === '#open-mcp-popover') {
+                              // For MCP connections, show specific instructions
+                              alert(`To setup ${connection.name}:\n\n1. Click the "Connect" button in the top menu\n2. Find and connect to the relevant MCP service\n3. Follow the setup instructions\n\nFor database: Connect to Neon\nFor other services: Look for the specific service in the MCP list`)
+                            } else if (connection.setupUrl.startsWith('#')) {
+                              // Navigate back to dashboard and scroll to element
+                              window.location.href = `/${connection.setupUrl}`
+                            } else {
+                              window.open(connection.setupUrl, '_blank')
+                            }
+                          }}
+                        >
+                          {getSetupActionText(connection)}
+                        </button>
+                        <button
                           className="docs-btn"
                           onClick={() => window.open(connection.docsUrl, '_blank')}
                           title="View Documentation"
@@ -373,7 +492,7 @@ export default function DevProfilePage() {
                           📚
                         </button>
                       </div>
-                      
+
                       {connection.lastChecked && (
                         <div className="last-checked">
                           Last checked: {new Date(connection.lastChecked).toLocaleTimeString()}
