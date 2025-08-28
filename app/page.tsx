@@ -112,6 +112,11 @@ export default function Home() {
         </aside>
       </div>
 
+      {/* Priority Actions - Full Width Horizontal Section */}
+      <section className="priority-actions-section">
+        <PriorityActionsPanel />
+      </section>
+
       {/* Help System */}
       <HelpSystem />
     </div>
