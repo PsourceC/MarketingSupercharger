@@ -3,9 +3,58 @@ import { setCredentials, getSearchConsoleData, calculateMetricsFromSearchConsole
 
 export async function GET() {
   try {
+    // Check for temporary sample data first
+    const tempData = process.env.TEMP_ASTRAWATT_DATA
+    if (tempData) {
+      try {
+        const sampleData = JSON.parse(tempData)
+        const metrics = [
+          {
+            id: 'search-ranking',
+            title: 'Average Search Position',
+            value: sampleData.avgPosition.toString(),
+            change: 'Sample data - Set up Google OAuth for real data',
+            changeType: sampleData.avgPosition <= 10 ? 'positive' : 'neutral',
+            icon: '🎯',
+            target: '< 5.0 avg position',
+            priority: sampleData.avgPosition > 15 ? 'critical' : 'medium',
+            explanation: 'Sample average search position for Astrawatt.com keywords',
+            whyItMatters: 'Higher rankings (lower numbers) lead to more customer visibility'
+          },
+          {
+            id: 'search-clicks',
+            title: 'Search Clicks',
+            value: sampleData.totalClicks.toString(),
+            change: `${sampleData.totalImpressions} impressions (sample)`,
+            changeType: 'positive',
+            icon: '👆',
+            target: 'Increase click rate',
+            priority: 'medium',
+            explanation: 'Sample clicks from Google Search for Astrawatt.com',
+            whyItMatters: 'Shows potential customer discovery through search'
+          },
+          {
+            id: 'search-ctr',
+            title: 'Click-Through Rate',
+            value: `${sampleData.avgCTR}%`,
+            change: sampleData.avgCTR > 5 ? 'Good performance (sample)' : 'Room for improvement (sample)',
+            changeType: sampleData.avgCTR > 5 ? 'positive' : 'neutral',
+            icon: '📊',
+            target: '> 5% CTR',
+            priority: sampleData.avgCTR < 3 ? 'high' : 'medium',
+            explanation: 'Sample click-through rate for Astrawatt.com listings',
+            whyItMatters: 'Higher CTR indicates your titles and descriptions attract customers'
+          }
+        ]
+        return NextResponse.json(metrics)
+      } catch (parseError) {
+        console.error('Error parsing temp data:', parseError)
+      }
+    }
+
     // Check if we have Google access token
     const accessToken = process.env.GOOGLE_ACCESS_TOKEN
-    const siteUrl = process.env.GOOGLE_SITE_URL || 'https://yoursolarcompany.com' // You'll need to set this
+    const siteUrl = process.env.GOOGLE_SITE_URL || 'https://www.astrawatt.com'
 
     let metrics = []
 
