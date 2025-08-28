@@ -345,19 +345,51 @@ export default function DevProfilePage() {
                     >
                       Connect Database
                     </button>
-                    <button
-                      className="action-btn google"
-                      onClick={() => {
-                        const googleSection = document.querySelector('#google-auth')
-                        if (googleSection) {
-                          window.location.href = '/#google-auth'
-                        } else {
-                          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-                        }
-                      }}
-                    >
-                      Connect Google
-                    </button>
+                    {connections.find(c => c.id === 'google-oauth' && c.status !== 'connected') && (
+                      <button
+                        className="action-btn google-search-console"
+                        onClick={() => {
+                          const googleSection = document.querySelector('#google-auth')
+                          if (googleSection) {
+                            window.location.href = '/#google-auth'
+                          } else {
+                            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+                          }
+                        }}
+                      >
+                        Connect Search Console
+                      </button>
+                    )}
+                    {connections.find(c => c.id === 'google-my-business' && c.status !== 'connected') && (
+                      <button
+                        className="action-btn google-my-business"
+                        onClick={() => {
+                          // Navigate to GMB setup page or scroll to GMB connection card
+                          const gmbConnection = connections.find(c => c.id === 'google-my-business')
+                          if (gmbConnection?.setupUrl && gmbConnection.setupUrl !== '#open-mcp-popover') {
+                            window.open(gmbConnection.setupUrl, '_blank')
+                          } else {
+                            // Scroll to the GMB connection card in the optimization section
+                            setTimeout(() => {
+                              const gmbCard = document.querySelector(`[data-connection-id="google-my-business"]`) ||
+                                             document.querySelector('.connection-card:has(h4:contains("Google My Business"))')
+                              if (gmbCard) {
+                                gmbCard.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                                // Add temporary highlight
+                                gmbCard.style.border = '2px solid #3b82f6'
+                                gmbCard.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.3)'
+                                setTimeout(() => {
+                                  gmbCard.style.border = ''
+                                  gmbCard.style.boxShadow = ''
+                                }, 3000)
+                              }
+                            }, 100)
+                          }
+                        }}
+                      >
+                        Connect GMB
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -489,7 +521,7 @@ export default function DevProfilePage() {
                           onClick={() => window.open(connection.docsUrl, '_blank')}
                           title="View Documentation"
                         >
-                          📚
+                          ��
                         </button>
                       </div>
 
@@ -526,7 +558,7 @@ export default function DevProfilePage() {
             </div>
           </div>
           <div className="tip">
-            <span className="tip-icon">📊</span>
+            <span className="tip-icon">����</span>
             <div className="tip-content">
               <h4>Live Monitoring</h4>
               <p>All connections are monitored in real-time for issues and performance</p>
