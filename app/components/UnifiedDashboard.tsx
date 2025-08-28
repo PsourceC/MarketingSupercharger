@@ -24,7 +24,25 @@ export default function UnifiedDashboard() {
 
   return (
     <div className="unified-dashboard">
-      {/* Top Section - Key Performance Overview */}
+      {/* Geographic Performance Section - Moved to Top */}
+      <div className="dashboard-section">
+        <div className="section-header expandable" onClick={() => toggleSection('geo')}>
+          <div className="header-content">
+            <h2>🗺️ Geographic Performance Analysis</h2>
+            <p>See where customers discover your solar business across Austin metro area</p>
+          </div>
+          <button className="collapse-toggle">
+            {isCollapsed('geo') ? '▼' : '▲'}
+          </button>
+        </div>
+        {!isCollapsed('geo') && (
+          <div className="section-content">
+            <EnhancedGeoGrid />
+          </div>
+        )}
+      </div>
+
+      {/* Key Performance Overview Section */}
       <div className="dashboard-top-section">
         <div className="performance-metrics-container">
           <div className="metrics-overview-section">
@@ -90,24 +108,6 @@ export default function UnifiedDashboard() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Geographic Performance Section */}
-      <div className="dashboard-section">
-        <div className="section-header expandable" onClick={() => toggleSection('geo')}>
-          <div className="header-content">
-            <h2>🗺️ Geographic Performance Analysis</h2>
-            <p>See where customers discover your solar business across Austin metro area</p>
-          </div>
-          <button className="collapse-toggle">
-            {isCollapsed('geo') ? '▼' : '▲'}
-          </button>
-        </div>
-        {!isCollapsed('geo') && (
-          <div className="section-content">
-            <EnhancedGeoGrid />
-          </div>
-        )}
       </div>
 
       {/* Actions and Marketing Section */}
