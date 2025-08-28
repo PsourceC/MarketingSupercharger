@@ -185,6 +185,34 @@
   background: linear-gradient(180deg, #3b82f6, #1d4ed8);
 }
 
+/* Comprehensive text overflow protection */
+.action-item * {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  hyphens: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.action-item .detail-value {
+  white-space: normal !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.action-item .next-steps li {
+  white-space: normal !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
+.action-item.expanded {
+  overflow: visible;
+  z-index: 10;
+  position: relative;
+}
+
 .action-header {
   display: flex;
   flex-direction: column;
