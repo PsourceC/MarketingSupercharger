@@ -302,7 +302,7 @@ export default function DevProfilePage() {
             )}
             {overallStatus === 'error' && (
               <div className="status-guidance error">
-                �� <strong>Issues Detected:</strong> Fix connection errors below
+                ❌ <strong>Issues Detected:</strong> Fix connection errors below
               </div>
             )}
           </div>
@@ -337,7 +337,7 @@ export default function DevProfilePage() {
                 <div className="action-icon">🚨</div>
                 <div className="action-content">
                   <h4>Connect Critical Services</h4>
-                  <p>Database and Google Search Console are required for core functionality</p>
+                  <p>Connect your database and Google services to unlock full optimization features</p>
                   <div className="action-buttons">
                     <button
                       className="action-btn database"
