@@ -371,16 +371,17 @@ export default function DevProfilePage() {
                           } else {
                             // Scroll to the GMB connection card in the optimization section
                             setTimeout(() => {
-                              const gmbCard = document.querySelector(`[data-connection-id="google-my-business"]`) ||
-                                             document.querySelector('.connection-card:has(h4:contains("Google My Business"))')
+                              const gmbCard = document.querySelector(`[data-connection-id="google-my-business"]`)
                               if (gmbCard) {
                                 gmbCard.scrollIntoView({ behavior: 'smooth', block: 'center' })
                                 // Add temporary highlight
+                                const originalBorder = gmbCard.style.border
+                                const originalBoxShadow = gmbCard.style.boxShadow
                                 gmbCard.style.border = '2px solid #3b82f6'
                                 gmbCard.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.3)'
                                 setTimeout(() => {
-                                  gmbCard.style.border = ''
-                                  gmbCard.style.boxShadow = ''
+                                  gmbCard.style.border = originalBorder
+                                  gmbCard.style.boxShadow = originalBoxShadow
                                 }, 3000)
                               }
                             }, 100)
