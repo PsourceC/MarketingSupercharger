@@ -191,8 +191,10 @@ export default function PriorityActionsPanel() {
                     <h5>{action.title}</h5>
                   </div>
                   <div className="action-meta">
-                    {action.automatable && <span className="auto-badge">🤖</span>}
-                    <span className="timeline-badge">{action.timeline}</span>
+                    <div className="action-badges">
+                      {action.automatable && <span className="auto-badge">🤖 Auto</span>}
+                      <span className="timeline-badge">{action.timeline}</span>
+                    </div>
                     <span className="expand-icon">{expandedAction === action.id ? '▼' : '▶'}</span>
                   </div>
                 </div>
@@ -272,8 +274,10 @@ export default function PriorityActionsPanel() {
                     <h5>{action.title}</h5>
                   </div>
                   <div className="action-meta">
-                    {action.automatable && <span className="auto-badge">🤖</span>}
-                    <span className="timeline-badge">{action.timeline}</span>
+                    <div className="action-badges">
+                      {action.automatable && <span className="auto-badge">🤖 Auto</span>}
+                      <span className="timeline-badge">{action.timeline}</span>
+                    </div>
                     <span className="expand-icon">{expandedAction === action.id ? '▼' : '▶'}</span>
                   </div>
                 </div>
@@ -353,8 +357,10 @@ export default function PriorityActionsPanel() {
                     <h5>{action.title}</h5>
                   </div>
                   <div className="action-meta">
-                    {action.automatable && <span className="auto-badge">🤖</span>}
-                    <span className="timeline-badge">{action.timeline}</span>
+                    <div className="action-badges">
+                      {action.automatable && <span className="auto-badge">🤖 Auto</span>}
+                      <span className="timeline-badge">{action.timeline}</span>
+                    </div>
                     <span className="expand-icon">{expandedAction === action.id ? '▼' : '▶'}</span>
                   </div>
                 </div>
