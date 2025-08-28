@@ -20,13 +20,7 @@ const nextConfig = {
         crypto: false,
       }
     }
-    
-    // Handle leaflet CSS imports
-    config.module.rules.push({
-      test: /\.css$/,
-      use: ['style-loader', 'css-loader'],
-    })
-    
+
     return config
   },
   
