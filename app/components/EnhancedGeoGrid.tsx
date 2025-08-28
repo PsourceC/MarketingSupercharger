@@ -31,7 +31,14 @@ interface Competitor {
   name: string
   score: number
   color: string
-  locations: { lat: number, lng: number, score: number }[]
+  locations: {
+    lat: number,
+    lng: number,
+    score: number,
+    areaName: string,
+    marketShare: number,
+    recentTrend: 'up' | 'down' | 'stable'
+  }[]
 }
 
 // Austin metro area locations with real coordinates and updated data
@@ -180,33 +187,33 @@ const locations: Location[] = [
 ]
 
 const competitors: Competitor[] = [
-  { 
-    name: '512 Solar', 
-    score: 92, 
+  {
+    name: '512 Solar',
+    score: 92,
     color: '#ef4444',
     locations: [
-      { lat: 30.2672, lng: -97.7431, score: 1 },
-      { lat: 30.6332, lng: -97.6779, score: 2 },
-      { lat: 30.5052, lng: -97.8203, score: 1 }
+      { lat: 30.2672, lng: -97.7431, score: 1, areaName: 'Central Austin', marketShare: 35, recentTrend: 'stable' },
+      { lat: 30.6332, lng: -97.6779, score: 2, areaName: 'Georgetown', marketShare: 28, recentTrend: 'up' },
+      { lat: 30.5052, lng: -97.8203, score: 1, areaName: 'Cedar Park', marketShare: 32, recentTrend: 'down' }
     ]
   },
-  { 
-    name: 'ATX Solar', 
-    score: 78, 
+  {
+    name: 'ATX Solar',
+    score: 78,
     color: '#f97316',
     locations: [
-      { lat: 30.2672, lng: -97.7431, score: 3 },
-      { lat: 30.5084, lng: -97.6789, score: 2 },
-      { lat: 30.4394, lng: -97.6200, score: 4 }
+      { lat: 30.2672, lng: -97.7431, score: 3, areaName: 'Central Austin', marketShare: 22, recentTrend: 'up' },
+      { lat: 30.5084, lng: -97.6789, score: 2, areaName: 'Round Rock', marketShare: 25, recentTrend: 'stable' },
+      { lat: 30.4394, lng: -97.6200, score: 4, areaName: 'Pflugerville', marketShare: 18, recentTrend: 'down' }
     ]
   },
-  { 
-    name: 'Cool Solar', 
-    score: 65, 
+  {
+    name: 'Cool Solar',
+    score: 65,
     color: '#6b7280',
     locations: [
-      { lat: 30.5788, lng: -97.8531, score: 5 },
-      { lat: 30.5427, lng: -97.5464, score: 6 }
+      { lat: 30.5788, lng: -97.8531, score: 5, areaName: 'Leander', marketShare: 15, recentTrend: 'stable' },
+      { lat: 30.5427, lng: -97.5464, score: 6, areaName: 'Hutto', marketShare: 12, recentTrend: 'up' }
     ]
   }
 ]
@@ -217,6 +224,8 @@ export default function EnhancedGeoGrid() {
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
   const [mapReady, setMapReady] = useState(false)
   const [lastRefresh, setLastRefresh] = useState(new Date())
+  const [competitorComparisonMode, setCompetitorComparisonMode] = useState(false)
+  const [selectedCompetitor, setSelectedCompetitor] = useState<string>('all')
 
   useEffect(() => {
     setMapReady(true)
@@ -249,6 +258,28 @@ export default function EnhancedGeoGrid() {
     if (score <= 10) return 'Good ✅'
     if (score <= 15) return 'Fair ⚠️'
     return 'Needs Work 🚨'
+  }
+
+  const getCompetitiveGap = (yourScore: number, competitorScore: number) => {
+    const gap = yourScore - competitorScore
+    if (gap <= 0) return { status: 'winning', text: `Leading by ${Math.abs(gap)} positions`, color: '#10b981' }
+    if (gap <= 3) return { status: 'close', text: `Behind by ${gap} positions`, color: '#f59e0b' }
+    return { status: 'behind', text: `Behind by ${gap} positions`, color: '#ef4444' }
+  }
+
+  const getAreaCompetitors = (areaName: string) => {
+    return competitors.map(comp => {
+      const location = comp.locations.find(loc => loc.areaName === areaName)
+      return location ? { ...comp, location } : null
+    }).filter(Boolean)
+  }
+
+  const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
+    switch(trend) {
+      case 'up': return '📈'
+      case 'down': return '📉'
+      default: return '➡️'
+    }
   }
 
   const refreshData = () => {
@@ -289,12 +320,39 @@ export default function EnhancedGeoGrid() {
         
         <div className="control-group">
           <label className="toggle-control">
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               checked={showCompetitors}
               onChange={(e) => setShowCompetitors(e.target.checked)}
             />
             <span className="toggle-text">🥊 Show Competitors</span>
+          </label>
+        </div>
+
+        {showCompetitors && (
+          <div className="control-group">
+            <label className="control-label">🎯 Compare With:</label>
+            <select
+              value={selectedCompetitor}
+              onChange={(e) => setSelectedCompetitor(e.target.value)}
+              className="enhanced-select competitor-select"
+            >
+              <option value="all">All Competitors</option>
+              {competitors.map(comp => (
+                <option key={comp.name} value={comp.name}>{comp.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <div className="control-group">
+          <label className="toggle-control">
+            <input
+              type="checkbox"
+              checked={competitorComparisonMode}
+              onChange={(e) => setCompetitorComparisonMode(e.target.checked)}
+            />
+            <span className="toggle-text">📊 Comparison Mode</span>
           </label>
         </div>
 
@@ -429,7 +487,7 @@ export default function EnhancedGeoGrid() {
                       <h3>{location.name}</h3>
                       <div className="popup-content">
                         <div className="popup-stat">
-                          <span className="popup-label">Current Ranking:</span>
+                          <span className="popup-label">Your Ranking:</span>
                           <span className={`popup-value rank-${score <= 5 ? 'excellent' : score <= 10 ? 'good' : 'poor'}`}>
                             #{score} {getPerformanceLabel(score)}
                           </span>
@@ -446,7 +504,44 @@ export default function EnhancedGeoGrid() {
                           <span className="popup-label">Last Updated:</span>
                           <span className="popup-value">{location.lastUpdated}</span>
                         </div>
-                        
+
+                        {showCompetitors && (
+                          <div className="competitor-analysis">
+                            <h4>🥊 Competitive Analysis</h4>
+                            {getAreaCompetitors(location.name).map((comp: any) => {
+                              const gap = getCompetitiveGap(score, comp.location.score)
+                              return (
+                                <div key={comp.name} className="competitor-comparison">
+                                  <div className="competitor-header">
+                                    <span
+                                      className="competitor-dot"
+                                      style={{ backgroundColor: comp.color }}
+                                    ></span>
+                                    <span className="competitor-name">{comp.name}</span>
+                                    <span className="competitor-rank">#{comp.location.score}</span>
+                                  </div>
+                                  <div className="gap-analysis">
+                                    <span
+                                      className="gap-indicator"
+                                      style={{ color: gap.color }}
+                                    >
+                                      {gap.text}
+                                    </span>
+                                    <span className="market-share">
+                                      {comp.location.marketShare}% market share
+                                    </span>
+                                  </div>
+                                  <div className="trend-indicator">
+                                    {getTrendIcon(comp.location.recentTrend)}
+                                    {comp.location.recentTrend === 'up' ? 'Growing' :
+                                     comp.location.recentTrend === 'down' ? 'Declining' : 'Stable'}
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+
                         {location.trends.length > 0 && (
                           <div className="popup-trends">
                             <h4>Recent Changes:</h4>
@@ -468,26 +563,97 @@ export default function EnhancedGeoGrid() {
             })}
             
             {/* Competitor locations */}
-            {showCompetitors && competitors.map(competitor => 
-              competitor.locations.map((loc, idx) => (
-                <CircleMarker
-                  key={`${competitor.name}-${idx}`}
-                  center={[loc.lat + 0.01, loc.lng + 0.01]} // Slight offset to avoid overlap
-                  radius={8}
-                  fillColor={competitor.color}
-                  color="white"
-                  weight={2}
-                  opacity={0.7}
-                  fillOpacity={0.6}
-                >
-                  <Tooltip>
-                    <div className="competitor-tooltip">
-                      <strong>{competitor.name}</strong><br/>
-                      Ranking: #{loc.score}
-                    </div>
-                  </Tooltip>
-                </CircleMarker>
-              ))
+            {showCompetitors && competitors
+              .filter(comp => selectedCompetitor === 'all' || comp.name === selectedCompetitor)
+              .map(competitor =>
+              competitor.locations.map((loc, idx) => {
+                const yourLocation = locations.find(l => l.name === loc.areaName)
+                const yourScore = yourLocation ? getPositionRanking(yourLocation, selectedKeyword) : 20
+                const gap = getCompetitiveGap(yourScore, loc.score)
+                const markerSize = competitorComparisonMode ? (loc.marketShare / 5) : 8
+
+                return (
+                  <CircleMarker
+                    key={`${competitor.name}-${idx}`}
+                    center={[loc.lat + 0.01, loc.lng + 0.01]} // Slight offset to avoid overlap
+                    radius={markerSize}
+                    fillColor={competitor.color}
+                    color={competitorComparisonMode ? gap.color : "white"}
+                    weight={competitorComparisonMode ? 3 : 2}
+                    opacity={0.8}
+                    fillOpacity={competitorComparisonMode ? 0.7 : 0.6}
+                  >
+                    <Tooltip>
+                      <div className="competitor-tooltip-enhanced">
+                        <strong>{competitor.name}</strong><br/>
+                        <span>#{loc.score} in {loc.areaName}</span><br/>
+                        <span style={{ color: gap.color, fontWeight: 'bold' }}>
+                          {gap.text}
+                        </span><br/>
+                        <span className="market-share">
+                          {loc.marketShare}% market share
+                        </span><br/>
+                        <span className="trend">
+                          {getTrendIcon(loc.recentTrend)}
+                          {loc.recentTrend === 'up' ? 'Growing' :
+                           loc.recentTrend === 'down' ? 'Declining' : 'Stable'}
+                        </span>
+                      </div>
+                    </Tooltip>
+
+                    <Popup>
+                      <div className="competitor-popup">
+                        <h3>{competitor.name} - {loc.areaName}</h3>
+                        <div className="competitor-popup-content">
+                          <div className="popup-stat">
+                            <span className="popup-label">Their Ranking:</span>
+                            <span className="popup-value">#{loc.score}</span>
+                          </div>
+                          <div className="popup-stat">
+                            <span className="popup-label">Your Ranking:</span>
+                            <span className="popup-value">#{yourScore}</span>
+                          </div>
+                          <div className="popup-stat">
+                            <span className="popup-label">Competitive Gap:</span>
+                            <span className="popup-value" style={{ color: gap.color }}>
+                              {gap.text}
+                            </span>
+                          </div>
+                          <div className="popup-stat">
+                            <span className="popup-label">Market Share:</span>
+                            <span className="popup-value">{loc.marketShare}%</span>
+                          </div>
+                          <div className="popup-stat">
+                            <span className="popup-label">Recent Trend:</span>
+                            <span className="popup-value">
+                              {getTrendIcon(loc.recentTrend)}
+                              {loc.recentTrend === 'up' ? 'Growing' :
+                               loc.recentTrend === 'down' ? 'Declining' : 'Stable'}
+                            </span>
+                          </div>
+
+                          <div className="competitive-insights">
+                            <h4>💡 Opportunity</h4>
+                            {gap.status === 'winning' ? (
+                              <p className="insight-text success">
+                                You're dominating this area! Focus on maintaining your lead.
+                              </p>
+                            ) : gap.status === 'close' ? (
+                              <p className="insight-text warning">
+                                Close competition - small improvements could give you the edge.
+                              </p>
+                            ) : (
+                              <p className="insight-text danger">
+                                Significant gap to close. Consider targeted campaigns here.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </Popup>
+                  </CircleMarker>
+                )
+              })
             )}
           </MapContainer>
         </div>
