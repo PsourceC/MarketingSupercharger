@@ -24,7 +24,6 @@ export default function Home() {
         {/* Left Panel - Key Metrics */}
         <aside className="metrics-sidebar">
           <MetricsOverview />
-          <PriorityActionsPanel />
         </aside>
 
         {/* Main Content Area */}
