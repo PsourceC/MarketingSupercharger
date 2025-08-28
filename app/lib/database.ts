@@ -4,23 +4,45 @@ import { Pool } from 'pg'
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  max: 10, // Reduced from 20 to prevent overwhelming
+  idleTimeoutMillis: 60000, // Increased to 60 seconds
+  connectionTimeoutMillis: 10000, // Increased to 10 seconds
+  acquireTimeoutMillis: 20000, // Add acquire timeout
+  allowExitOnIdle: true,
 })
 
-// Helper function to execute queries
-export async function query(text: string, params?: any[]) {
-  try {
-    const start = Date.now()
-    const res = await pool.query(text, params)
-    const duration = Date.now() - start
-    console.log('Executed query', { text, duration, rows: res.rowCount })
-    return res
-  } catch (error) {
-    console.error('Database query error:', error)
-    throw error
+// Helper function to execute queries with retry logic
+export async function query(text: string, params?: any[], retries = 2) {
+  let lastError: any
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const start = Date.now()
+      const res = await pool.query(text, params)
+      const duration = Date.now() - start
+      console.log('Executed query', { text: text.substring(0, 100) + '...', duration, rows: res.rowCount })
+      return res
+    } catch (error: any) {
+      lastError = error
+      console.error(`Database query error (attempt ${attempt + 1}/${retries + 1}):`, error.message)
+
+      // If it's a connection issue and we have retries left, wait and try again
+      if (attempt < retries && (
+        error.code === 'ECONNRESET' ||
+        error.code === 'ENOTFOUND' ||
+        error.message.includes('Connection terminated') ||
+        error.message.includes('timeout')
+      )) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1))) // Exponential backoff
+        continue
+      }
+
+      // If it's not a connection issue or we're out of retries, throw immediately
+      break
+    }
   }
+
+  throw lastError
 }
 
 // Get current metrics from database

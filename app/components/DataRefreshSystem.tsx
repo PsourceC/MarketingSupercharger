@@ -18,8 +18,8 @@ export default function DataRefreshSystem() {
     isRefreshing: false,
     lastRefresh: new Date(0), // Use epoch time to prevent hydration mismatch
     nextRefresh: new Date(0), // Use epoch time to prevent hydration mismatch
-    autoRefreshEnabled: true,
-    refreshInterval: 15
+    autoRefreshEnabled: false, // Disabled by default to prevent overwhelming
+    refreshInterval: 60 // Increased to 60 minutes
   })
 
   const [recentUpdates, setRecentUpdates] = useState<DataUpdate[]>([])
@@ -31,7 +31,7 @@ export default function DataRefreshSystem() {
 
     // Initialize actual dates only after mounting
     const now = new Date()
-    const nextRefresh = new Date(now.getTime() + 15 * 60 * 1000) // 15 minutes
+    const nextRefresh = new Date(now.getTime() + 60 * 60 * 1000) // 60 minutes
 
     setRefreshStatus(prev => ({
       ...prev,
@@ -98,8 +98,8 @@ export default function DataRefreshSystem() {
       }
     })
 
-    // Start polling for updates
-    dataSubscription.startPolling(60000) // Poll every minute
+    // Start polling for updates - reduced frequency
+    dataSubscription.startPolling(300000) // Poll every 5 minutes instead of 1 minute
 
     // Load initial updates
     loadRecentUpdates()
