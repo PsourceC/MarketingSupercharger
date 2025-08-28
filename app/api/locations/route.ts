@@ -1,38 +1,38 @@
 import { NextResponse } from 'next/server'
-
-// This would connect to your actual location tracking services:
-// - Local SEO tracking tools (BrightLocal, Whitespark, etc.)
-// - Google Search Console with location filters
-// - Rank tracking services (SEMrush, Ahrefs, etc.)
+import { getLocationPerformance } from '../../lib/database'
 
 export async function GET() {
   try {
-    // TODO: Replace with real API calls to your location tracking services
-    // Example: const locationData = await fetchLocationRankings()
-    // Example: const searchVolumeData = await fetchKeywordData()
-    
-    const locations = [
+    // Get real location data from Neon database
+    const locations = await getLocationPerformance()
+
+    if (locations && locations.length > 0) {
+      return NextResponse.json(locations)
+    }
+
+    // Fallback if no data in database yet
+    const fallbackLocations = [
       {
-        id: 'setup-required',
-        name: 'Connect Location APIs',
+        id: 'database-connected',
+        name: 'Database Connected - Add Real Data',
         lat: 30.2672,
         lng: -97.7431,
         overallScore: 0,
         keywordScores: {},
         population: 0,
         searchVolume: 0,
-        lastUpdated: 'APIs not connected',
+        lastUpdated: 'Database ready for data',
         trends: [
-          { 
-            keyword: 'Setup required', 
-            change: 0, 
-            changeText: 'Connect ranking tracking APIs to see real location data' 
+          {
+            keyword: 'Database ready',
+            change: 0,
+            changeText: 'Neon database connected. Add ranking data via Google Search Console or ranking APIs'
           }
         ]
       }
     ]
 
-    return NextResponse.json(locations)
+    return NextResponse.json(fallbackLocations)
   } catch (error) {
     console.error('Error fetching location data:', error)
     return NextResponse.json(
