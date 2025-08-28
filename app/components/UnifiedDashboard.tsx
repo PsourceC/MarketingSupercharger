@@ -53,6 +53,7 @@ export default function UnifiedDashboard() {
               <p>Your solar business performance at a glance</p>
             </div>
             <GoogleAuthButton />
+            <TempDataButton />
             <MetricsOverview />
           </div>
 
