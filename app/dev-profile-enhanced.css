@@ -952,4 +952,21 @@
     border-color: rgba(107, 114, 128, 0.5);
     color: #d1d5db;
   }
+
+  .last-health-check {
+    background: rgba(75, 85, 99, 0.8);
+    border-color: rgba(107, 114, 128, 0.5);
+    color: #d1d5db;
+  }
+
+  .auto-refresh-toggle {
+    background: rgba(75, 85, 99, 0.8);
+    border-color: rgba(107, 114, 128, 0.5);
+    color: #f9fafb;
+  }
+
+  .auto-refresh-toggle:hover {
+    background: rgba(107, 114, 128, 0.9);
+    border-color: rgba(156, 163, 175, 0.5);
+  }
 }
