@@ -6,6 +6,7 @@ import MetricsOverview from './MetricsOverview'
 import AutomationToolsGrid from './AutomationToolsGrid'
 import PriorityActionsPanel from './PriorityActionsPanel'
 import DataRefreshSystem from './DataRefreshSystem'
+import GoogleAuthButton from './GoogleAuthButton'
 
 export default function UnifiedDashboard() {
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
