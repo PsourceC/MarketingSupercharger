@@ -1,5 +1,6 @@
-import TabbedDashboard from './components/TabbedDashboard'
+import UnifiedDashboard from './components/UnifiedDashboard'
 import HelpSystem from './components/HelpSystem'
+import './unified-dashboard.css'
 
 export default function Home() {
   return (
@@ -15,8 +16,8 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Tabbed Dashboard Interface */}
-      <TabbedDashboard />
+      {/* Unified Dashboard Interface */}
+      <UnifiedDashboard />
 
       {/* Help System */}
       <HelpSystem />
