@@ -1,98 +1,58 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-
-interface Metric {
-  id: string
-  title: string
-  value: string | number
-  change: string
-  changeType: 'positive' | 'negative' | 'neutral'
-  icon: string
-  target?: string
-  priority: 'critical' | 'high' | 'medium' | 'low'
-  explanation: string
-  whyItMatters: string
-}
-
-const metrics: Metric[] = [
-  {
-    id: 'avg-position',
-    title: 'Search Ranking',
-    value: 12.4,
-    change: 'Improved +2.3 spots',
-    changeType: 'positive',
-    icon: '🎯',
-    target: 'Goal: Top 8',
-    priority: 'high',
-    explanation: 'Where your business appears when people search for solar companies in Austin',
-    whyItMatters: 'Higher rankings (lower numbers) mean more customers find you first'
-  },
-  {
-    id: 'visibility-score',
-    title: 'How Often You Appear',
-    value: '34%',
-    change: 'Up +8% this month',
-    changeType: 'positive',
-    icon: '👁️',
-    target: 'Goal: 60%+',
-    priority: 'medium',
-    explanation: 'How often your business shows up when people search for solar services',
-    whyItMatters: 'More visibility = more potential customers see your business'
-  },
-  {
-    id: 'gmb-reviews',
-    title: 'Google Reviews',
-    value: 31,
-    change: 'Need 119 more to compete',
-    changeType: 'negative',
-    icon: '⭐',
-    target: 'Goal: 150+',
-    priority: 'critical',
-    explanation: 'Customer reviews on your Google Business listing',
-    whyItMatters: 'More reviews build trust and help you rank higher in searches'
-  },
-  {
-    id: 'citations',
-    title: 'Directory Listings',
-    value: '2/100',
-    change: 'Needs urgent attention',
-    changeType: 'negative',
-    icon: '🔗',
-    target: 'Goal: 50+',
-    priority: 'critical',
-    explanation: 'How many online directories list your business (Yelp, Yellow Pages, etc.)',
-    whyItMatters: 'More listings help Google trust your business and improve local search ranking'
-  },
-  {
-    id: 'backlinks',
-    title: 'Website References',
-    value: 389,
-    change: '+15 new this month',
-    changeType: 'positive',
-    icon: '🌐',
-    target: 'Doing great!',
-    priority: 'low',
-    explanation: 'How many other websites link to your website',
-    whyItMatters: 'Quality links show Google your website is trustworthy and authoritative'
-  },
-  {
-    id: 'gmb-photos',
-    title: 'Google Business Photos',
-    value: 94,
-    change: 'Add 56 more photos',
-    changeType: 'negative',
-    icon: '📸',
-    target: 'Goal: 150+',
-    priority: 'medium',
-    explanation: 'Photos of your work, team, and business on Google',
-    whyItMatters: 'More photos attract customers and improve your Google Business ranking'
-  }
-]
+import { fetchBusinessMetrics, type Metric } from '../services/api'
 
 export default function MetricsOverview() {
   const [selectedPeriod, setSelectedPeriod] = useState('30d')
   const [showTooltip, setShowTooltip] = useState<string | null>(null)
+  const [metrics, setMetrics] = useState<Metric[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+
+  // Fetch real metrics data
+  useEffect(() => {
+    const loadMetrics = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await fetchBusinessMetrics()
+        setMetrics(data)
+        setLastUpdated(new Date())
+      } catch (err) {
+        setError('Failed to load metrics data. Please check your API connection.')
+        console.error('Error loading metrics:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadMetrics()
+
+    // Auto-refresh every 5 minutes
+    const interval = setInterval(loadMetrics, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [selectedPeriod])
+
+  // Listen for global data refresh events
+  useEffect(() => {
+    const handleDataRefresh = () => {
+      const loadMetrics = async () => {
+        try {
+          const data = await fetchBusinessMetrics()
+          setMetrics(data)
+          setLastUpdated(new Date())
+        } catch (err) {
+          console.error('Error refreshing metrics:', err)
+        }
+      }
+      loadMetrics()
+    }
+
+    window.addEventListener('dataRefresh', handleDataRefresh)
+    return () => window.removeEventListener('dataRefresh', handleDataRefresh)
+  }, [])
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -111,20 +71,78 @@ export default function MetricsOverview() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="metrics-overview loading">
+        <div className="metrics-header">
+          <h3>📊 Key Performance Metrics</h3>
+          <div className="loading-indicator">
+            <span className="spinner">⏳</span>
+            <span>Loading real data...</span>
+          </div>
+        </div>
+        <div className="metrics-loading">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="metric-card loading-skeleton">
+              <div className="skeleton-line"></div>
+              <div className="skeleton-line short"></div>
+              <div className="skeleton-line"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="metrics-overview error">
+        <div className="metrics-header">
+          <h3>📊 Key Performance Metrics</h3>
+          <div className="error-indicator">
+            <span className="error-icon">⚠️</span>
+            <span>Data Connection Issue</span>
+          </div>
+        </div>
+        <div className="error-message">
+          <p>{error}</p>
+          <div className="error-actions">
+            <button
+              onClick={() => window.location.reload()}
+              className="retry-btn"
+            >
+              🔄 Retry Connection
+            </button>
+            <p className="setup-hint">
+              💡 <strong>Need to connect data sources?</strong>
+              <br />Set up Google Search Console, GMB API, and ranking tracking services.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="metrics-overview">
       <div className="metrics-header">
         <h3>📊 Key Performance Metrics</h3>
-        <div className="period-selector">
-          <select 
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="period-select"
-          >
-            <option value="7d">7 days</option>
-            <option value="30d">30 days</option>
-            <option value="90d">90 days</option>
-          </select>
+        <div className="header-controls">
+          <div className="period-selector">
+            <select
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="period-select"
+            >
+              <option value="7d">7 days</option>
+              <option value="30d">30 days</option>
+              <option value="90d">90 days</option>
+            </select>
+          </div>
+          <div className="data-status">
+            <span className="data-indicator live">🟢</span>
+            <span className="data-time">Updated: {lastUpdated.toLocaleTimeString()}</span>
+          </div>
         </div>
       </div>
 
@@ -178,55 +196,46 @@ export default function MetricsOverview() {
         ))}
       </div>
 
-      <div className="competitor-comparison">
-        <h4>🥊 vs Top Competitor (512 Solar)</h4>
-        <div className="comparison-bars">
-          <div className="comparison-item">
-            <span className="comp-label">Reviews</span>
-            <div className="comp-bar">
-              <div className="comp-progress yours" style={{ width: '6.8%' }}></div>
-              <div className="comp-progress theirs" style={{ width: '100%' }}></div>
+      {/* Dynamic Competitor Comparison - only show if we have metric data */}
+      {metrics.length > 0 && (
+        <div className="competitor-comparison">
+          <h4>🥊 Competitive Analysis</h4>
+          <div className="comparison-note">
+            <p>📊 Real-time competitive data from connected APIs</p>
+            <div className="comparison-actions">
+              <button className="comp-refresh-btn">🔄 Update Competitors</button>
+              <button className="comp-setup-btn">⚙️ Configure Tracking</button>
             </div>
-            <span className="comp-values">31 vs 453</span>
-          </div>
-          
-          <div className="comparison-item">
-            <span className="comp-label">Photos</span>
-            <div className="comp-bar">
-              <div className="comp-progress yours" style={{ width: '41.4%' }}></div>
-              <div className="comp-progress theirs" style={{ width: '100%' }}></div>
-            </div>
-            <span className="comp-values">94 vs 227</span>
-          </div>
-          
-          <div className="comparison-item">
-            <span className="comp-label">Backlinks</span>
-            <div className="comp-bar">
-              <div className="comp-progress yours" style={{ width: '100%' }}></div>
-              <div className="comp-progress theirs" style={{ width: '47.8%' }}></div>
-            </div>
-            <span className="comp-values">389 vs 186</span>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="trend-summary">
-        <h4>📈 30-Day Trend Summary</h4>
-        <div className="trend-items">
-          <div className="trend-item positive">
-            <span>📍 Keyword positions improved in 4/7 locations</span>
-          </div>
-          <div className="trend-item positive">
-            <span>📊 Search visibility up 8% month-over-month</span>
-          </div>
-          <div className="trend-item negative">
-            <span>📱 GMB posting frequency decreased</span>
-          </div>
-          <div className="trend-item neutral">
-            <span>⭐ Review growth slower than competitors</span>
+      {/* Dynamic Trend Summary */}
+      {metrics.length > 0 && (
+        <div className="trend-summary">
+          <h4>📈 Live Trend Analysis</h4>
+          <div className="trend-items">
+            {metrics.filter(m => m.changeType === 'positive').length > 0 && (
+              <div className="trend-item positive">
+                <span>📈 {metrics.filter(m => m.changeType === 'positive').length} metrics improving</span>
+              </div>
+            )}
+            {metrics.filter(m => m.changeType === 'negative').length > 0 && (
+              <div className="trend-item negative">
+                <span>📉 {metrics.filter(m => m.changeType === 'negative').length} metrics need attention</span>
+              </div>
+            )}
+            {metrics.filter(m => m.priority === 'critical').length > 0 && (
+              <div className="trend-item critical">
+                <span>🚨 {metrics.filter(m => m.priority === 'critical').length} critical issues require immediate action</span>
+              </div>
+            )}
+            <div className="trend-item neutral">
+              <span>🔄 Data refreshed from live APIs every 5 minutes</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
