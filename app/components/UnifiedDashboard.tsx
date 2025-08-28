@@ -238,6 +238,9 @@ export default function UnifiedDashboard() {
           </div>
         )}
       </div>
+
+      {/* Dev Profile - Floating Connection Manager */}
+      <DevProfile />
     </div>
   )
 }
