@@ -57,6 +57,19 @@ export default function TabbedDashboard() {
       case 'dashboard':
         return (
           <div className="tab-content dashboard-content">
+            <div className="performance-header">
+              <h2>🗺️ Geographic Performance Analysis</h2>
+              <p>See where customers discover your solar business across Austin metro area</p>
+            </div>
+            <div className="geo-section-enhanced">
+              <EnhancedGeoGrid />
+            </div>
+          </div>
+        )
+
+      case 'performance':
+        return (
+          <div className="tab-content performance-content">
             <div className="dashboard-overview">
               <div className="overview-grid">
                 <div className="metrics-section">
@@ -71,7 +84,7 @@ export default function TabbedDashboard() {
                         <h3>Top Opportunity</h3>
                       </div>
                       <p>Pflugerville is your strongest market at #3 ranking. Focus your efforts here to reach #1 position!</p>
-                      <button className="insight-action" onClick={() => setActiveTab('performance')}>View Performance</button>
+                      <button className="insight-action" onClick={() => setActiveTab('dashboard')}>View Dashboard</button>
                     </div>
                     <div className="insight-card warning">
                       <div className="insight-header">
@@ -116,19 +129,6 @@ export default function TabbedDashboard() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )
-
-      case 'performance':
-        return (
-          <div className="tab-content performance-content">
-            <div className="performance-header">
-              <h2>🗺️ Geographic Performance Analysis</h2>
-              <p>See where customers discover your solar business across Austin metro area</p>
-            </div>
-            <div className="geo-section-enhanced">
-              <EnhancedGeoGrid />
             </div>
           </div>
         )
