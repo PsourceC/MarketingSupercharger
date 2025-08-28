@@ -339,12 +339,14 @@ export default function DevProfilePage() {
                   <h4>Connect Critical Services</h4>
                   <p>Connect your database and Google services to unlock full optimization features</p>
                   <div className="action-buttons">
-                    <button
-                      className="action-btn database"
-                      onClick={() => alert('To connect Database:\n\n1. Click "Connect" in top menu\n2. Find "Neon" in MCP list\n3. Connect your Neon database\n4. Configure connection settings')}
-                    >
-                      Connect Database
-                    </button>
+                    {connections.find(c => c.id === 'database' && c.status !== 'connected') && (
+                      <button
+                        className="action-btn database"
+                        onClick={() => alert('To connect Database:\n\n1. Click "Connect" in top menu\n2. Find "Neon" in MCP list\n3. Connect your Neon database\n4. Configure connection settings')}
+                      >
+                        Connect Database
+                      </button>
+                    )}
                     {connections.find(c => c.id === 'google-oauth' && c.status !== 'connected') && (
                       <button
                         className="action-btn google-search-console"
