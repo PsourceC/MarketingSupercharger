@@ -1,16 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable experimental features for better Netlify compatibility
+  // Essential server-only package configuration
   experimental: {
-    serverComponentsExternalPackages: ['pg'],
+    serverComponentsExternalPackages: ['pg', 'googleapis'],
   },
   
-  // Transpile server-only packages
-  transpilePackages: [],
-  
-  // Configure webpack for better client/server separation
+  // Basic webpack config for server/client separation
   webpack: (config, { isServer }) => {
-    // Fix for server-only modules being bundled on client
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -20,67 +16,19 @@ const nextConfig = {
         crypto: false,
       }
     }
-
     return config
   },
   
-  // Image optimization
+  // Image optimization for Netlify
   images: {
-    unoptimized: true, // Required for static export compatibility
+    unoptimized: true,
   },
   
-  // Environment variables configuration
-  env: {
-    CUSTOM_KEY: process.env.CUSTOM_KEY,
-  },
-  
-  // Redirect configuration
-  async redirects() {
-    return [
-      // Add any custom redirects here if needed
-    ]
-  },
-  
-  // Headers configuration
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-        ],
-      },
-    ]
-  },
-  
-  // Output configuration for Netlify
-  output: 'standalone',
-  
-  // Optimize bundle size
+  // Build optimization
   swcMinify: true,
-  
-  // Disable x-powered-by header
   poweredByHeader: false,
-  
-  // Configure build behavior
   compress: true,
-  
-  // Handle trailing slashes
   trailingSlash: false,
-  
-  // Configure static optimization
-  staticPageGenerationTimeout: 1000,
 }
 
 module.exports = nextConfig
