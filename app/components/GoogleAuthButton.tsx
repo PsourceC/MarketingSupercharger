@@ -11,7 +11,7 @@ export default function GoogleAuthButton() {
   useEffect(() => {
     setMounted(true)
 
-    // Check for auth status from URL params only after mounting
+    // Check for auth status from URL params first
     const urlParams = new URLSearchParams(window.location.search)
     const authResult = urlParams.get('auth')
 
@@ -21,8 +21,25 @@ export default function GoogleAuthButton() {
       window.history.replaceState({}, document.title, window.location.pathname)
     } else if (authResult === 'error') {
       setAuthStatus('error')
+    } else {
+      // If no URL params, check if we're already authenticated
+      checkAuthStatus()
     }
   }, [])
+
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch('/api/auth/status')
+      const data = await response.json()
+
+      if (data.connected) {
+        setAuthStatus('connected')
+      }
+    } catch (error) {
+      console.error('Error checking auth status:', error)
+      // Keep status as 'idle' if we can't check
+    }
+  }
 
   const handleAuthenticate = async () => {
     setIsLoading(true)
