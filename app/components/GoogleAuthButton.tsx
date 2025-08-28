@@ -90,6 +90,20 @@ export default function GoogleAuthButton() {
     }
   }
 
+  // Don't render different content until mounted to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="google-auth-container">
+        <button className="google-auth-button" disabled>
+          🔗 Connect Google Search Console
+        </button>
+        <p className="auth-setup-message">
+          📋 <strong>OAuth may need setup.</strong> If this fails, add the redirect URI to Google Cloud Console or try sample data below.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="google-auth-container">
       <button
