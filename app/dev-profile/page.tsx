@@ -45,8 +45,8 @@ export default function DevProfilePage() {
     }
   }, [autoRefreshEnabled, isChecking])
 
-  const checkAllConnections = async () => {
-    setIsChecking(true)
+  const checkAllConnections = async (silent = false) => {
+    if (!silent) setIsChecking(true)
     
     const connectionChecks: ConnectionStatus[] = [
       // Core Infrastructure
