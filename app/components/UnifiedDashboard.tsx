@@ -7,6 +7,7 @@ import AutomationToolsGrid from './AutomationToolsGrid'
 import PriorityActionsPanel from './PriorityActionsPanel'
 import DataRefreshSystem from './DataRefreshSystem'
 import GoogleAuthButton from './GoogleAuthButton'
+import DataSourceIndicator from './DataSourceIndicator'
 import TempDataButton from './TempDataButton'
 import ManualDataImport from './ManualDataImport'
 
