@@ -124,6 +124,92 @@
   border: 1px solid rgba(239, 68, 68, 0.5);
 }
 
+/* Temporary Data Button Styles */
+.temp-data-container {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 2px dashed #fbbf24;
+  border-radius: 12px;
+  background: #fef3c7;
+  text-align: center;
+}
+
+.temp-data-button {
+  background: #f59e0b;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.temp-data-button:hover:not(:disabled) {
+  background: #d97706;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.temp-data-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  background: #9ca3af;
+}
+
+.temp-data-explanation {
+  margin: 0.75rem 0 0 0;
+  color: #92400e;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.temp-data-message {
+  margin: 0;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.temp-data-message.success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #10b981;
+}
+
+/* Integration with dashboard sections */
+.dashboard-top-section .temp-data-container {
+  background: rgba(254, 243, 199, 0.2);
+  border: 2px dashed rgba(251, 191, 36, 0.4);
+  backdrop-filter: blur(10px);
+}
+
+.dashboard-top-section .temp-data-button {
+  background: rgba(245, 158, 11, 0.8);
+  border: 1px solid rgba(245, 158, 11, 0.6);
+}
+
+.dashboard-top-section .temp-data-button:hover:not(:disabled) {
+  background: rgba(217, 119, 6, 0.9);
+}
+
+.dashboard-top-section .temp-data-explanation {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dashboard-top-section .temp-data-message.success {
+  background: rgba(16, 185, 129, 0.2);
+  color: white;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .google-auth-button {
@@ -131,8 +217,18 @@
     padding: 16px 24px;
     font-size: 1.1rem;
   }
-  
+
   .google-auth-container {
+    margin: 1rem -0.5rem;
+  }
+
+  .temp-data-button {
+    width: 100%;
+    padding: 16px 24px;
+    font-size: 1.1rem;
+  }
+
+  .temp-data-container {
     margin: 1rem -0.5rem;
   }
 }
