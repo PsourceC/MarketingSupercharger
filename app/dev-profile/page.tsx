@@ -39,17 +39,17 @@ export default function DevProfilePage() {
       {
         id: 'database',
         name: 'Database (Neon)',
-        description: 'PostgreSQL database for storing rankings, metrics, and business data',
+        description: 'PostgreSQL database for storing rankings, metrics, and business data. Click "Connect to Neon" in MCP Settings to get started.',
         status: 'disconnected',
         category: 'core',
         priority: 'critical',
-        setupUrl: '/connect/neon',
+        setupUrl: '#open-mcp-popover',
         docsUrl: 'https://neon.tech/docs'
       },
       {
         id: 'google-oauth',
         name: 'Google Search Console',
-        description: 'OAuth connection for real search ranking and performance data',
+        description: 'OAuth connection for real search ranking and performance data. Scroll down to the Google Auth section to connect.',
         status: 'disconnected',
         category: 'core',
         priority: 'critical',
