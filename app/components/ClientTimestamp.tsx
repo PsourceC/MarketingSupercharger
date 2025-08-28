@@ -18,19 +18,10 @@ export default function ClientTimestamp() {
     return () => clearInterval(interval)
   }, [])
 
-  if (!mounted) {
-    return (
-      <div className="last-updated">
-        <span className="update-indicator">🔄</span>
-        Updated: Loading... • Fresh data every 15 minutes
-      </div>
-    )
-  }
-
   return (
     <div className="last-updated">
       <span className="update-indicator">🔄</span>
-      Updated: {currentTime} • Fresh data every 15 minutes
+      Updated: {mounted ? currentTime : '--:--:--'} • Fresh data every 15 minutes
     </div>
   )
 }
