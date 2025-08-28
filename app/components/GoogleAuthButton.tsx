@@ -126,7 +126,7 @@ export default function GoogleAuthButton() {
   }
 
   return (
-    <div className="google-auth-container">
+    <div id="google-auth" className="google-auth-container">
       <button
         onClick={handleAuthenticate}
         disabled={isLoading || authStatus === 'connected'}
