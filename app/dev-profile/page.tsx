@@ -327,6 +327,63 @@ export default function DevProfilePage() {
         </div>
       </div>
 
+      {/* Quick Actions for Critical Setup */}
+      {overallStatus !== 'connected' && (
+        <div className="quick-actions-section">
+          <h3>🚀 Quick Setup Actions</h3>
+          <div className="quick-actions-grid">
+            {connections.filter(c => c.priority === 'critical' && c.status !== 'connected').length > 0 && (
+              <div className="quick-action-card critical">
+                <div className="action-icon">🚨</div>
+                <div className="action-content">
+                  <h4>Connect Critical Services</h4>
+                  <p>Database and Google Search Console are required for core functionality</p>
+                  <div className="action-buttons">
+                    <button
+                      className="action-btn database"
+                      onClick={() => alert('To connect Database:\n\n1. Click "Connect" in top menu\n2. Find "Neon" in MCP list\n3. Connect your Neon database\n4. Configure connection settings')}
+                    >
+                      Connect Database
+                    </button>
+                    <button
+                      className="action-btn google"
+                      onClick={() => {
+                        const googleSection = document.querySelector('#google-auth')
+                        if (googleSection) {
+                          window.location.href = '/#google-auth'
+                        } else {
+                          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+                        }
+                      }}
+                    >
+                      Connect Google
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="quick-action-card">
+              <div className="action-icon">📊</div>
+              <div className="action-content">
+                <h4>Load Sample Data</h4>
+                <p>Explore the dashboard with sample data while setting up connections</p>
+                <TempDataButton />
+              </div>
+            </div>
+
+            <div className="quick-action-card">
+              <div className="action-icon">📁</div>
+              <div className="action-content">
+                <h4>Import Data</h4>
+                <p>Upload CSV files from Google Search Console for instant analysis</p>
+                <ManualDataImport />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Data Import & Connection Section */}
       <div className="data-import-section">
         <h3>📊 Data Sources & Import</h3>
