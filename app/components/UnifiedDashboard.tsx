@@ -6,10 +6,6 @@ import MetricsOverview from './MetricsOverview'
 import AutomationToolsGrid from './AutomationToolsGrid'
 import PriorityActionsPanel from './PriorityActionsPanel'
 import DataRefreshSystem from './DataRefreshSystem'
-import GoogleAuthButton from './GoogleAuthButton'
-import DataSourceIndicator from './DataSourceIndicator'
-import TempDataButton from './TempDataButton'
-import ManualDataImport from './ManualDataImport'
 import DevProfile from './DevProfile'
 
 export default function UnifiedDashboard() {
@@ -55,10 +51,6 @@ export default function UnifiedDashboard() {
               <h2>📊 Key Performance Metrics</h2>
               <p>Your solar business performance at a glance</p>
             </div>
-            <GoogleAuthButton />
-            <DataSourceIndicator />
-            <TempDataButton />
-            <ManualDataImport />
             <MetricsOverview />
           </div>
 

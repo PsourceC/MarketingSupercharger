@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import GoogleAuthButton from '../components/GoogleAuthButton'
+import DataSourceIndicator from '../components/DataSourceIndicator'
+import TempDataButton from '../components/TempDataButton'
+import ManualDataImport from '../components/ManualDataImport'
 
 interface ConnectionStatus {
   id: string
@@ -274,6 +278,36 @@ export default function DevProfilePage() {
           <div className="stat">
             <span className="stat-number">{connections.filter(c => c.priority === 'critical').length}</span>
             <span className="stat-label">Critical</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Data Import & Connection Section */}
+      <div className="data-import-section">
+        <h3>📊 Data Sources & Import</h3>
+        <div className="import-grid">
+          <div className="import-card">
+            <h4>🔗 Google Search Console Connection</h4>
+            <p>Connect to Google Search Console to get real ranking and performance data</p>
+            <GoogleAuthButton />
+          </div>
+
+          <div className="import-card">
+            <h4>📈 Data Source Status</h4>
+            <p>See whether you're viewing live data or sample data</p>
+            <DataSourceIndicator />
+          </div>
+
+          <div className="import-card">
+            <h4>🔄 Load Sample Data (While Setting Up Google)</h4>
+            <p>Use sample data to explore the dashboard while setting up your Google connection</p>
+            <TempDataButton />
+          </div>
+
+          <div className="import-card">
+            <h4>📁 Import Search Console Data Manually</h4>
+            <p>Upload CSV files from Google Search Console for instant data analysis</p>
+            <ManualDataImport />
           </div>
         </div>
       </div>
