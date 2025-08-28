@@ -7,10 +7,9 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/google/callback'
 )
 
-// Scopes needed for Search Console API
+// Scopes needed for Search Console API (readonly only to avoid sensitive scope verification)
 const SCOPES = [
-  'https://www.googleapis.com/auth/webmasters.readonly',
-  'https://www.googleapis.com/auth/webmasters'
+  'https://www.googleapis.com/auth/webmasters.readonly'
 ]
 
 export function getAuthUrl() {
