@@ -20,13 +20,13 @@ const tabs: Tab[] = [
     id: 'dashboard',
     label: 'Dashboard',
     icon: '📊',
-    description: 'Key metrics and business overview'
+    description: 'Geographic performance and customer discovery'
   },
   {
     id: 'performance',
     label: 'Performance',
     icon: '🗺️',
-    description: 'Geographic performance and customer discovery'
+    description: 'Key metrics and business overview'
   },
   {
     id: 'marketing',
