@@ -51,6 +51,7 @@ export default function UnifiedDashboard() {
               <h2>📊 Key Performance Metrics</h2>
               <p>Your solar business performance at a glance</p>
             </div>
+            <GoogleAuthButton />
             <MetricsOverview />
           </div>
 
