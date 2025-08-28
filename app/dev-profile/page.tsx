@@ -148,41 +148,100 @@ export default function DevProfilePage() {
       }
     ]
 
-    // Check each connection status
+    // Check each connection status with retry logic
     for (const connection of connectionChecks) {
-      try {
-        switch (connection.id) {
-          case 'google-oauth':
-            const authResponse = await fetch('/api/auth/status')
-            const authData = await authResponse.json()
-            connection.status = authData.connected ? 'connected' : 'disconnected'
-            connection.lastChecked = new Date().toISOString()
-            break
-            
-          case 'database':
-            try {
-              const dbResponse = await fetch('/api/metrics')
-              connection.status = dbResponse.ok ? 'connected' : 'error'
+      let retryCount = 0
+      const maxRetries = 2
+
+      while (retryCount <= maxRetries) {
+        try {
+          switch (connection.id) {
+            case 'google-oauth':
+              const authResponse = await fetch('/api/auth/status', {
+                method: 'GET',
+                cache: 'no-cache',
+                headers: {
+                  'Cache-Control': 'no-cache',
+                }
+              })
+
+              if (!authResponse.ok) {
+                throw new Error(`HTTP ${authResponse.status}: ${authResponse.statusText}`)
+              }
+
+              const authData = await authResponse.json()
+              connection.status = authData.connected ? 'connected' : 'disconnected'
               connection.lastChecked = new Date().toISOString()
-            } catch {
-              connection.status = 'error'
-              connection.errorMessage = 'Database connection timeout'
-            }
-            break
-            
-          default:
-            // For now, mark others as disconnected - you can implement checks later
-            connection.status = 'disconnected'
+              connection.errorMessage = undefined // Clear any previous errors
+              break
+
+            case 'database':
+              const dbResponse = await fetch('/api/metrics', {
+                method: 'GET',
+                cache: 'no-cache',
+                headers: {
+                  'Cache-Control': 'no-cache',
+                },
+                signal: AbortSignal.timeout(10000) // 10 second timeout
+              })
+
+              if (dbResponse.ok) {
+                const dbData = await dbResponse.json()
+                // Additional check: ensure we get valid data structure
+                if (dbData && (Array.isArray(dbData) || typeof dbData === 'object')) {
+                  connection.status = 'connected'
+                  connection.errorMessage = undefined
+                } else {
+                  connection.status = 'error'
+                  connection.errorMessage = 'Database returned invalid data format'
+                }
+              } else {
+                connection.status = 'error'
+                connection.errorMessage = `Database API error: ${dbResponse.status} ${dbResponse.statusText}`
+              }
+              connection.lastChecked = new Date().toISOString()
+              break
+
+            case 'google-my-business':
+              // Future: Add actual GMB API check
+              // For now, simulate a check
+              connection.status = 'disconnected'
+              connection.lastChecked = new Date().toISOString()
+              break
+
+            case 'google-analytics':
+              // Future: Add actual GA API check
+              connection.status = 'disconnected'
+              connection.lastChecked = new Date().toISOString()
+              break
+
+            default:
+              // For other services, mark as disconnected
+              connection.status = 'disconnected'
+              connection.lastChecked = new Date().toISOString()
+          }
+          break // Success, exit retry loop
+
+        } catch (error) {
+          retryCount++
+          const errorMessage = error.name === 'AbortError' ? 'Connection timeout' :
+                              error.message || 'Unknown error'
+
+          if (retryCount > maxRetries) {
+            connection.status = 'error'
+            connection.errorMessage = `Check failed after ${maxRetries} retries: ${errorMessage}`
             connection.lastChecked = new Date().toISOString()
+          } else {
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount))
+          }
         }
-      } catch (error) {
-        connection.status = 'error'
-        connection.errorMessage = `Check failed: ${error.message}`
       }
     }
 
     setConnections(connectionChecks)
-    setIsChecking(false)
+    setLastHealthCheck(new Date().toISOString())
+    if (!silent) setIsChecking(false)
   }
 
   const getOverallStatus = () => {
