@@ -212,6 +212,12 @@ export default function DataRefreshSystem() {
     }
   }
 
+  // Safe time formatting that prevents hydration issues
+  const formatTime = (date: Date) => {
+    if (!mounted) return '--:--:--'
+    return date.toLocaleTimeString()
+  }
+
   const timeUntilNextRefresh = Math.max(0, Math.floor((refreshStatus.nextRefresh.getTime() - Date.now()) / 1000))
   const minutesUntilRefresh = Math.floor(timeUntilNextRefresh / 60)
   const secondsUntilRefresh = timeUntilNextRefresh % 60
