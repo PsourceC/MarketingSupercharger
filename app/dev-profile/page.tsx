@@ -25,11 +25,25 @@ export default function DevProfilePage() {
   const [mounted, setMounted] = useState(false)
   const [connections, setConnections] = useState<ConnectionStatus[]>([])
   const [isChecking, setIsChecking] = useState(false)
+  const [lastHealthCheck, setLastHealthCheck] = useState<string>('')
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
 
   useEffect(() => {
     setMounted(true)
     checkAllConnections()
-  }, [])
+
+    // Set up automatic health checks every 5 minutes if enabled
+    const healthCheckInterval = setInterval(() => {
+      if (autoRefreshEnabled && !isChecking) {
+        console.log('Running automatic health check...')
+        checkAllConnections(true) // Pass true for silent/background check
+      }
+    }, 5 * 60 * 1000) // 5 minutes
+
+    return () => {
+      clearInterval(healthCheckInterval)
+    }
+  }, [autoRefreshEnabled, isChecking])
 
   const checkAllConnections = async () => {
     setIsChecking(true)
