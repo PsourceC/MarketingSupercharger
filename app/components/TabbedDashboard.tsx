@@ -165,53 +165,59 @@ export default function TabbedDashboard() {
               <div className="detailed-analytics">
                 <div className="analytics-cards">
                   <div className="analytics-card">
-                    <h3>📊 Traffic Sources</h3>
+                    <h3>📊 Customer Discovery Sources</h3>
                     <div className="analytics-data">
                       <div className="data-item">
-                        <span className="data-label">Organic Search</span>
+                        <span className="data-label">Google Search</span>
                         <span className="data-value">67%</span>
+                        <span className="data-trend positive">+5%</span>
                       </div>
                       <div className="data-item">
-                        <span className="data-label">Direct</span>
+                        <span className="data-label">Direct Website</span>
                         <span className="data-value">18%</span>
+                        <span className="data-trend positive">+2%</span>
                       </div>
                       <div className="data-item">
-                        <span className="data-label">Referral</span>
+                        <span className="data-label">Referrals</span>
                         <span className="data-value">15%</span>
+                        <span className="data-trend neutral">0%</span>
                       </div>
                     </div>
                   </div>
                   <div className="analytics-card">
-                    <h3>📈 Performance Trends</h3>
+                    <h3>📈 Growth Trends</h3>
                     <div className="trend-data">
                       <div className="trend-item">
-                        <span className="trend-label">This Week</span>
-                        <span className="trend-value positive">+12% traffic</span>
+                        <span className="trend-label">Website Traffic</span>
+                        <span className="trend-value positive">+12% this week</span>
                       </div>
                       <div className="trend-item">
-                        <span className="trend-label">This Month</span>
-                        <span className="trend-value positive">+8% visibility</span>
+                        <span className="trend-label">Search Visibility</span>
+                        <span className="trend-value positive">+8% this month</span>
                       </div>
                       <div className="trend-item">
-                        <span className="trend-label">Quarter</span>
-                        <span className="trend-value positive">+23% leads</span>
+                        <span className="trend-label">Lead Generation</span>
+                        <span className="trend-value positive">+23% this quarter</span>
                       </div>
                     </div>
                   </div>
                   <div className="analytics-card">
-                    <h3>🎯 Conversion Metrics</h3>
+                    <h3>🎯 Business Impact</h3>
                     <div className="conversion-data">
                       <div className="conversion-item">
-                        <span className="conversion-label">Lead Conversion</span>
-                        <span className="conversion-value">3.2%</span>
-                      </div>
-                      <div className="conversion-item">
-                        <span className="conversion-label">Call-to-Action</span>
-                        <span className="conversion-value">5.7%</span>
-                      </div>
-                      <div className="conversion-item">
                         <span className="conversion-label">Quote Requests</span>
-                        <span className="conversion-value">12.4%</span>
+                        <span className="conversion-value">47</span>
+                        <span className="conversion-period">this month</span>
+                      </div>
+                      <div className="conversion-item">
+                        <span className="conversion-label">Phone Calls</span>
+                        <span className="conversion-value">156</span>
+                        <span className="conversion-period">this month</span>
+                      </div>
+                      <div className="conversion-item">
+                        <span className="conversion-label">Map Directions</span>
+                        <span className="conversion-value">89</span>
+                        <span className="conversion-period">this month</span>
                       </div>
                     </div>
                   </div>
