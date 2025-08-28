@@ -337,8 +337,23 @@ export default function DevProfilePage() {
           </div>
         </div>
         <div className="header-actions">
-          <button 
-            onClick={checkAllConnections}
+          <div className="health-check-info">
+            {lastHealthCheck && (
+              <span className="last-health-check">
+                Last check: {new Date(lastHealthCheck).toLocaleTimeString()}
+              </span>
+            )}
+            <label className="auto-refresh-toggle">
+              <input
+                type="checkbox"
+                checked={autoRefreshEnabled}
+                onChange={(e) => setAutoRefreshEnabled(e.target.checked)}
+              />
+              Auto-refresh (5min)
+            </label>
+          </div>
+          <button
+            onClick={() => checkAllConnections()}
             disabled={isChecking}
             className="refresh-btn"
           >
@@ -403,7 +418,7 @@ export default function DevProfilePage() {
       {/* Quick Actions for Critical Setup */}
       {overallStatus !== 'connected' && (
         <div className="quick-actions-section">
-          <h3>🚀 Quick Setup Actions</h3>
+          <h3>���� Quick Setup Actions</h3>
           <div className="quick-actions-grid">
             {connections.filter(c => c.priority === 'critical' && c.status !== 'connected').length > 0 && (
               <div className="quick-action-card critical">
