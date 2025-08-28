@@ -351,40 +351,54 @@ export default function DevProfilePage() {
                   <div key={connection.id} className={`connection-card ${connection.status} priority-${connection.priority}`}>
                     <div className="connection-header">
                       <div className="connection-title">
-                        <span className="status-indicator">{getStatusIcon(connection.status)}</span>
+                        <span
+                          className="status-indicator"
+                          title={`Status: ${getStatusText(connection.status)}`}
+                        >
+                          {getStatusIcon(connection.status)}
+                        </span>
                         <h4>{connection.name}</h4>
                         <span className={`priority-badge priority-${connection.priority}`}>
                           {connection.priority}
                         </span>
                       </div>
+                      <div className="status-text">
+                        <span className={`status-label status-${connection.status}`}>
+                          {getStatusText(connection.status)}
+                        </span>
+                      </div>
                     </div>
-                    
+
                     <p className="connection-description">{connection.description}</p>
-                    
-                    {connection.errorMessage && (
-                      <div className="error-message">
-                        ⚠️ {connection.errorMessage}
+
+                    {connection.status === 'connected' && (
+                      <div className="success-message">
+                        ✅ Connection is active and working properly
                       </div>
                     )}
-                    
+
+                    {connection.errorMessage && (
+                      <div className="error-message">
+                        {connection.errorMessage}
+                      </div>
+                    )}
+
                     <div className="connection-footer">
                       <div className="connection-actions">
-                        {connection.status !== 'connected' && (
-                          <button 
-                            className="setup-btn"
-                            onClick={() => {
-                              if (connection.setupUrl.startsWith('#')) {
-                                // Navigate back to dashboard and scroll to element
-                                window.location.href = `/${connection.setupUrl}`
-                              } else {
-                                window.open(connection.setupUrl, '_blank')
-                              }
-                            }}
-                          >
-                            Setup
-                          </button>
-                        )}
-                        <button 
+                        <button
+                          className={`setup-btn ${connection.priority === 'critical' ? 'critical' : ''}`}
+                          onClick={() => {
+                            if (connection.setupUrl.startsWith('#')) {
+                              // Navigate back to dashboard and scroll to element
+                              window.location.href = `/${connection.setupUrl}`
+                            } else {
+                              window.open(connection.setupUrl, '_blank')
+                            }
+                          }}
+                        >
+                          {getSetupActionText(connection)}
+                        </button>
+                        <button
                           className="docs-btn"
                           onClick={() => window.open(connection.docsUrl, '_blank')}
                           title="View Documentation"
@@ -392,7 +406,7 @@ export default function DevProfilePage() {
                           📚
                         </button>
                       </div>
-                      
+
                       {connection.lastChecked && (
                         <div className="last-checked">
                           Last checked: {new Date(connection.lastChecked).toLocaleTimeString()}
