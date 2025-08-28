@@ -302,7 +302,7 @@ export default function DevProfilePage() {
             )}
             {overallStatus === 'error' && (
               <div className="status-guidance error">
-                ❌ <strong>Issues Detected:</strong> Fix connection errors below
+                �� <strong>Issues Detected:</strong> Fix connection errors below
               </div>
             )}
           </div>
@@ -463,7 +463,7 @@ export default function DevProfilePage() {
               
               <div className="connection-grid">
                 {categoryConnections.map(connection => (
-                  <div key={connection.id} className={`connection-card ${connection.status} priority-${connection.priority}`}>
+                  <div key={connection.id} className={`connection-card ${connection.status} priority-${connection.priority}`} data-connection-id={connection.id}>
                     <div className="connection-header">
                       <div className="connection-title">
                         <span
@@ -521,7 +521,7 @@ export default function DevProfilePage() {
                           onClick={() => window.open(connection.docsUrl, '_blank')}
                           title="View Documentation"
                         >
-                          ��
+                          📚
                         </button>
                       </div>
 
@@ -558,7 +558,7 @@ export default function DevProfilePage() {
             </div>
           </div>
           <div className="tip">
-            <span className="tip-icon">����</span>
+            <span className="tip-icon">📊</span>
             <div className="tip-content">
               <h4>Live Monitoring</h4>
               <p>All connections are monitored in real-time for issues and performance</p>
