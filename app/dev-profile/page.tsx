@@ -6,6 +6,7 @@ import GoogleAuthButton from '../components/GoogleAuthButton'
 import DataSourceIndicator from '../components/DataSourceIndicator'
 import TempDataButton from '../components/TempDataButton'
 import ManualDataImport from '../components/ManualDataImport'
+import '../dev-profile-enhanced.css'
 
 interface ConnectionStatus {
   id: string
