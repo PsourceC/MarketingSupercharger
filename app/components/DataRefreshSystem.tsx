@@ -156,9 +156,25 @@ export default function DataRefreshSystem() {
   }
 
   // Safe time formatting that prevents hydration issues
-  const formatTime = (date: Date) => {
+  const formatTime = (date: Date | string) => {
     if (!mounted) return '--:--:--'
-    return date.toLocaleTimeString()
+
+    // Handle both Date objects and string timestamps
+    let dateObj: Date
+    if (typeof date === 'string') {
+      dateObj = new Date(date)
+    } else if (date instanceof Date) {
+      dateObj = date
+    } else {
+      return '--:--:--'
+    }
+
+    // Check if the date is valid
+    if (isNaN(dateObj.getTime())) {
+      return '--:--:--'
+    }
+
+    return dateObj.toLocaleTimeString()
   }
 
   const timeUntilNextRefresh = Math.max(0, Math.floor((refreshStatus.nextRefresh.getTime() - Date.now()) / 1000))
