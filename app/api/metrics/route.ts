@@ -1,9 +1,55 @@
 import { NextResponse } from 'next/server'
 import { setCredentials, getSearchConsoleData, calculateMetricsFromSearchConsole } from '../../lib/google-auth'
+import { getCurrentMetrics } from '../../lib/database'
 
 export async function GET() {
   try {
-    // Check for temporary sample data first
+    // First try to get real data from Neon database
+    const dbMetrics = await getCurrentMetrics()
+
+    if (dbMetrics && (dbMetrics.total_clicks > 0 || dbMetrics.avg_position > 0)) {
+      const metrics = [
+        {
+          id: 'search-ranking',
+          title: 'Average Search Position',
+          value: dbMetrics.avg_position ? parseFloat(dbMetrics.avg_position).toFixed(1) : '0',
+          change: 'Live data from Neon database',
+          changeType: dbMetrics.avg_position <= 10 ? 'positive' : 'neutral',
+          icon: '🎯',
+          target: '< 5.0 avg position',
+          priority: dbMetrics.avg_position > 15 ? 'critical' : 'medium',
+          explanation: 'Real average search position for Astrawatt.com keywords from database',
+          whyItMatters: 'Higher rankings (lower numbers) lead to more customer visibility and clicks'
+        },
+        {
+          id: 'search-clicks',
+          title: 'Search Clicks',
+          value: dbMetrics.total_clicks ? dbMetrics.total_clicks.toString() : '0',
+          change: `${dbMetrics.total_impressions || 0} impressions`,
+          changeType: dbMetrics.total_clicks > 0 ? 'positive' : 'neutral',
+          icon: '👆',
+          target: 'Increase click rate',
+          priority: 'medium',
+          explanation: 'Total clicks from Google Search for Astrawatt.com',
+          whyItMatters: 'Direct measure of how many customers find your business through search'
+        },
+        {
+          id: 'search-ctr',
+          title: 'Click-Through Rate',
+          value: `${dbMetrics.avg_ctr ? parseFloat(dbMetrics.avg_ctr).toFixed(2) : '0'}%`,
+          change: dbMetrics.avg_ctr > 5 ? 'Good performance' : 'Room for improvement',
+          changeType: dbMetrics.avg_ctr > 5 ? 'positive' : 'neutral',
+          icon: '📊',
+          target: '> 5% CTR',
+          priority: dbMetrics.avg_ctr < 3 ? 'high' : 'medium',
+          explanation: 'Click-through rate for Astrawatt.com listings from database',
+          whyItMatters: 'Higher CTR indicates your titles and descriptions attract customers'
+        }
+      ]
+      return NextResponse.json(metrics)
+    }
+
+    // Check for temporary sample data as fallback
     const tempData = process.env.TEMP_ASTRAWATT_DATA
     if (tempData) {
       try {
@@ -13,7 +59,7 @@ export async function GET() {
             id: 'search-ranking',
             title: 'Average Search Position',
             value: sampleData.avgPosition.toString(),
-            change: 'Sample data - Set up Google OAuth for real data',
+            change: 'Sample data - Database connected, add real data',
             changeType: sampleData.avgPosition <= 10 ? 'positive' : 'neutral',
             icon: '🎯',
             target: '< 5.0 avg position',
