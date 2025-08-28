@@ -235,7 +235,7 @@ export default function DataRefreshSystem() {
           </div>
           <div className="refresh-timing">
             <span className="last-refresh">
-              Last updated: {refreshStatus.lastRefresh.toLocaleTimeString()}
+              Last updated: {formatTime(refreshStatus.lastRefresh)}
             </span>
             {refreshStatus.autoRefreshEnabled && !refreshStatus.isRefreshing && (
               <span className="next-refresh">
@@ -281,7 +281,7 @@ export default function DataRefreshSystem() {
                   <span className="update-type-icon">{getUpdateIcon(update.type)}</span>
                   <span className="update-impact-icon">{getImpactIcon(update.impact)}</span>
                   <span className="update-time">
-                    {update.timestamp.toLocaleTimeString()}
+                    {formatTime(update.timestamp)}
                   </span>
                 </div>
                 <div className="update-message">{update.message}</div>
