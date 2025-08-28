@@ -110,7 +110,7 @@ export default function GoogleAuthButton() {
   // Don't render different content until mounted to prevent hydration mismatch
   if (!mounted) {
     return (
-      <div className="google-auth-container">
+      <div id="google-auth" className="google-auth-container">
         <button
           onClick={() => {}} // No-op until mounted
           disabled={false} // Match initial state
