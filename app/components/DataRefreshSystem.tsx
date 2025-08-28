@@ -24,6 +24,7 @@ interface RefreshStatus {
 }
 
 export default function DataRefreshSystem() {
+  const [mounted, setMounted] = useState(false)
   const [refreshStatus, setRefreshStatus] = useState<RefreshStatus>({
     isRefreshing: false,
     lastRefresh: new Date(),
@@ -34,6 +35,11 @@ export default function DataRefreshSystem() {
 
   const [recentUpdates, setRecentUpdates] = useState<DataUpdate[]>([])
   const [refreshCount, setRefreshCount] = useState(0)
+
+  // Track when component has mounted to prevent hydration issues
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Simulate realistic data updates
   const generateRandomUpdate = useCallback((): DataUpdate => {
