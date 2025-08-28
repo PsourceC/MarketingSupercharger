@@ -1,10 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function GoogleAuthButton() {
   const [isLoading, setIsLoading] = useState(false)
   const [authStatus, setAuthStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle')
+  const [mounted, setMounted] = useState(false)
+
+  // Handle client-side mounting and URL parameter checking
+  useEffect(() => {
+    setMounted(true)
+
+    // Check for auth status from URL params only after mounting
+    const urlParams = new URLSearchParams(window.location.search)
+    const authResult = urlParams.get('auth')
+
+    if (authResult === 'success') {
+      setAuthStatus('connected')
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+    } else if (authResult === 'error') {
+      setAuthStatus('error')
+    }
+  }, [])
 
   const handleAuthenticate = async () => {
     setIsLoading(true)
@@ -42,20 +60,6 @@ export default function GoogleAuthButton() {
       console.error('Error initiating Google auth:', error)
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  // Check for auth status from URL params
-  if (typeof window !== 'undefined') {
-    const urlParams = new URLSearchParams(window.location.search)
-    const authResult = urlParams.get('auth')
-    
-    if (authResult === 'success' && authStatus !== 'connected') {
-      setAuthStatus('connected')
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname)
-    } else if (authResult === 'error' && authStatus !== 'error') {
-      setAuthStatus('error')
     }
   }
 
