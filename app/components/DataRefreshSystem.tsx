@@ -199,7 +199,9 @@ export default function DataRefreshSystem() {
     return dateObj.toLocaleTimeString()
   }
 
-  const timeUntilNextRefresh = Math.max(0, Math.floor((refreshStatus.nextRefresh.getTime() - Date.now()) / 1000))
+  const timeUntilNextRefresh = mounted
+    ? Math.max(0, Math.floor((refreshStatus.nextRefresh.getTime() - Date.now()) / 1000))
+    : 0
   const minutesUntilRefresh = Math.floor(timeUntilNextRefresh / 60)
   const secondsUntilRefresh = timeUntilNextRefresh % 60
 
