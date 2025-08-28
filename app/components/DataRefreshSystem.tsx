@@ -35,9 +35,15 @@ export default function DataRefreshSystem() {
     try {
       const updates = await fetchRecentUpdates()
       if (updates && updates.length > 0) {
+        // Ensure all timestamps are Date objects
+        const processedUpdates = updates.map(update => ({
+          ...update,
+          timestamp: update.timestamp instanceof Date ? update.timestamp : new Date(update.timestamp)
+        }))
+
         setRecentUpdates(prev => {
           // Merge new updates with existing ones, avoiding duplicates
-          const newUpdates = updates.filter(update =>
+          const newUpdates = processedUpdates.filter(update =>
             !prev.some(existing => existing.id === update.id)
           )
           return [...newUpdates, ...prev].slice(0, 20) // Keep last 20 updates
