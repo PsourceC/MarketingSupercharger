@@ -787,8 +787,10 @@
   }
 
   .action-description {
-    font-size: 0.7rem;
-    padding-left: 1rem;
+    font-size: 0.75rem;
+    padding-left: 0.25rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
   }
 
   .action-buttons {
