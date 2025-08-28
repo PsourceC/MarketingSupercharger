@@ -63,30 +63,31 @@ export default function TabbedDashboard() {
                   <MetricsOverview />
                 </div>
                 <div className="quick-insights">
+                  <h2>💡 Quick Insights & Recommendations</h2>
                   <div className="insight-cards">
                     <div className="insight-card highlight">
                       <div className="insight-header">
                         <span className="insight-icon">🎯</span>
                         <h3>Top Opportunity</h3>
                       </div>
-                      <p>Pflugerville is your strongest market at #3 ranking. Push for #1!</p>
-                      <button className="insight-action">Focus Here</button>
+                      <p>Pflugerville is your strongest market at #3 ranking. Focus your efforts here to reach #1 position!</p>
+                      <button className="insight-action" onClick={() => setActiveTab('performance')}>View Performance</button>
                     </div>
                     <div className="insight-card warning">
                       <div className="insight-header">
                         <span className="insight-icon">⚠️</span>
                         <h3>Needs Attention</h3>
                       </div>
-                      <p>Central Austin at #12 - your biggest potential market needs work.</p>
-                      <button className="insight-action">Fix Now</button>
+                      <p>Central Austin ranks #12 but has 12,400 monthly searches - your biggest potential market!</p>
+                      <button className="insight-action" onClick={() => setActiveTab('actions')}>View Actions</button>
                     </div>
                     <div className="insight-card success">
                       <div className="insight-header">
                         <span className="insight-icon">📈</span>
-                        <h3>Growing Fast</h3>
+                        <h3>Recent Success</h3>
                       </div>
-                      <p>Cedar Park jumped +3 positions this month!</p>
-                      <button className="insight-action">Analyze</button>
+                      <p>Cedar Park jumped +3 positions this month! Replicate these strategies elsewhere.</p>
+                      <button className="insight-action" onClick={() => setActiveTab('marketing')}>View Tools</button>
                     </div>
                   </div>
                 </div>
