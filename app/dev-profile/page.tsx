@@ -388,7 +388,10 @@ export default function DevProfilePage() {
                         <button
                           className={`setup-btn ${connection.priority === 'critical' ? 'critical' : ''}`}
                           onClick={() => {
-                            if (connection.setupUrl.startsWith('#')) {
+                            if (connection.setupUrl === '#open-mcp-popover') {
+                              // For MCP connections, show specific instructions
+                              alert(`To setup ${connection.name}:\n\n1. Click the "Connect" button in the top menu\n2. Find and connect to the relevant MCP service\n3. Follow the setup instructions\n\nFor database: Connect to Neon\nFor other services: Look for the specific service in the MCP list`)
+                            } else if (connection.setupUrl.startsWith('#')) {
                               // Navigate back to dashboard and scroll to element
                               window.location.href = `/${connection.setupUrl}`
                             } else {
