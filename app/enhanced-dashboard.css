@@ -1377,7 +1377,13 @@
 /* Responsive Design */
 @media (max-width: 1400px) {
   .dashboard-grid {
-    grid-template-columns: 280px 1fr 250px;
+    grid-template-columns: 300px 1fr 250px;
+  }
+}
+
+@media (max-width: 1300px) {
+  .dashboard-grid {
+    grid-template-columns: 280px 1fr 240px;
   }
 }
 
