@@ -3,6 +3,7 @@ import HelpSystem from './components/HelpSystem'
 import ClientTimestamp from './components/ClientTimestamp'
 import './unified-dashboard.css'
 import './google-auth.css'
+import './manual-import.css'
 
 export default function Home() {
   return (
