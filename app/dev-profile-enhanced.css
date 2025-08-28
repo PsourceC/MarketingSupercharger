@@ -763,27 +763,104 @@
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
+/* Health Check UI Styles */
+.health-check-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+  margin-right: 1rem;
+}
+
+.last-health-check {
+  font-size: 0.8rem;
+  color: #6b7280;
+  background: rgba(249, 250, 251, 0.8);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.auto-refresh-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #374151;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.5rem 0.75rem;
+  background: rgba(249, 250, 251, 0.8);
+  border-radius: 8px;
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  transition: all 0.3s ease;
+}
+
+.auto-refresh-toggle:hover {
+  background: rgba(243, 244, 246, 0.9);
+  border-color: #cbd5e0;
+}
+
+.auto-refresh-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #10b981;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.refresh-btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  min-width: 140px;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
   .dev-profile-page {
     padding: 1rem;
   }
-  
+
   .status-circle {
     width: 60px;
     height: 60px;
     font-size: 24px;
   }
-  
+
   .connection-card {
     padding: 1.5rem;
   }
-  
+
   .setup-btn {
     padding: 0.6rem 1.2rem;
     font-size: 0.85rem;
   }
-  
+
   .docs-btn {
     width: 40px;
     height: 40px;
