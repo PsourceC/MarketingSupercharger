@@ -141,11 +141,15 @@
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  padding: 1rem;
+  padding: 1.25rem;
   transition: all 0.3s ease;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
   position: relative;
   overflow: hidden;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
 }
 
 .action-item::before {
