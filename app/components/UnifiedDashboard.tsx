@@ -55,6 +55,7 @@ export default function UnifiedDashboard() {
             </div>
             <GoogleAuthButton />
             <TempDataButton />
+            <ManualDataImport />
             <MetricsOverview />
           </div>
 
@@ -120,7 +121,7 @@ export default function UnifiedDashboard() {
         <div className="dual-section-left">
           <div className="section-header expandable" onClick={() => toggleSection('actions')}>
             <div className="header-content">
-              <h2>���� Priority Actions</h2>
+              <h2>🎯 Priority Actions</h2>
               <p>Data-driven tasks to improve rankings</p>
             </div>
             <button className="collapse-toggle">
