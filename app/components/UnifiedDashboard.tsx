@@ -8,6 +8,7 @@ import PriorityActionsPanel from './PriorityActionsPanel'
 import DataRefreshSystem from './DataRefreshSystem'
 import GoogleAuthButton from './GoogleAuthButton'
 import TempDataButton from './TempDataButton'
+import ManualDataImport from './ManualDataImport'
 
 export default function UnifiedDashboard() {
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
@@ -119,7 +120,7 @@ export default function UnifiedDashboard() {
         <div className="dual-section-left">
           <div className="section-header expandable" onClick={() => toggleSection('actions')}>
             <div className="header-content">
-              <h2>🎯 Priority Actions</h2>
+              <h2>���� Priority Actions</h2>
               <p>Data-driven tasks to improve rankings</p>
             </div>
             <button className="collapse-toggle">
