@@ -1401,6 +1401,13 @@
   padding: 0 2rem;
 }
 
+@media (max-width: 768px) {
+  .priority-actions-section {
+    padding: 0 1rem;
+    margin: 1rem auto;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 1600px) {
   .dashboard-grid {
