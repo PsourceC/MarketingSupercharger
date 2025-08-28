@@ -1394,6 +1394,13 @@
   margin: 0;
 }
 
+/* Priority Actions Full Width Section */
+.priority-actions-section {
+  max-width: 1800px;
+  margin: 2rem auto;
+  padding: 0 2rem;
+}
+
 /* Responsive Design */
 @media (max-width: 1600px) {
   .dashboard-grid {
