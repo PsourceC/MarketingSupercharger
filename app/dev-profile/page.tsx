@@ -283,6 +283,28 @@ export default function DevProfilePage() {
           <div className="status-info">
             <h2>Overall Status: {overallStatus.charAt(0).toUpperCase() + overallStatus.slice(1)}</h2>
             <p>{connectedCount} of {totalCount} connections active</p>
+
+            {/* Action Guidance */}
+            {overallStatus === 'disconnected' && (
+              <div className="status-guidance urgent">
+                🚨 <strong>Action Required:</strong> Connect critical services to get started
+              </div>
+            )}
+            {overallStatus === 'partial' && (
+              <div className="status-guidance warning">
+                ⚠️ <strong>Setup In Progress:</strong> Connect remaining services for full functionality
+              </div>
+            )}
+            {overallStatus === 'connected' && (
+              <div className="status-guidance success">
+                ✅ <strong>All Set:</strong> All connections are working properly
+              </div>
+            )}
+            {overallStatus === 'error' && (
+              <div className="status-guidance error">
+                ❌ <strong>Issues Detected:</strong> Fix connection errors below
+              </div>
+            )}
           </div>
         </div>
         <div className="status-stats">
@@ -297,6 +319,10 @@ export default function DevProfilePage() {
           <div className="stat">
             <span className="stat-number">{connections.filter(c => c.priority === 'critical').length}</span>
             <span className="stat-label">Critical</span>
+          </div>
+          <div className="stat">
+            <span className="stat-number">{connections.filter(c => c.status === 'disconnected' && c.priority === 'critical').length}</span>
+            <span className="stat-label">Need Setup</span>
           </div>
         </div>
       </div>
