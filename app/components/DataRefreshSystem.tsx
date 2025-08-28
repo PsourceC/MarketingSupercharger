@@ -24,6 +24,7 @@ interface RefreshStatus {
 }
 
 export default function DataRefreshSystem() {
+  const [mounted, setMounted] = useState(false)
   const [refreshStatus, setRefreshStatus] = useState<RefreshStatus>({
     isRefreshing: false,
     lastRefresh: new Date(),
@@ -34,6 +35,11 @@ export default function DataRefreshSystem() {
 
   const [recentUpdates, setRecentUpdates] = useState<DataUpdate[]>([])
   const [refreshCount, setRefreshCount] = useState(0)
+
+  // Track when component has mounted to prevent hydration issues
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Simulate realistic data updates
   const generateRandomUpdate = useCallback((): DataUpdate => {
@@ -206,6 +212,12 @@ export default function DataRefreshSystem() {
     }
   }
 
+  // Safe time formatting that prevents hydration issues
+  const formatTime = (date: Date) => {
+    if (!mounted) return '--:--:--'
+    return date.toLocaleTimeString()
+  }
+
   const timeUntilNextRefresh = Math.max(0, Math.floor((refreshStatus.nextRefresh.getTime() - Date.now()) / 1000))
   const minutesUntilRefresh = Math.floor(timeUntilNextRefresh / 60)
   const secondsUntilRefresh = timeUntilNextRefresh % 60
@@ -223,7 +235,7 @@ export default function DataRefreshSystem() {
           </div>
           <div className="refresh-timing">
             <span className="last-refresh">
-              Last updated: {refreshStatus.lastRefresh.toLocaleTimeString()}
+              Last updated: {formatTime(refreshStatus.lastRefresh)}
             </span>
             {refreshStatus.autoRefreshEnabled && !refreshStatus.isRefreshing && (
               <span className="next-refresh">
@@ -269,7 +281,7 @@ export default function DataRefreshSystem() {
                   <span className="update-type-icon">{getUpdateIcon(update.type)}</span>
                   <span className="update-impact-icon">{getImpactIcon(update.impact)}</span>
                   <span className="update-time">
-                    {update.timestamp.toLocaleTimeString()}
+                    {formatTime(update.timestamp)}
                   </span>
                 </div>
                 <div className="update-message">{update.message}</div>
