@@ -194,6 +194,25 @@
   box-sizing: border-box;
 }
 
+/* Special handling for critical actions to prevent squishing */
+.action-item.critical {
+  min-height: 120px;
+  padding: 1.25rem;
+}
+
+.action-item.critical .action-description {
+  margin-bottom: 1.25rem;
+  line-height: 1.7;
+  font-size: 0.9rem;
+  padding-left: 0;
+}
+
+.action-item.critical .progress-section {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  min-height: 60px;
+}
+
 .action-item .detail-value {
   white-space: normal !important;
   word-break: break-word;
