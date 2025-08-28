@@ -16,8 +16,8 @@ export default function DataRefreshSystem() {
   const [mounted, setMounted] = useState(false)
   const [refreshStatus, setRefreshStatus] = useState<RefreshStatus>({
     isRefreshing: false,
-    lastRefresh: new Date(),
-    nextRefresh: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+    lastRefresh: new Date(0), // Use epoch time to prevent hydration mismatch
+    nextRefresh: new Date(0), // Use epoch time to prevent hydration mismatch
     autoRefreshEnabled: true,
     refreshInterval: 15
   })
