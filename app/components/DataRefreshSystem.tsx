@@ -28,6 +28,16 @@ export default function DataRefreshSystem() {
   // Track when component has mounted to prevent hydration issues
   useEffect(() => {
     setMounted(true)
+
+    // Initialize actual dates only after mounting
+    const now = new Date()
+    const nextRefresh = new Date(now.getTime() + 15 * 60 * 1000) // 15 minutes
+
+    setRefreshStatus(prev => ({
+      ...prev,
+      lastRefresh: now,
+      nextRefresh
+    }))
   }, [])
 
   // Load real updates from API
