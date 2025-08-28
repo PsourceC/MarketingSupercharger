@@ -441,7 +441,7 @@ export default function EnhancedGeoGrid() {
 
         <div className="map-container-enhanced">
           <MapContainer
-            center={[30.4518, -97.7431]}
+            center={locations.length > 0 ? [locations[0].lat, locations[0].lng] : [30.4518, -97.7431]}
             zoom={10}
             style={{ height: '500px', width: '100%' }}
             className="austin-map-leaflet"

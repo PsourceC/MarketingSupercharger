@@ -3,13 +3,15 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #333;
+  padding-bottom: 2rem;
 }
 
 .main-header {
   background: rgba(255, 255, 255, 0.95);
-  padding: 2rem;
+  padding: 2.5rem 2rem;
   margin-bottom: 2rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 20px 20px;
 }
 
 .header-content {
@@ -53,9 +55,9 @@
 /* Main Dashboard Grid */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 320px 1fr 280px;
+  grid-template-columns: 380px 1fr 300px;
   gap: 2rem;
-  max-width: 1600px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 0 2rem 2rem;
   min-height: calc(100vh - 200px);
@@ -66,6 +68,26 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+
+/* Text Protection for Priority Actions Panel */
+.priority-actions-panel * {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  max-width: 100%;
+}
+
+.priority-actions-panel .action-header {
+  overflow: visible !important;
+}
+
+.priority-actions-panel .action-title-section {
+  min-width: 0 !important;
+  flex: 1 !important;
+}
+
+.priority-actions-panel .action-meta {
+  flex-shrink: 0 !important;
 }
 
 .main-content {
@@ -895,12 +917,16 @@
   font-size: 0.8rem;
 }
 
-/* Priority Actions Panel Styles */
+/* Priority Actions Panel Styles - Base (overridden by priority-actions-improved.css) */
 .priority-actions-panel {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.75rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  /* Ensure text is never cut off */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .panel-header {
@@ -1015,8 +1041,12 @@
 
 .action-header h5 {
   margin: 0;
-  color: #333;
-  font-size: 0.9rem;
+  color: #111827;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  word-wrap: break-word;
+  min-width: 0; /* Allows text to wrap properly */
 }
 
 .action-meta {
@@ -1049,10 +1079,13 @@
 }
 
 .action-description {
-  color: #6b7280;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  margin-bottom: 0.75rem;
+  color: #374151;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  font-weight: 400;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .progress-section {
@@ -1363,10 +1396,36 @@
   margin: 0;
 }
 
+/* Priority Actions Full Width Section */
+.priority-actions-section {
+  max-width: 1800px;
+  margin: 2rem auto;
+  padding: 0 2rem;
+}
+
+@media (max-width: 768px) {
+  .priority-actions-section {
+    padding: 0 1rem;
+    margin: 1rem auto;
+  }
+}
+
 /* Responsive Design */
+@media (max-width: 1600px) {
+  .dashboard-grid {
+    grid-template-columns: 360px 1fr 280px;
+  }
+}
+
 @media (max-width: 1400px) {
   .dashboard-grid {
-    grid-template-columns: 280px 1fr 250px;
+    grid-template-columns: 340px 1fr 260px;
+  }
+}
+
+@media (max-width: 1300px) {
+  .dashboard-grid {
+    grid-template-columns: 320px 1fr 250px;
   }
 }
 
