@@ -9,14 +9,30 @@ export default function GoogleAuthButton() {
   const handleAuthenticate = async () => {
     setIsLoading(true)
     setAuthStatus('connecting')
-    
+
     try {
       const response = await fetch('/api/auth/google')
       const data = await response.json()
-      
+
       if (data.authUrl) {
-        // Redirect to Google OAuth
-        window.location.href = data.authUrl
+        // Open in new tab to avoid iframe blocking issues
+        const newTab = window.open(data.authUrl, '_blank', 'noopener,noreferrer')
+
+        if (!newTab) {
+          // Fallback to same tab if popup blocked
+          window.location.href = data.authUrl
+        } else {
+          // Monitor for when tab closes or user returns
+          const checkClosed = setInterval(() => {
+            if (newTab.closed) {
+              clearInterval(checkClosed)
+              // Check for auth success on page
+              setTimeout(() => {
+                window.location.reload()
+              }, 1000)
+            }
+          }, 1000)
+        }
       } else {
         setAuthStatus('error')
         console.error('No auth URL received')
