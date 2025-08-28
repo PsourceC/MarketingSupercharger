@@ -94,7 +94,11 @@ export default function GoogleAuthButton() {
   if (!mounted) {
     return (
       <div className="google-auth-container">
-        <button className="google-auth-button" disabled>
+        <button
+          onClick={() => {}} // No-op until mounted
+          disabled={false} // Match initial state
+          className="google-auth-button" // Match initial getButtonClass()
+        >
           🔗 Connect Google Search Console
         </button>
         <p className="auth-setup-message">
