@@ -10,6 +10,7 @@ import GoogleAuthButton from './GoogleAuthButton'
 import DataSourceIndicator from './DataSourceIndicator'
 import TempDataButton from './TempDataButton'
 import ManualDataImport from './ManualDataImport'
+import DevProfile from './DevProfile'
 
 export default function UnifiedDashboard() {
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
