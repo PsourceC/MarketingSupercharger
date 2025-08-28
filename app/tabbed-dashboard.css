@@ -412,6 +412,36 @@
   color: #059669;
 }
 
+.data-trend {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.data-trend.positive {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.data-trend.negative {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.data-trend.neutral {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.conversion-period {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-style: italic;
+}
+
 /* Responsive Design */
 @media (max-width: 1400px) {
   .dashboard-content .overview-grid {
