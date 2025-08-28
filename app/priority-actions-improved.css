@@ -7,8 +7,12 @@
   box-shadow: 0 6px 30px rgba(0, 0, 0, 0.08);
   max-height: 85vh;
   overflow-y: auto;
+  overflow-x: hidden;
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  width: 100%;
 }
 
 .panel-header {
