@@ -47,6 +47,12 @@ export default function DevProfilePage() {
   }, [autoRefreshEnabled, isChecking])
 
   const checkAllConnections = async (silent = false) => {
+    // Skip checks if webpack is hot reloading (in development)
+    if (isDevelopment && (window as any).__webpack_require__?.hmrM) {
+      console.log('Skipping health check - webpack HMR in progress')
+      return
+    }
+
     if (!silent) setIsChecking(true)
     
     const connectionChecks: ConnectionStatus[] = [
