@@ -8,9 +8,9 @@ export async function GET(request: NextRequest) {
   try {
     // Get business configuration
     const configResult = await query(`
-      SELECT website_url, target_keywords, primary_location 
-      FROM solar_business_info 
-      ORDER BY created_at DESC 
+      SELECT website, target_keywords, service_areas
+      FROM solar_business_info
+      ORDER BY created_at DESC
       LIMIT 1
     `)
 
@@ -21,9 +21,9 @@ export async function GET(request: NextRequest) {
     }
 
     const config = configResult.rows[0]
-    const keywords = config.target_keywords ? JSON.parse(config.target_keywords) : ['solar installation', 'solar panels']
-    const location = config.primary_location || 'United States'
-    const yourDomain = config.website_url ? new URL(config.website_url).hostname.replace('www.', '') : 'your-domain.com'
+    const keywords = config.target_keywords ? (Array.isArray(config.target_keywords) ? config.target_keywords : ['solar installation', 'solar panels']) : ['solar installation', 'solar panels']
+    const location = config.service_areas?.[0] || 'United States'
+    const yourDomain = config.website ? new URL(config.website).hostname.replace('www.', '') : 'your-domain.com'
 
     const competitorService = new CompetitorTrackingService(keywords, location, yourDomain)
 
