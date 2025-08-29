@@ -213,8 +213,11 @@ export default function DevProfilePage() {
                   }
                 }
                 connection.lastChecked = new Date().toISOString()
-              } catch (fetchError) {
-                throw fetchError
+              } catch (fetchError: any) {
+                // Handle locally to avoid bubbling AbortError/TypeError logs
+                connection.status = 'error'
+                connection.errorMessage = `Auth check failed: ${fetchError?.message || 'unknown error'}`
+                connection.lastChecked = new Date().toISOString()
               }
             }
               break
@@ -271,9 +274,9 @@ export default function DevProfilePage() {
           let shouldRetry = true
 
           // Handle different types of errors
-          if (error.name === 'AbortError') {
+          if ((error as any).name === 'AbortError') {
             errorMessage = 'Connection timeout'
-          } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+          } else if ((error as any).name === 'TypeError' && (error as any).message?.includes('Failed to fetch')) {
             errorMessage = 'Network connection failed (likely HMR reload)'
             // Don't retry on HMR-related fetch failures
             if (retryCount === 1) shouldRetry = false
