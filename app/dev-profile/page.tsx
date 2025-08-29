@@ -157,49 +157,60 @@ export default function DevProfilePage() {
         try {
           switch (connection.id) {
             case 'google-oauth':
-              const authResponse = await fetch('/api/auth/status', {
-                method: 'GET',
-                cache: 'no-cache',
-                headers: {
-                  'Cache-Control': 'no-cache',
+              try {
+                const authResponse = await fetch('/api/auth/status', {
+                  method: 'GET',
+                  cache: 'no-cache',
+                  headers: {
+                    'Cache-Control': 'no-cache',
+                  },
+                  signal: AbortSignal.timeout(5000) // 5 second timeout for auth
+                })
+
+                if (!authResponse.ok) {
+                  throw new Error(`HTTP ${authResponse.status}: ${authResponse.statusText}`)
                 }
-              })
 
-              if (!authResponse.ok) {
-                throw new Error(`HTTP ${authResponse.status}: ${authResponse.statusText}`)
+                const authData = await authResponse.json()
+                connection.status = authData.connected ? 'connected' : 'disconnected'
+                connection.lastChecked = new Date().toISOString()
+                connection.errorMessage = undefined // Clear any previous errors
+              } catch (fetchError) {
+                // Re-throw to be handled by outer catch block
+                throw fetchError
               }
-
-              const authData = await authResponse.json()
-              connection.status = authData.connected ? 'connected' : 'disconnected'
-              connection.lastChecked = new Date().toISOString()
-              connection.errorMessage = undefined // Clear any previous errors
               break
 
             case 'database':
-              const dbResponse = await fetch('/api/metrics', {
-                method: 'GET',
-                cache: 'no-cache',
-                headers: {
-                  'Cache-Control': 'no-cache',
-                },
-                signal: AbortSignal.timeout(10000) // 10 second timeout
-              })
+              try {
+                const dbResponse = await fetch('/api/metrics', {
+                  method: 'GET',
+                  cache: 'no-cache',
+                  headers: {
+                    'Cache-Control': 'no-cache',
+                  },
+                  signal: AbortSignal.timeout(8000) // 8 second timeout for database
+                })
 
-              if (dbResponse.ok) {
-                const dbData = await dbResponse.json()
-                // Additional check: ensure we get valid data structure
-                if (dbData && (Array.isArray(dbData) || typeof dbData === 'object')) {
-                  connection.status = 'connected'
-                  connection.errorMessage = undefined
+                if (dbResponse.ok) {
+                  const dbData = await dbResponse.json()
+                  // Additional check: ensure we get valid data structure
+                  if (dbData && (Array.isArray(dbData) || typeof dbData === 'object')) {
+                    connection.status = 'connected'
+                    connection.errorMessage = undefined
+                  } else {
+                    connection.status = 'error'
+                    connection.errorMessage = 'Database returned invalid data format'
+                  }
                 } else {
                   connection.status = 'error'
-                  connection.errorMessage = 'Database returned invalid data format'
+                  connection.errorMessage = `Database API error: ${dbResponse.status} ${dbResponse.statusText}`
                 }
-              } else {
-                connection.status = 'error'
-                connection.errorMessage = `Database API error: ${dbResponse.status} ${dbResponse.statusText}`
+                connection.lastChecked = new Date().toISOString()
+              } catch (fetchError) {
+                // Re-throw to be handled by outer catch block
+                throw fetchError
               }
-              connection.lastChecked = new Date().toISOString()
               break
 
             case 'google-my-business':
