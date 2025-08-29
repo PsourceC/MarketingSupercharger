@@ -27,6 +27,7 @@ export default function DevProfilePage() {
   const [isChecking, setIsChecking] = useState(false)
   const [lastHealthCheck, setLastHealthCheck] = useState<string>('')
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
+  const isDevelopment = process.env.NODE_ENV === 'development'
 
   useEffect(() => {
     setMounted(true)
