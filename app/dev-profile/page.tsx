@@ -173,15 +173,13 @@ export default function DevProfilePage() {
       while (retryCount <= maxRetries) {
         try {
           switch (connection.id) {
-            case 'google-oauth':
+            case 'google-oauth': {
               try {
                 const authResponse = await fetch('/api/auth/status', {
                   method: 'GET',
                   cache: 'no-cache',
-                  headers: {
-                    'Cache-Control': 'no-cache',
-                  },
-                  signal: AbortSignal.timeout(5000) // 5 second timeout for auth
+                  headers: { 'Cache-Control': 'no-cache' },
+                  signal: AbortSignal.timeout(5000)
                 })
 
                 if (!authResponse.ok) {
@@ -190,12 +188,21 @@ export default function DevProfilePage() {
 
                 const authData = await authResponse.json()
                 connection.status = authData.connected ? 'connected' : 'disconnected'
+                connection.errorMessage = undefined
+
+                if (!authData.connected) {
+                  const ai = mapServiceToConnection('ai-ranking-tracker')
+                  if (ai.mapped === 'connected') {
+                    connection.status = 'pending'
+                    connection.errorMessage = undefined
+                    connection.description = 'OAuth optional right now. Alternative live data is active via AI Ranking Tracker.'
+                  }
+                }
                 connection.lastChecked = new Date().toISOString()
-                connection.errorMessage = undefined // Clear any previous errors
               } catch (fetchError) {
-                // Re-throw to be handled by outer catch block
                 throw fetchError
               }
+            }
               break
 
             case 'database':
@@ -656,7 +663,7 @@ export default function DevProfilePage() {
 
       {/* Quick Tips */}
       <div className="tips-section">
-        <h3>�� Quick Setup Tips</h3>
+        <h3>💡 Quick Setup Tips</h3>
         <div className="tips-grid">
           <div className="tip">
             <span className="tip-icon">🚨</span>
