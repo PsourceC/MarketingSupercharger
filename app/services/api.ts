@@ -131,15 +131,7 @@ export async function fetchRecentUpdates(): Promise<DataUpdate[]> {
   }
 }
 
-// Competitor data API calls
-export async function fetchCompetitorData() {
-  try {
-    return await apiFetch('/competitors')
-  } catch (error) {
-    console.error('Failed to fetch competitor data:', error)
-    return getMockCompetitors()
-  }
-}
+// Legacy competitor data endpoint (replaced by /competitor-tracking)
 
 // Real-time ranking data
 export async function fetchCurrentRankings(keyword?: string) {
@@ -168,7 +160,65 @@ export async function fetchCitationData() {
     return await apiFetch('/citations')
   } catch (error) {
     console.error('Failed to fetch citation data:', error)
-    return null
+    return {
+      citations: [],
+      summary: {
+        totalDirectories: 0,
+        foundCitations: 0,
+        consistentCitations: 0,
+        inconsistentCitations: 0,
+        missingCitations: 0,
+        consistencyScore: 0,
+        lastUpdated: new Date(),
+        topIssues: []
+      },
+      recommendations: [],
+      error: error instanceof Error ? error.message : 'Failed to fetch citation data'
+    }
+  }
+}
+
+// Competitor tracking
+export async function fetchCompetitorData() {
+  try {
+    return await apiFetch('/competitor-tracking')
+  } catch (error) {
+    console.error('Failed to fetch competitor data:', error)
+    return {
+      competitors: [],
+      summary: {
+        totalCompetitors: 0,
+        averagePosition: 0,
+        marketShare: 0,
+        topCompetitors: [],
+        keywordGaps: [],
+        lastUpdated: new Date()
+      },
+      insights: [],
+      error: error instanceof Error ? error.message : 'Failed to fetch competitor data'
+    }
+  }
+}
+
+// Refresh citation data
+export async function refreshCitationData() {
+  try {
+    await apiFetch('/citations', { method: 'POST', body: JSON.stringify({ action: 'refresh' }) })
+    return true
+  } catch (error) {
+    console.error('Failed to refresh citation data:', error)
+    return false
+  }
+}
+
+// Refresh competitor data
+export async function refreshCompetitorData() {
+  try {
+    await apiFetch('/competitor-tracking', { method: 'POST', body: JSON.stringify({ action: 'refresh' }) })
+    return true
+  } catch (error) {
+    console.error('Failed to refresh competitor data:', error)
+    return false
   }
 }
 
@@ -253,8 +303,17 @@ function getMockActions(): PriorityAction[] {
 
 function getMockCompetitors() {
   return {
-    message: 'Connect to competitor analysis API to view real competitor data',
-    competitors: []
+    competitors: [],
+    summary: {
+      totalCompetitors: 0,
+      averagePosition: 0,
+      marketShare: 0,
+      topCompetitors: [],
+      keywordGaps: [],
+      lastUpdated: new Date()
+    },
+    insights: [],
+    message: 'Custom competitor tracking service ready to analyze your market'
   }
 }
 

@@ -17,8 +17,19 @@ interface SetupGuide {
   tips?: string[]
 }
 
+interface ServiceStatus {
+  status: 'working' | 'partial' | 'not-setup'
+  message: string
+}
+
+interface ServiceStatuses {
+  [key: string]: ServiceStatus
+}
+
 export default function SetupPage() {
   const [selectedService, setSelectedService] = useState<string>('database')
+  const [serviceStatuses, setServiceStatuses] = useState<ServiceStatuses>({})
+  const [statusLoading, setStatusLoading] = useState(true)
 
   // Handle URL parameters to auto-select service
   useEffect(() => {
@@ -27,6 +38,24 @@ export default function SetupPage() {
     if (serviceParam) {
       setSelectedService(serviceParam)
     }
+  }, [])
+
+  // Fetch service statuses
+  const fetchStatuses = async () => {
+    setStatusLoading(true)
+    try {
+      const response = await fetch('/api/service-status')
+      const data = await response.json()
+      setServiceStatuses(data.services || {})
+    } catch (error) {
+      console.error('Error fetching service statuses:', error)
+    } finally {
+      setStatusLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchStatuses()
   }, [])
 
   const setupGuides: SetupGuide[] = [
@@ -87,6 +116,62 @@ export default function SetupPage() {
         'Make sure your website is verified in Google Search Console first',
         'You need admin/owner permissions for the website property',
         'Data will start appearing within 15-30 minutes after connection'
+      ]
+    },
+    {
+      id: 'ai-ranking-tracker',
+      name: 'AI Ranking Tracker (Alternative)',
+      description: 'AI-powered ranking tracking that bypasses Google Search Console DNS requirements',
+      category: 'critical',
+      icon: '🤖',
+      timeEstimate: '2-3 minutes',
+      difficulty: 'Easy',
+      requirements: [
+        'Neon database connection',
+        'Keywords and locations to track'
+      ],
+      steps: [
+        'Go to /auto-ranking page from the dashboard',
+        'Configure your domain, keywords, and target locations',
+        'Click "Run Ranking Check" to test the system',
+        'Review the automation status and recent data',
+        'Use "Run Now" button to manually trigger checks',
+        'Schedule regular automated checks if desired'
+      ],
+      tips: [
+        'Perfect alternative when you can\'t access DNS for Google Search Console',
+        'Uses AI simulation and can be upgraded to real search APIs',
+        'Tracks 6 solar keywords across 5 locations by default',
+        'For real data, consider upgrading to SerpApi or Bright Data integration'
+      ]
+    },
+    {
+      id: 'brightdata',
+      name: 'Bright Data Integration',
+      description: 'Real search result scraping for accurate ranking data (replaces AI simulation)',
+      category: 'critical',
+      icon: '🔍',
+      timeEstimate: '2-3 minutes',
+      difficulty: 'Easy',
+      requirements: [
+        'Bright Data account',
+        'API key from Bright Data dashboard'
+      ],
+      steps: [
+        'Sign up for Bright Data account at brightdata.com',
+        'Navigate to your Bright Data dashboard',
+        'Go to API credentials section',
+        'Generate a new API key for SERP scraping',
+        'Copy the API key',
+        'Paste the API key when prompted in Builder.io',
+        'Test the connection to verify it works',
+        'Configure keywords and locations for tracking'
+      ],
+      tips: [
+        'Bright Data offers credits for new accounts',
+        'API key enables real Google search result scraping',
+        'Much more accurate than simulated ranking data',
+        'Monitor your credit usage to avoid unexpected charges'
       ]
     },
     {
@@ -315,6 +400,58 @@ export default function SetupPage() {
     }
   }
 
+  const getStatusIndicator = (serviceId: string) => {
+    if (statusLoading) {
+      return {
+        icon: '⏳',
+        color: '#6b7280',
+        bgColor: '#f3f4f6',
+        text: 'Checking...'
+      }
+    }
+
+    const status = serviceStatuses[serviceId]
+    if (!status) {
+      return {
+        icon: '❓',
+        color: '#6b7280',
+        bgColor: '#f3f4f6',
+        text: 'Unknown'
+      }
+    }
+
+    switch (status.status) {
+      case 'working':
+        return {
+          icon: '👍',
+          color: '#ffffff',
+          bgColor: '#10b981',
+          text: 'Working'
+        }
+      case 'partial':
+        return {
+          icon: '➖',
+          color: '#ffffff',
+          bgColor: '#f59e0b',
+          text: 'Partial'
+        }
+      case 'not-setup':
+        return {
+          icon: '👎',
+          color: '#ffffff',
+          bgColor: '#ef4444',
+          text: 'Not Setup'
+        }
+      default:
+        return {
+          icon: '❓',
+          color: '#6b7280',
+          bgColor: '#f3f4f6',
+          text: 'Unknown'
+        }
+    }
+  }
+
   return (
     <div className="setup-page">
       {/* Header */}
@@ -333,7 +470,17 @@ export default function SetupPage() {
       <div className="setup-content">
         {/* Service Selector */}
         <div className="service-selector">
-          <h2>Choose a Service to Set Up</h2>
+          <div className="selector-header">
+            <h2>Choose a Service to Set Up</h2>
+            <button
+              onClick={fetchStatuses}
+              disabled={statusLoading}
+              className="refresh-button"
+              title="Refresh service statuses"
+            >
+              {statusLoading ? '⏳' : '🔄'} Refresh
+            </button>
+          </div>
           <div className="service-grid">
             {setupGuides.map(guide => (
               <button
@@ -345,18 +492,33 @@ export default function SetupPage() {
                   <span className="service-icon">{guide.icon}</span>
                   <div className="service-info">
                     <h3>{guide.name}</h3>
-                    <span 
-                      className="priority-badge"
-                      style={{ backgroundColor: getCategoryColor(guide.category) }}
-                    >
-                      {guide.category.toUpperCase()}
-                    </span>
+                    <div className="badges-row">
+                      <span
+                        className="priority-badge"
+                        style={{ backgroundColor: getCategoryColor(guide.category) }}
+                      >
+                        {guide.category.toUpperCase()}
+                      </span>
+                      <span
+                        className="status-indicator"
+                        style={{
+                          backgroundColor: getStatusIndicator(guide.id).bgColor,
+                          color: getStatusIndicator(guide.id).color
+                        }}
+                        title={serviceStatuses[guide.id]?.message || 'Status unknown'}
+                      >
+                        {getStatusIndicator(guide.id).icon} {getStatusIndicator(guide.id).text}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <p className="service-description">{guide.description}</p>
+                {serviceStatuses[guide.id] && (
+                  <p className="status-message">{serviceStatuses[guide.id].message}</p>
+                )}
                 <div className="service-meta">
                   <span className="time-estimate">⏱️ {guide.timeEstimate}</span>
-                  <span 
+                  <span
                     className="difficulty"
                     style={{ color: getDifficultyColor(guide.difficulty) }}
                   >

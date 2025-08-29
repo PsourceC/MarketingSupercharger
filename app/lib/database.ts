@@ -1,13 +1,34 @@
 import { Pool } from 'pg'
 
 // Create a connection pool for better performance
+const connectionString = process.env.DATABASE_URL
+let ssl: any = false
+try {
+  if (connectionString) {
+    const url = new URL(connectionString)
+    const host = url.hostname
+    const sslMode = url.searchParams.get('sslmode')
+    if (sslMode === 'require' || host.endsWith('neon.tech')) {
+      ssl = { rejectUnauthorized: false }
+    } else if (process.env.NODE_ENV === 'production') {
+      ssl = { rejectUnauthorized: false }
+    }
+  } else if (process.env.NODE_ENV === 'production') {
+    ssl = { rejectUnauthorized: false }
+  }
+} catch {
+  if (process.env.NODE_ENV === 'production') {
+    ssl = { rejectUnauthorized: false }
+  }
+}
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 10, // Reduced from 20 to prevent overwhelming
-  idleTimeoutMillis: 60000, // Increased to 60 seconds
-  connectionTimeoutMillis: 10000, // Increased to 10 seconds
-  acquireTimeoutMillis: 20000, // Add acquire timeout
+  connectionString,
+  ssl,
+  max: 10,
+  idleTimeoutMillis: 60000,
+  connectionTimeoutMillis: 10000,
+  acquireTimeoutMillis: 20000,
   allowExitOnIdle: true,
 })
 

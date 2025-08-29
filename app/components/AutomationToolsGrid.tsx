@@ -41,6 +41,18 @@ const automationTools: AutomationTool[] = [
     impact: 'high'
   },
   {
+    id: 'auto-ranking',
+    title: 'AI Ranking Tracker',
+    icon: '🤖',
+    description: 'AI-powered alternative to Google Search Console - no DNS setup required',
+    status: 'good',
+    statusText: 'Tracking 6 keywords across 5 locations automatically',
+    href: '/auto-ranking',
+    automation: true,
+    lastActivity: 'Real-time',
+    impact: 'high'
+  },
+  {
     id: 'review-management',
     title: 'Customer Review Helper',
     icon: '⭐',
