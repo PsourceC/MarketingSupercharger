@@ -19,6 +19,8 @@ interface ConnectionStatus {
   errorMessage?: string
   setupUrl?: string
   docsUrl?: string
+  workaroundActive?: boolean
+  workaroundText?: string
 }
 
 export default function DevProfilePage() {
@@ -196,6 +198,8 @@ export default function DevProfilePage() {
                     connection.status = 'pending'
                     connection.errorMessage = undefined
                     connection.description = 'OAuth optional right now. Alternative live data is active via AI Ranking Tracker.'
+                    connection.workaroundActive = true
+                    connection.workaroundText = 'AI Ranking Tracker live'
                   }
                 }
                 connection.lastChecked = new Date().toISOString()
@@ -589,6 +593,9 @@ export default function DevProfilePage() {
                         <span className={`priority-badge priority-${connection.priority}`}>
                           {connection.priority}
                         </span>
+                        {connection.workaroundActive && (
+                          <span className="priority-badge">WORKAROUND ACTIVE</span>
+                        )}
                       </div>
                       <div className="status-text">
                         <span className={`status-label status-${connection.status}`}>
