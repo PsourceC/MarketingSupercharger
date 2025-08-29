@@ -178,6 +178,7 @@ export default function DevProfilePage() {
     }
 
     // Check each connection status with retry logic
+    try {
     for (const connection of connectionChecks) {
       let retryCount = 0
       const maxRetries = 2
@@ -187,12 +188,11 @@ export default function DevProfilePage() {
           switch (connection.id) {
             case 'google-oauth': {
               try {
-                const authResponse = await fetch('/api/auth/status', {
+                const authResponse = await fetchWithTimeout('/api/auth/status', {
                   method: 'GET',
                   cache: 'no-cache',
-                  headers: { 'Cache-Control': 'no-cache' },
-                  signal: AbortSignal.timeout(5000)
-                })
+                  headers: { 'Cache-Control': 'no-cache' }
+                }, 5000)
 
                 if (!authResponse.ok) {
                   throw new Error(`HTTP ${authResponse.status}: ${authResponse.statusText}`)
@@ -293,6 +293,9 @@ export default function DevProfilePage() {
           }
         }
       }
+    }
+    } catch (loopError) {
+      console.warn('Connection check loop error:', loopError)
     }
 
     setConnections(connectionChecks)
