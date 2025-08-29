@@ -44,14 +44,17 @@ export default function SetupPage() {
   const fetchStatuses = async () => {
     setStatusLoading(true)
     const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 8000) => {
-      const controller = new AbortController()
-      const id = setTimeout(() => controller.abort(), timeoutMs)
-      try { return await fetch(input, { ...init, signal: controller.signal }) }
-      catch (err: any) {
-        const body = JSON.stringify({ error: err?.message || 'fetch failed' })
-        return new Response(body, { status: 599, headers: { 'Content-Type': 'application/json' } })
-      }
-      finally { clearTimeout(id) }
+      return await new Promise<Response>((resolve) => {
+        const timeoutId = setTimeout(() => {
+          resolve(new Response(JSON.stringify({ error: 'timeout' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+        }, timeoutMs)
+        fetch(input, init)
+          .then((res) => { clearTimeout(timeoutId); resolve(res) })
+          .catch((err: any) => {
+            clearTimeout(timeoutId)
+            resolve(new Response(JSON.stringify({ error: err?.message || 'fetch failed' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+          })
+      })
     }
     try {
       const response = await fetchWithTimeout('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }, 8000)
