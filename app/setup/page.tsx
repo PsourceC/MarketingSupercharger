@@ -28,6 +28,8 @@ interface ServiceStatuses {
 
 export default function SetupPage() {
   const [selectedService, setSelectedService] = useState<string>('database')
+  const [serviceStatuses, setServiceStatuses] = useState<ServiceStatuses>({})
+  const [statusLoading, setStatusLoading] = useState(true)
 
   // Handle URL parameters to auto-select service
   useEffect(() => {
@@ -36,6 +38,23 @@ export default function SetupPage() {
     if (serviceParam) {
       setSelectedService(serviceParam)
     }
+  }, [])
+
+  // Fetch service statuses
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      try {
+        const response = await fetch('/api/service-status')
+        const data = await response.json()
+        setServiceStatuses(data.services || {})
+      } catch (error) {
+        console.error('Error fetching service statuses:', error)
+      } finally {
+        setStatusLoading(false)
+      }
+    }
+
+    fetchStatuses()
   }, [])
 
   const setupGuides: SetupGuide[] = [
