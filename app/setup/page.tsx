@@ -43,12 +43,20 @@ export default function SetupPage() {
   // Fetch service statuses
   const fetchStatuses = async () => {
     setStatusLoading(true)
+    const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 8000) => {
+      const controller = new AbortController()
+      const id = setTimeout(() => controller.abort(), timeoutMs)
+      try { return await fetch(input, { ...init, signal: controller.signal }) }
+      finally { clearTimeout(id) }
+    }
     try {
-      const response = await fetch('/api/service-status')
+      const response = await fetchWithTimeout('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }, 8000)
       const data = await response.json()
       setServiceStatuses(data.services || {})
-    } catch (error) {
-      console.error('Error fetching service statuses:', error)
+    } catch (error: any) {
+      if (error?.name !== 'AbortError') {
+        console.warn('Service status fetch issue (non-fatal):', error?.message || error)
+      }
     } finally {
       setStatusLoading(false)
     }
