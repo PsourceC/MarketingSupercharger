@@ -17,8 +17,14 @@ export default function DevProfile() {
   }, [])
 
   const checkQuickStatus = async () => {
+    const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 6000) => {
+      const controller = new AbortController()
+      const id = setTimeout(() => controller.abort(), timeoutMs)
+      try { return await fetch(input, { ...init, signal: controller.signal }) }
+      finally { clearTimeout(id) }
+    }
     try {
-      const res = await fetch('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } })
+      const res = await fetchWithTimeout('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }, 6000)
       if (res.ok) {
         const data = await res.json()
         const services = data.services || {}
@@ -34,7 +40,7 @@ export default function DevProfile() {
         return
       }
     } catch (error) {
-      console.log('Quick status check failed:', error)
+      // swallow; will fallback to auth-only
     }
 
     // Fallback to auth-only check
