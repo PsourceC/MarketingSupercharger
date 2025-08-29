@@ -79,7 +79,7 @@ export default function DevProfilePage() {
         status: 'disconnected',
         category: 'optimization',
         priority: 'high',
-        setupUrl: '/connect/gmb',
+        setupUrl: '/setup?service=google-my-business',
         docsUrl: 'https://developers.google.com/my-business'
       },
       {
@@ -89,8 +89,8 @@ export default function DevProfilePage() {
         status: 'disconnected',
         category: 'optimization',
         priority: 'high',
-        setupUrl: '/connect/citations',
-        docsUrl: '/docs/citations'
+        setupUrl: '/setup?service=citation-tracking',
+        docsUrl: '/setup?service=citation-tracking'
       },
       {
         id: 'competitor-api',
@@ -99,10 +99,10 @@ export default function DevProfilePage() {
         status: 'disconnected',
         category: 'optimization',
         priority: 'medium',
-        setupUrl: '/connect/competitors',
-        docsUrl: '/docs/competitors'
+        setupUrl: '/setup?service=competitor-tracking',
+        docsUrl: '/setup?service=competitor-tracking'
       },
-      
+
       // Analytics & Monitoring
       {
         id: 'google-analytics',
@@ -111,7 +111,7 @@ export default function DevProfilePage() {
         status: 'disconnected',
         category: 'analytics',
         priority: 'high',
-        setupUrl: '/connect/analytics',
+        setupUrl: '/setup?service=google-analytics',
         docsUrl: 'https://developers.google.com/analytics'
       },
       {
@@ -121,10 +121,10 @@ export default function DevProfilePage() {
         status: 'disconnected',
         category: 'analytics',
         priority: 'medium',
-        setupUrl: '/connect/search-console-api',
+        setupUrl: '/setup?service=google-search-console',
         docsUrl: 'https://developers.google.com/webmaster-tools/search-console-api'
       },
-      
+
       // Notifications & Alerts
       {
         id: 'email-notifications',
@@ -133,8 +133,8 @@ export default function DevProfilePage() {
         status: 'disconnected',
         category: 'notifications',
         priority: 'medium',
-        setupUrl: '/connect/email',
-        docsUrl: '/docs/notifications'
+        setupUrl: '/setup?service=email-notifications',
+        docsUrl: '/setup?service=email-notifications'
       },
       {
         id: 'slack-integration',
@@ -143,8 +143,8 @@ export default function DevProfilePage() {
         status: 'disconnected',
         category: 'notifications',
         priority: 'low',
-        setupUrl: '/connect/slack',
-        docsUrl: '/docs/slack'
+        setupUrl: '/setup?service=slack-integration',
+        docsUrl: '/setup?service=slack-integration'
       }
     ]
 
