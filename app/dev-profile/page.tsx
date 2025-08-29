@@ -33,13 +33,13 @@ export default function DevProfilePage() {
     setMounted(true)
     checkAllConnections()
 
-    // Set up automatic health checks every 5 minutes if enabled
+    // Set up automatic health checks - longer interval in development to avoid HMR conflicts
     const healthCheckInterval = setInterval(() => {
       if (autoRefreshEnabled && !isChecking && document.visibilityState === 'visible') {
         console.log('Running automatic health check...')
         checkAllConnections(true) // Pass true for silent/background check
       }
-    }, 5 * 60 * 1000) // 5 minutes
+    }, isDevelopment ? 10 * 60 * 1000 : 5 * 60 * 1000) // 10 minutes in dev, 5 minutes in production
 
     return () => {
       clearInterval(healthCheckInterval)
