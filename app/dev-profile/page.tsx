@@ -205,36 +205,12 @@ export default function DevProfilePage() {
             }
               break
 
-            case 'database':
-              try {
-                const dbResponse = await fetch('/api/metrics', {
-                  method: 'GET',
-                  cache: 'no-cache',
-                  headers: {
-                    'Cache-Control': 'no-cache',
-                  },
-                  signal: AbortSignal.timeout(8000) // 8 second timeout for database
-                })
-
-                if (dbResponse.ok) {
-                  const dbData = await dbResponse.json()
-                  // Additional check: ensure we get valid data structure
-                  if (dbData && (Array.isArray(dbData) || typeof dbData === 'object')) {
-                    connection.status = 'connected'
-                    connection.errorMessage = undefined
-                  } else {
-                    connection.status = 'error'
-                    connection.errorMessage = 'Database returned invalid data format'
-                  }
-                } else {
-                  connection.status = 'error'
-                  connection.errorMessage = `Database API error: ${dbResponse.status} ${dbResponse.statusText}`
-                }
-                connection.lastChecked = new Date().toISOString()
-              } catch (fetchError) {
-                // Re-throw to be handled by outer catch block
-                throw fetchError
-              }
+            case 'database': {
+              const mapped = mapServiceToConnection('database')
+              connection.status = mapped.mapped
+              connection.errorMessage = mapped.note
+              connection.lastChecked = new Date().toISOString()
+            }
               break
 
             case 'google-my-business':
