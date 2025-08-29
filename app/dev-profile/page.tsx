@@ -155,6 +155,26 @@ export default function DevProfilePage() {
       }
     ]
 
+    // Load unified service statuses for consistent mapping
+    let unifiedStatuses: Record<string, { status: 'working' | 'partial' | 'not-setup'; message: string }> = {}
+    try {
+      const svcRes = await fetch('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } })
+      if (svcRes.ok) {
+        const svcData = await svcRes.json()
+        unifiedStatuses = svcData.services || {}
+      }
+    } catch (e) {
+      console.warn('Failed to load unified service statuses:', e)
+    }
+
+    const mapServiceToConnection = (svcId: string): { mapped: 'connected' | 'pending' | 'disconnected'; note?: string } => {
+      const svc = unifiedStatuses[svcId]
+      if (!svc) return { mapped: 'disconnected' }
+      if (svc.status === 'working') return { mapped: 'connected' }
+      if (svc.status === 'partial') return { mapped: 'pending', note: svc.message }
+      return { mapped: 'disconnected' }
+    }
+
     // Check each connection status with retry logic
     for (const connection of connectionChecks) {
       let retryCount = 0
@@ -498,7 +518,7 @@ export default function DevProfilePage() {
             )}
 
             <div className="quick-action-card">
-              <div className="action-icon">📊</div>
+              <div className="action-icon">��</div>
               <div className="action-content">
                 <h4>Load Sample Data</h4>
                 <p>Explore the dashboard with sample data while setting up connections</p>
