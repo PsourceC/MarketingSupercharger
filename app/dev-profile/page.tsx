@@ -229,8 +229,23 @@ export default function DevProfilePage() {
             }
               break
 
+            case 'citation-tracking': {
+              const mapped = mapServiceToConnection('citation-monitoring')
+              connection.status = mapped.mapped
+              connection.errorMessage = mapped.note
+              connection.lastChecked = new Date().toISOString()
+            }
+              break
+
+            case 'competitor-api': {
+              const mapped = mapServiceToConnection('competitor-tracking')
+              connection.status = mapped.mapped
+              connection.errorMessage = mapped.note
+              connection.lastChecked = new Date().toISOString()
+            }
+              break
+
             default:
-              // For other services, mark as disconnected
               connection.status = 'disconnected'
               connection.lastChecked = new Date().toISOString()
           }
@@ -445,7 +460,7 @@ export default function DevProfilePage() {
       {/* Quick Actions for Critical Setup */}
       {overallStatus !== 'connected' && (
         <div className="quick-actions-section">
-          <h3>����� Quick Setup Actions</h3>
+          <h3>���� Quick Setup Actions</h3>
           <div className="quick-actions-grid">
             {connections.filter(c => c.priority === 'critical' && c.status !== 'connected').length > 0 && (
               <div className="quick-action-card critical">
