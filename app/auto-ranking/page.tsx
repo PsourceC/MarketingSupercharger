@@ -113,6 +113,32 @@ export default function AutoRankingPage() {
         </p>
       </div>
 
+      {automationStatus && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="text-lg font-semibold text-green-800 mb-2">🔄 Automation Status</h3>
+              <div className="text-green-700 text-sm space-y-1">
+                <p><strong>Status:</strong> {automationStatus.status}</p>
+                <p><strong>Keywords Tracked:</strong> {automationStatus.configuredKeywords}</p>
+                <p><strong>Locations Tracked:</strong> {automationStatus.configuredLocations}</p>
+                <p><strong>Recent Entries (24h):</strong> {automationStatus.recentEntries}</p>
+                {automationStatus.lastCheck && (
+                  <p><strong>Last Check:</strong> {new Date(automationStatus.lastCheck).toLocaleString()}</p>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={runScheduledCheck}
+              disabled={isRunning}
+              className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:bg-gray-400"
+            >
+              {isRunning ? 'Running...' : 'Run Now'}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-white border rounded-lg p-4">
           <h3 className="text-lg font-semibold mb-4">Configuration</h3>
