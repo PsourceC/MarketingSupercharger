@@ -147,6 +147,16 @@ export default function DevProfilePage() {
       }
     ]
 
+    const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 8000) => {
+      const controller = new AbortController()
+      const id = setTimeout(() => controller.abort(), timeoutMs)
+      try {
+        return await fetch(input, { ...init, signal: controller.signal })
+      } finally {
+        clearTimeout(id)
+      }
+    }
+
     // Load unified service statuses for consistent mapping
     let unifiedStatuses: Record<string, { status: 'working' | 'partial' | 'not-setup'; message: string }> = {}
     try {
