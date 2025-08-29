@@ -41,19 +41,20 @@ export default function SetupPage() {
   }, [])
 
   // Fetch service statuses
-  useEffect(() => {
-    const fetchStatuses = async () => {
-      try {
-        const response = await fetch('/api/service-status')
-        const data = await response.json()
-        setServiceStatuses(data.services || {})
-      } catch (error) {
-        console.error('Error fetching service statuses:', error)
-      } finally {
-        setStatusLoading(false)
-      }
+  const fetchStatuses = async () => {
+    setStatusLoading(true)
+    try {
+      const response = await fetch('/api/service-status')
+      const data = await response.json()
+      setServiceStatuses(data.services || {})
+    } catch (error) {
+      console.error('Error fetching service statuses:', error)
+    } finally {
+      setStatusLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchStatuses()
   }, [])
 
