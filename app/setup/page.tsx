@@ -509,6 +509,9 @@ export default function SetupPage() {
                       >
                         {getStatusIndicator(guide.id).icon} {getStatusIndicator(guide.id).text}
                       </span>
+                      {guide.id === 'google-search-console' && serviceStatuses['ai-ranking-tracker']?.status === 'working' && (
+                        <span className="priority-badge">WORKAROUND ACTIVE</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -538,6 +541,9 @@ export default function SetupPage() {
               <div>
                 <h2>{selectedGuide.name}</h2>
                 <p>{selectedGuide.description}</p>
+                {selectedGuide.id === 'google-search-console' && serviceStatuses['ai-ranking-tracker']?.status === 'working' && (
+                  <p className="status-message">Active workaround: AI Ranking Tracker is live and supplying ranking data.</p>
+                )}
               </div>
             </div>
             <div className="guide-meta">
