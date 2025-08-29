@@ -452,18 +452,33 @@ export default function SetupPage() {
                   <span className="service-icon">{guide.icon}</span>
                   <div className="service-info">
                     <h3>{guide.name}</h3>
-                    <span 
-                      className="priority-badge"
-                      style={{ backgroundColor: getCategoryColor(guide.category) }}
-                    >
-                      {guide.category.toUpperCase()}
-                    </span>
+                    <div className="badges-row">
+                      <span
+                        className="priority-badge"
+                        style={{ backgroundColor: getCategoryColor(guide.category) }}
+                      >
+                        {guide.category.toUpperCase()}
+                      </span>
+                      <span
+                        className="status-indicator"
+                        style={{
+                          backgroundColor: getStatusIndicator(guide.id).bgColor,
+                          color: getStatusIndicator(guide.id).color
+                        }}
+                        title={serviceStatuses[guide.id]?.message || 'Status unknown'}
+                      >
+                        {getStatusIndicator(guide.id).icon} {getStatusIndicator(guide.id).text}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <p className="service-description">{guide.description}</p>
+                {serviceStatuses[guide.id] && (
+                  <p className="status-message">{serviceStatuses[guide.id].message}</p>
+                )}
                 <div className="service-meta">
                   <span className="time-estimate">⏱️ {guide.timeEstimate}</span>
-                  <span 
+                  <span
                     className="difficulty"
                     style={{ color: getDifficultyColor(guide.difficulty) }}
                   >
