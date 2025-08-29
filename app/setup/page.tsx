@@ -146,6 +146,35 @@ export default function SetupPage() {
       ]
     },
     {
+      id: 'brightdata',
+      name: 'Bright Data Integration',
+      description: 'Real search result scraping for accurate ranking data (replaces AI simulation)',
+      category: 'critical',
+      icon: '🔍',
+      timeEstimate: '2-3 minutes',
+      difficulty: 'Easy',
+      requirements: [
+        'Bright Data account',
+        'API key from Bright Data dashboard'
+      ],
+      steps: [
+        'Sign up for Bright Data account at brightdata.com',
+        'Navigate to your Bright Data dashboard',
+        'Go to API credentials section',
+        'Generate a new API key for SERP scraping',
+        'Copy the API key',
+        'Paste the API key when prompted in Builder.io',
+        'Test the connection to verify it works',
+        'Configure keywords and locations for tracking'
+      ],
+      tips: [
+        'Bright Data offers credits for new accounts',
+        'API key enables real Google search result scraping',
+        'Much more accurate than simulated ranking data',
+        'Monitor your credit usage to avoid unexpected charges'
+      ]
+    },
+    {
       id: 'google-my-business',
       name: 'Google My Business',
       description: 'Track reviews, ratings, and local business performance',
