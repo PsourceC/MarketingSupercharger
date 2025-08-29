@@ -32,14 +32,18 @@ export class BrightDataService {
   }
 
   async searchGoogle(query: string, location?: string): Promise<BrightDataSearchResponse> {
+    if (this.simulationMode) {
+      return this.simulateGoogleSearch(query, location)
+    }
+
     try {
-      // Use Bright Data's Web Search dataset API
+      // Real Bright Data API call (when endpoint is configured)
       const requestBody = {
         url: `https://www.google.com/search?q=${encodeURIComponent(query)}&num=100${location ? `&location=${encodeURIComponent(location)}` : ''}`,
         format: 'json'
       }
 
-      const response = await fetch(`${this.baseUrl}/request`, {
+      const response = await fetch(`${this.baseUrl}/search`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
@@ -54,8 +58,6 @@ export class BrightDataService {
       }
 
       const data = await response.json()
-
-      // Parse Google search results from Bright Data response
       const results = this.parseGoogleResults(data)
 
       return {
@@ -69,6 +71,47 @@ export class BrightDataService {
     } catch (error) {
       console.error('Bright Data search error:', error)
       throw error
+    }
+  }
+
+  private simulateGoogleSearch(query: string, location?: string): BrightDataSearchResponse {
+    // Simulate realistic search results based on query and location
+    const results: SearchResult[] = []
+
+    // Generate realistic results for solar industry
+    const solarDomains = [
+      'sunrun.com',
+      'tesla.com',
+      'solarcity.com',
+      'sunpower.com',
+      'affordablesolar.example',
+      'local-solar-company.com',
+      'energysage.com',
+      'solar.com',
+      'renewableenergyworld.com',
+      'solarpowerworld.com'
+    ]
+
+    const positions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 18, 22, 25, 28, 31, 35, 42, 47]
+
+    solarDomains.forEach((domain, index) => {
+      if (index < positions.length) {
+        results.push({
+          title: `${domain.replace('.com', '').replace('.example', '')} - Solar Installation ${location || 'Services'}`,
+          url: `https://${domain}/solar-installation${location ? '-' + location.toLowerCase().replace(/[^a-z0-9]/g, '-') : ''}`,
+          position: positions[index],
+          snippet: `Professional solar installation services in ${location || 'your area'}. Get free quotes and expert advice.`
+        })
+      }
+    })
+
+    return {
+      results,
+      total_results: results.length,
+      search_metadata: {
+        query,
+        location
+      }
     }
   }
 
