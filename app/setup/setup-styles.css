@@ -141,6 +141,34 @@
   font-size: 0.8rem;
 }
 
+.badges-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: fit-content;
+}
+
+.status-message {
+  margin: 0.5rem 0 0 0;
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-style: italic;
+  line-height: 1.3;
+}
+
 .service-description {
   margin: 0 0 0.75rem 0;
   color: #6b7280;
