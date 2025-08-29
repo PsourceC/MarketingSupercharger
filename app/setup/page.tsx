@@ -20,6 +20,15 @@ interface SetupGuide {
 export default function SetupPage() {
   const [selectedService, setSelectedService] = useState<string>('database')
 
+  // Handle URL parameters to auto-select service
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const serviceParam = urlParams.get('service')
+    if (serviceParam) {
+      setSelectedService(serviceParam)
+    }
+  }, [])
+
   const setupGuides: SetupGuide[] = [
     {
       id: 'database',
