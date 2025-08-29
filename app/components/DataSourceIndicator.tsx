@@ -23,15 +23,24 @@ export default function DataSourceIndicator() {
   }, [])
 
   const checkDataSource = async () => {
+    const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 6000) => {
+      const controller = new AbortController()
+      const id = setTimeout(() => controller.abort(), timeoutMs)
+      try { return await fetch(input, { ...init, signal: controller.signal }) }
+      finally { clearTimeout(id) }
+    }
     try {
-      const [svcRes, authRes] = await Promise.all([
-        fetch('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }),
-        fetch('/api/auth/status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } })
+      const [svcRes, authRes] = await Promise.allSettled([
+        fetchWithTimeout('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }, 6000),
+        fetchWithTimeout('/api/auth/status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }, 6000)
       ])
 
-      const svcJson = svcRes.ok ? await svcRes.json() : { services: {} }
+      const svcOk = svcRes.status === 'fulfilled' && svcRes.value.ok
+      const authOk = authRes.status === 'fulfilled' && authRes.value.ok
+
+      const svcJson = svcOk ? await svcRes.value.json() : { services: {} }
       const services = svcJson.services || {}
-      const authJson = authRes.ok ? await authRes.json() : { connected: false }
+      const authJson = authOk ? await authRes.value.json() : { connected: false }
 
       const aiLive = services['ai-ranking-tracker']?.status === 'working'
       const gscLive = !!authJson.connected
@@ -52,13 +61,8 @@ export default function DataSourceIndicator() {
         source,
         lastUpdated: new Date().toISOString()
       })
-    } catch (error) {
-      console.error('Error checking data source:', error)
-      setStatus({
-        connected: false,
-        isLive: false,
-        source: 'Sample Data'
-      })
+    } catch {
+      setStatus({ connected: false, isLive: false, source: 'Sample Data' })
     }
   }
 
