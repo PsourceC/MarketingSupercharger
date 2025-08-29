@@ -121,16 +121,6 @@ export default function DevProfilePage() {
         setupUrl: '/setup?service=google-analytics',
         docsUrl: 'https://developers.google.com/analytics'
       },
-      {
-        id: 'search-console-api',
-        name: 'Search Console API',
-        description: 'Advanced search performance data and indexing status',
-        status: 'disconnected',
-        category: 'analytics',
-        priority: 'medium',
-        setupUrl: '/setup?service=google-search-console',
-        docsUrl: 'https://developers.google.com/webmaster-tools/search-console-api'
-      },
 
       // Notifications & Alerts
       {
@@ -518,7 +508,7 @@ export default function DevProfilePage() {
             )}
 
             <div className="quick-action-card">
-              <div className="action-icon">��</div>
+              <div className="action-icon">📊</div>
               <div className="action-content">
                 <h4>Load Sample Data</h4>
                 <p>Explore the dashboard with sample data while setting up connections</p>
@@ -666,7 +656,7 @@ export default function DevProfilePage() {
 
       {/* Quick Tips */}
       <div className="tips-section">
-        <h3>💡 Quick Setup Tips</h3>
+        <h3>�� Quick Setup Tips</h3>
         <div className="tips-grid">
           <div className="tip">
             <span className="tip-icon">🚨</span>
