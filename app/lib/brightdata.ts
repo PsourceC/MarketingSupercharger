@@ -18,13 +18,17 @@ interface BrightDataSearchResponse {
 
 export class BrightDataService {
   private apiKey: string
-  private baseUrl = 'https://api.brightdata.com/datasets/v1'
+  private baseUrl = 'https://brightdata.com/api' // Will be updated with correct endpoint
+  private simulationMode = true // Set to false when real API endpoint is configured
 
   constructor() {
     this.apiKey = process.env.BRIGHTDATA_API_KEY || ''
     if (!this.apiKey) {
       throw new Error('BRIGHTDATA_API_KEY environment variable is required')
     }
+
+    // Check if we should use real API (when endpoint is properly configured)
+    this.simulationMode = !process.env.BRIGHTDATA_REAL_API_ENABLED
   }
 
   async searchGoogle(query: string, location?: string): Promise<BrightDataSearchResponse> {
