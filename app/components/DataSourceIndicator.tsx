@@ -24,14 +24,32 @@ export default function DataSourceIndicator() {
 
   const checkDataSource = async () => {
     try {
-      // Check OAuth status
-      const authResponse = await fetch('/api/auth/status')
-      const authData = await authResponse.json()
-      
+      const [svcRes, authRes] = await Promise.all([
+        fetch('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }),
+        fetch('/api/auth/status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } })
+      ])
+
+      const svcJson = svcRes.ok ? await svcRes.json() : { services: {} }
+      const services = svcJson.services || {}
+      const authJson = authRes.ok ? await authRes.json() : { connected: false }
+
+      const aiLive = services['ai-ranking-tracker']?.status === 'working'
+      const gscLive = !!authJson.connected
+
+      let isLive = false
+      let source = 'Sample Data'
+      if (gscLive) {
+        isLive = true
+        source = 'Google Search Console (Live)'
+      } else if (aiLive) {
+        isLive = true
+        source = 'AI Ranking Tracker (Live)'
+      }
+
       setStatus({
-        connected: authData.connected,
-        isLive: authData.connected,
-        source: authData.connected ? 'Google Search Console (Live)' : 'Sample Data',
+        connected: isLive,
+        isLive,
+        source,
         lastUpdated: new Date().toISOString()
       })
     } catch (error) {
