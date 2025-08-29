@@ -34,7 +34,7 @@ export default function DevProfilePage() {
 
     // Set up automatic health checks every 5 minutes if enabled
     const healthCheckInterval = setInterval(() => {
-      if (autoRefreshEnabled && !isChecking) {
+      if (autoRefreshEnabled && !isChecking && document.visibilityState === 'visible') {
         console.log('Running automatic health check...')
         checkAllConnections(true) // Pass true for silent/background check
       }
