@@ -160,7 +160,7 @@ export default function DevProfilePage() {
     // Load unified service statuses for consistent mapping
     let unifiedStatuses: Record<string, { status: 'working' | 'partial' | 'not-setup'; message: string }> = {}
     try {
-      const svcRes = await fetch('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } })
+      const svcRes = await fetchWithTimeout('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }, 8000)
       if (svcRes.ok) {
         const svcData = await svcRes.json()
         unifiedStatuses = svcData.services || {}
