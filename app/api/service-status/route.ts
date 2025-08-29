@@ -30,35 +30,69 @@ export async function GET() {
     services.database = { status: 'not-setup', message: 'Database not connected' }
   }
 
+  // Check Bright Data Status
+  try {
+    if (process.env.BRIGHTDATA_API_KEY) {
+      const testResult = await brightData.testConnection()
+      if (testResult.success) {
+        services['brightdata'] = {
+          status: 'working',
+          message: testResult.message
+        }
+      } else {
+        services['brightdata'] = {
+          status: 'partial',
+          message: `API key configured but ${testResult.message}`
+        }
+      }
+    } else {
+      services['brightdata'] = {
+        status: 'not-setup',
+        message: 'API key not configured'
+      }
+    }
+  } catch (error: any) {
+    services['brightdata'] = {
+      status: 'not-setup',
+      message: `Connection failed: ${error.message}`
+    }
+  }
+
   // Check AI Ranking Tracker Status
   try {
     const rankingData = await query(`
-      SELECT COUNT(*) as ranking_count 
-      FROM solar_keyword_rankings 
+      SELECT COUNT(*) as ranking_count
+      FROM solar_keyword_rankings
       WHERE created_at >= NOW() - INTERVAL '24 hours'
     `)
-    
+
     const recentCount = Number(rankingData.rows[0]?.ranking_count || 0)
-    
-    if (recentCount > 0) {
-      services['ai-ranking-tracker'] = { 
-        status: 'working', 
-        message: `${recentCount} rankings tracked in last 24h` 
+    const brightDataWorking = services['brightdata']?.status === 'working'
+
+    if (recentCount > 0 && brightDataWorking) {
+      services['ai-ranking-tracker'] = {
+        status: 'working',
+        message: `${recentCount} rankings tracked with real Bright Data`
+      }
+    } else if (recentCount > 0) {
+      services['ai-ranking-tracker'] = {
+        status: 'partial',
+        message: `${recentCount} rankings tracked (fallback data)`
       }
     } else {
       // Check if locations exist
       const locationCheck = await query('SELECT COUNT(*) as loc_count FROM solar_locations')
       const locationCount = Number(locationCheck.rows[0]?.loc_count || 0)
-      
+
       if (locationCount > 0) {
-        services['ai-ranking-tracker'] = { 
-          status: 'partial', 
-          message: 'Setup complete but no recent data' 
+        services['ai-ranking-tracker'] = {
+          status: 'partial',
+          message: 'Setup complete but no recent data'
         }
       } else {
-        services['ai-ranking-tracker'] = { 
-          status: 'not-setup', 
-          message: 'No locations configured' 
+        services['ai-ranking-tracker'] = {
+          status: 'not-setup',
+          message: 'No locations configured'
         }
       }
     }
