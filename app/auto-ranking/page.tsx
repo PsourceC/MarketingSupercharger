@@ -24,6 +24,7 @@ export default function AutoRankingPage() {
   const [isRunning, setIsRunning] = useState(false)
   const [results, setResults] = useState<RankingResult[]>([])
   const [recentRankings, setRecentRankings] = useState<RecentRanking[]>([])
+  const [automationStatus, setAutomationStatus] = useState<any>(null)
   const [config, setConfig] = useState({
     keywords: ['solar installation', 'solar panels', 'solar financing'],
     locations: ['Phoenix, AZ', 'Tucson, AZ', 'Mesa, AZ'],
