@@ -224,12 +224,25 @@ export default function DevProfilePage() {
 
         } catch (error) {
           retryCount++
-          const errorMessage = error.name === 'AbortError' ? 'Connection timeout' :
-                              error.message || 'Unknown error'
+          let errorMessage = 'Unknown error'
+          let shouldRetry = true
 
-          if (retryCount > maxRetries) {
+          // Handle different types of errors
+          if (error.name === 'AbortError') {
+            errorMessage = 'Connection timeout'
+          } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+            errorMessage = 'Network connection failed (likely HMR reload)'
+            // Don't retry on HMR-related fetch failures
+            if (retryCount === 1) shouldRetry = false
+          } else if (error.message) {
+            errorMessage = error.message
+          }
+
+          if (retryCount > maxRetries || !shouldRetry) {
             connection.status = 'error'
-            connection.errorMessage = `Check failed after ${maxRetries} retries: ${errorMessage}`
+            connection.errorMessage = shouldRetry ?
+              `Check failed after ${maxRetries} retries: ${errorMessage}` :
+              `Connection check skipped: ${errorMessage}`
             connection.lastChecked = new Date().toISOString()
           } else {
             // Wait before retry (exponential backoff)
