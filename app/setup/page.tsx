@@ -1,0 +1,458 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import './setup-styles.css'
+
+interface SetupGuide {
+  id: string
+  name: string
+  description: string
+  category: 'critical' | 'high' | 'medium' | 'low'
+  icon: string
+  steps: string[]
+  requirements: string[]
+  timeEstimate: string
+  difficulty: 'Easy' | 'Medium' | 'Advanced'
+  tips?: string[]
+}
+
+export default function SetupPage() {
+  const [selectedService, setSelectedService] = useState<string>('database')
+
+  // Handle URL parameters to auto-select service
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const serviceParam = urlParams.get('service')
+    if (serviceParam) {
+      setSelectedService(serviceParam)
+    }
+  }, [])
+
+  const setupGuides: SetupGuide[] = [
+    {
+      id: 'database',
+      name: 'Database (Neon)',
+      description: 'Set up PostgreSQL database for storing rankings, metrics, and business data',
+      category: 'critical',
+      icon: '🗄️',
+      timeEstimate: '5-10 minutes',
+      difficulty: 'Easy',
+      requirements: [
+        'Valid email address',
+        'Neon account (free tier available)',
+        'Network access to neon.tech'
+      ],
+      steps: [
+        'Click "Connect" button in the top menu of this dashboard',
+        'Find "Neon" in the MCP integrations list',
+        'Click "Connect to Neon"',
+        'Sign up for Neon account at neon.tech if you don\'t have one',
+        'Create a new project in Neon dashboard',
+        'Copy your connection string from Neon project settings',
+        'Paste the connection string when prompted in Builder.io',
+        'Test the connection - you should see "Database Connected" status',
+        'Return to Dev Profile to verify connection is working'
+      ],
+      tips: [
+        'Neon offers a generous free tier perfect for getting started',
+        'Your connection string contains sensitive credentials - never share it',
+        'The database will automatically create necessary tables on first connection'
+      ]
+    },
+    {
+      id: 'google-search-console',
+      name: 'Google Search Console',
+      description: 'Connect to Google Search Console for real search ranking and performance data',
+      category: 'critical',
+      icon: '🔍',
+      timeEstimate: '3-5 minutes',
+      difficulty: 'Easy',
+      requirements: [
+        'Google account',
+        'Verified website in Google Search Console',
+        'Admin access to your website'
+      ],
+      steps: [
+        'Scroll down to the "Google Search Console Connection" section on dev-profile page',
+        'Click the "Connect with Google" button',
+        'Sign in with your Google account',
+        'Grant permission to access Search Console data',
+        'Select your verified website property',
+        'Confirm the connection',
+        'Wait for initial data sync (may take a few minutes)',
+        'Verify connection shows "Connected" status'
+      ],
+      tips: [
+        'Make sure your website is verified in Google Search Console first',
+        'You need admin/owner permissions for the website property',
+        'Data will start appearing within 15-30 minutes after connection'
+      ]
+    },
+    {
+      id: 'google-my-business',
+      name: 'Google My Business',
+      description: 'Track reviews, ratings, and local business performance',
+      category: 'high',
+      icon: '🏪',
+      timeEstimate: '10-15 minutes',
+      difficulty: 'Medium',
+      requirements: [
+        'Google My Business account',
+        'Verified business listing',
+        'Business owner/manager access'
+      ],
+      steps: [
+        'Set up Google My Business account at business.google.com',
+        'Verify your business listing (by postcard, phone, or instant verification)',
+        'Ensure you have manager or owner permissions',
+        'In your GMB dashboard, go to Settings > Users',
+        'Note your Business ID from the URL (numbers after /b/)',
+        'Go to Google Cloud Console (console.cloud.google.com)',
+        'Create a new project or select existing one',
+        'Enable Google My Business API',
+        'Create service account credentials',
+        'Download the JSON credentials file',
+        'Return to Builder.io setup and upload the credentials',
+        'Enter your Business ID when prompted',
+        'Test the connection'
+      ],
+      tips: [
+        'Business verification can take 1-2 weeks if done by postcard',
+        'You can start setup while verification is pending',
+        'API access requires a Google Cloud project (free tier available)',
+        'Keep your credentials file secure - it contains sensitive access keys'
+      ]
+    },
+    {
+      id: 'google-analytics',
+      name: 'Google Analytics',
+      description: 'Website traffic and conversion tracking',
+      category: 'high',
+      icon: '📊',
+      timeEstimate: '8-12 minutes',
+      difficulty: 'Medium',
+      requirements: [
+        'Google Analytics account',
+        'GA4 property set up',
+        'Admin access to GA property'
+      ],
+      steps: [
+        'Log in to Google Analytics (analytics.google.com)',
+        'Ensure you have a GA4 property set up for your website',
+        'Go to Admin section in GA',
+        'Click on "Data API linking"',
+        'Create a new Google Cloud project if needed',
+        'Enable Google Analytics Reporting API',
+        'Create service account in Google Cloud Console',
+        'Download service account JSON file',
+        'In GA Admin, add the service account email as a viewer',
+        'Copy your GA4 Property ID (format: 123456789)',
+        'Return to Builder.io and upload credentials',
+        'Enter Property ID when prompted',
+        'Test data retrieval'
+      ],
+      tips: [
+        'Make sure you\'re using GA4, not Universal Analytics',
+        'Service account needs Viewer permissions minimum',
+        'Property ID is different from Measurement ID',
+        'Data may take 24-48 hours to appear initially'
+      ]
+    },
+    {
+      id: 'citation-tracking',
+      name: 'Citation Monitoring',
+      description: 'Track business listings across directories (Moz Local, BrightLocal)',
+      category: 'high',
+      icon: '📍',
+      timeEstimate: '15-20 minutes',
+      difficulty: 'Advanced',
+      requirements: [
+        'Subscription to Moz Local or BrightLocal',
+        'API access enabled',
+        'Business listings already submitted'
+      ],
+      steps: [
+        'Choose a citation tracking service (Moz Local or BrightLocal recommended)',
+        'Sign up for a paid plan with API access',
+        'In your service dashboard, find API settings',
+        'Generate API key and secret',
+        'Note your account ID or client ID',
+        'Ensure your business listings are submitted and tracked',
+        'Test API access with their documentation',
+        'Return to Builder.io setup',
+        'Enter API credentials when prompted',
+        'Configure tracking parameters (location, keywords)',
+        'Verify data is pulling correctly'
+      ],
+      tips: [
+        'This requires a paid subscription to citation tracking services',
+        'Start with free trials to test integration',
+        'BrightLocal and Moz both offer reliable APIs',
+        'Initial setup may take 1-2 weeks for full citation discovery'
+      ]
+    },
+    {
+      id: 'competitor-tracking',
+      name: 'Competitor Tracking',
+      description: 'Monitor competitor rankings and performance (SEMrush, Ahrefs)',
+      category: 'medium',
+      icon: '🎯',
+      timeEstimate: '10-15 minutes',
+      difficulty: 'Advanced',
+      requirements: [
+        'SEMrush or Ahrefs subscription',
+        'API access plan',
+        'Competitor domains identified'
+      ],
+      steps: [
+        'Subscribe to SEMrush or Ahrefs with API access',
+        'Log in to your account dashboard',
+        'Navigate to API settings or developer section',
+        'Generate API key',
+        'Note your usage limits and credits',
+        'Identify 3-5 main competitor domains',
+        'Test API access using their documentation',
+        'Return to Builder.io setup',
+        'Enter API key and configure tracking',
+        'Add competitor domains to monitor',
+        'Set up keywords to track',
+        'Schedule regular data pulls'
+      ],
+      tips: [
+        'SEMrush and Ahrefs are premium tools with significant monthly costs',
+        'Start with competitor domains you already know perform well',
+        'Focus on local competitors in your service area',
+        'API calls are usually limited, so configure wisely'
+      ]
+    },
+    {
+      id: 'email-notifications',
+      name: 'Email Notifications',
+      description: 'Send alerts for ranking changes and performance updates',
+      category: 'medium',
+      icon: '📧',
+      timeEstimate: '5-8 minutes',
+      difficulty: 'Easy',
+      requirements: [
+        'Email address for notifications',
+        'SMTP server access (Gmail, Outlook, etc.)',
+        'App-specific password if using Gmail'
+      ],
+      steps: [
+        'Decide on notification email address',
+        'If using Gmail, enable 2FA and create app-specific password',
+        'For other providers, gather SMTP settings',
+        'Return to Builder.io notification settings',
+        'Enter SMTP server details (smtp.gmail.com for Gmail)',
+        'Enter your email and app-specific password',
+        'Configure notification triggers (ranking drops, errors, etc.)',
+        'Set notification frequency (daily, weekly)',
+        'Send test email to verify setup',
+        'Customize notification content and format'
+      ],
+      tips: [
+        'Gmail requires app-specific passwords for SMTP access',
+        'Test with daily notifications first, then adjust frequency',
+        'Set up filters in your email to organize alerts',
+        'Consider creating a dedicated email for business notifications'
+      ]
+    },
+    {
+      id: 'slack-integration',
+      name: 'Slack Integration',
+      description: 'Daily performance reports and alerts in Slack',
+      category: 'low',
+      icon: '💬',
+      timeEstimate: '8-10 minutes',
+      difficulty: 'Medium',
+      requirements: [
+        'Slack workspace access',
+        'Permission to install apps',
+        'Dedicated channel for notifications'
+      ],
+      steps: [
+        'Create a dedicated Slack channel (e.g., #seo-alerts)',
+        'Go to your Slack workspace settings',
+        'Navigate to Apps & Integrations',
+        'Create a new Slack app or incoming webhook',
+        'Generate webhook URL',
+        'Copy the webhook URL',
+        'Return to Builder.io Slack settings',
+        'Paste webhook URL',
+        'Configure notification types and frequency',
+        'Set up message formatting preferences',
+        'Send test message to verify setup',
+        'Invite relevant team members to the channel'
+      ],
+      tips: [
+        'Create a dedicated channel to avoid cluttering general channels',
+        'Test notifications during business hours first',
+        'Use Slack threading for detailed reports',
+        'Consider different webhooks for alerts vs. reports'
+      ]
+    }
+  ]
+
+  const selectedGuide = setupGuides.find(g => g.id === selectedService) || setupGuides[0]
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'critical': return '#ef4444'
+      case 'high': return '#f59e0b'
+      case 'medium': return '#3b82f6'
+      case 'low': return '#10b981'
+      default: return '#6b7280'
+    }
+  }
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Easy': return '#10b981'
+      case 'Medium': return '#f59e0b'
+      case 'Advanced': return '#ef4444'
+      default: return '#6b7280'
+    }
+  }
+
+  return (
+    <div className="setup-page">
+      {/* Header */}
+      <div className="setup-header">
+        <div className="header-left">
+          <Link href="/dev-profile" className="back-button">
+            ← Back to Dev Profile
+          </Link>
+          <div className="header-info">
+            <h1>🔧 Service Setup Guide</h1>
+            <p>Step-by-step instructions to connect all services for your solar business optimization</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="setup-content">
+        {/* Service Selector */}
+        <div className="service-selector">
+          <h2>Choose a Service to Set Up</h2>
+          <div className="service-grid">
+            {setupGuides.map(guide => (
+              <button
+                key={guide.id}
+                className={`service-card ${selectedService === guide.id ? 'selected' : ''}`}
+                onClick={() => setSelectedService(guide.id)}
+              >
+                <div className="service-header">
+                  <span className="service-icon">{guide.icon}</span>
+                  <div className="service-info">
+                    <h3>{guide.name}</h3>
+                    <span 
+                      className="priority-badge"
+                      style={{ backgroundColor: getCategoryColor(guide.category) }}
+                    >
+                      {guide.category.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+                <p className="service-description">{guide.description}</p>
+                <div className="service-meta">
+                  <span className="time-estimate">⏱️ {guide.timeEstimate}</span>
+                  <span 
+                    className="difficulty"
+                    style={{ color: getDifficultyColor(guide.difficulty) }}
+                  >
+                    📊 {guide.difficulty}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Selected Guide */}
+        <div className="setup-guide">
+          <div className="guide-header">
+            <div className="guide-title">
+              <span className="guide-icon">{selectedGuide.icon}</span>
+              <div>
+                <h2>{selectedGuide.name}</h2>
+                <p>{selectedGuide.description}</p>
+              </div>
+            </div>
+            <div className="guide-meta">
+              <span 
+                className="priority-badge large"
+                style={{ backgroundColor: getCategoryColor(selectedGuide.category) }}
+              >
+                {selectedGuide.category.toUpperCase()} PRIORITY
+              </span>
+              <div className="meta-row">
+                <span className="time-estimate">⏱️ {selectedGuide.timeEstimate}</span>
+                <span 
+                  className="difficulty"
+                  style={{ color: getDifficultyColor(selectedGuide.difficulty) }}
+                >
+                  📊 {selectedGuide.difficulty}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Requirements */}
+          <div className="guide-section">
+            <h3>📋 Prerequisites</h3>
+            <ul className="requirements-list">
+              {selectedGuide.requirements.map((req, index) => (
+                <li key={index}>{req}</li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Setup Steps */}
+          <div className="guide-section">
+            <h3>🚀 Setup Steps</h3>
+            <ol className="steps-list">
+              {selectedGuide.steps.map((step, index) => (
+                <li key={index} className="step-item">
+                  <span className="step-number">{index + 1}</span>
+                  <span className="step-text">{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* Tips */}
+          {selectedGuide.tips && (
+            <div className="guide-section">
+              <h3>💡 Pro Tips</h3>
+              <ul className="tips-list">
+                {selectedGuide.tips.map((tip, index) => (
+                  <li key={index}>{tip}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="guide-actions">
+            <Link 
+              href="/dev-profile" 
+              className="btn-primary"
+            >
+              Return to Dev Profile
+            </Link>
+            <button 
+              className="btn-secondary"
+              onClick={() => window.open(selectedGuide.id === 'database' ? 'https://neon.tech' : 
+                                     selectedGuide.id === 'google-search-console' ? 'https://search.google.com/search-console' :
+                                     selectedGuide.id === 'google-my-business' ? 'https://business.google.com' :
+                                     selectedGuide.id === 'google-analytics' ? 'https://analytics.google.com' :
+                                     '#', '_blank')}
+            >
+              Open External Service
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -25,14 +25,35 @@ export default function DevProfilePage() {
   const [mounted, setMounted] = useState(false)
   const [connections, setConnections] = useState<ConnectionStatus[]>([])
   const [isChecking, setIsChecking] = useState(false)
+  const [lastHealthCheck, setLastHealthCheck] = useState<string>('')
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
+  const isDevelopment = process.env.NODE_ENV === 'development'
 
   useEffect(() => {
     setMounted(true)
     checkAllConnections()
-  }, [])
 
-  const checkAllConnections = async () => {
-    setIsChecking(true)
+    // Set up automatic health checks - longer interval in development to avoid HMR conflicts
+    const healthCheckInterval = setInterval(() => {
+      if (autoRefreshEnabled && !isChecking && document.visibilityState === 'visible') {
+        console.log('Running automatic health check...')
+        checkAllConnections(true) // Pass true for silent/background check
+      }
+    }, isDevelopment ? 10 * 60 * 1000 : 5 * 60 * 1000) // 10 minutes in dev, 5 minutes in production
+
+    return () => {
+      clearInterval(healthCheckInterval)
+    }
+  }, [autoRefreshEnabled, isChecking])
+
+  const checkAllConnections = async (silent = false) => {
+    // Skip checks if webpack is hot reloading (in development)
+    if (isDevelopment && (window as any).__webpack_require__?.hmrM) {
+      console.log('Skipping health check - webpack HMR in progress')
+      return
+    }
+
+    if (!silent) setIsChecking(true)
     
     const connectionChecks: ConnectionStatus[] = [
       // Core Infrastructure
@@ -65,7 +86,7 @@ export default function DevProfilePage() {
         status: 'disconnected',
         category: 'optimization',
         priority: 'high',
-        setupUrl: '/connect/gmb',
+        setupUrl: '/setup?service=google-my-business',
         docsUrl: 'https://developers.google.com/my-business'
       },
       {
@@ -75,8 +96,8 @@ export default function DevProfilePage() {
         status: 'disconnected',
         category: 'optimization',
         priority: 'high',
-        setupUrl: '/connect/citations',
-        docsUrl: '/docs/citations'
+        setupUrl: '/setup?service=citation-tracking',
+        docsUrl: '/setup?service=citation-tracking'
       },
       {
         id: 'competitor-api',
@@ -85,10 +106,10 @@ export default function DevProfilePage() {
         status: 'disconnected',
         category: 'optimization',
         priority: 'medium',
-        setupUrl: '/connect/competitors',
-        docsUrl: '/docs/competitors'
+        setupUrl: '/setup?service=competitor-tracking',
+        docsUrl: '/setup?service=competitor-tracking'
       },
-      
+
       // Analytics & Monitoring
       {
         id: 'google-analytics',
@@ -97,7 +118,7 @@ export default function DevProfilePage() {
         status: 'disconnected',
         category: 'analytics',
         priority: 'high',
-        setupUrl: '/connect/analytics',
+        setupUrl: '/setup?service=google-analytics',
         docsUrl: 'https://developers.google.com/analytics'
       },
       {
@@ -107,10 +128,10 @@ export default function DevProfilePage() {
         status: 'disconnected',
         category: 'analytics',
         priority: 'medium',
-        setupUrl: '/connect/search-console-api',
+        setupUrl: '/setup?service=google-search-console',
         docsUrl: 'https://developers.google.com/webmaster-tools/search-console-api'
       },
-      
+
       // Notifications & Alerts
       {
         id: 'email-notifications',
@@ -119,8 +140,8 @@ export default function DevProfilePage() {
         status: 'disconnected',
         category: 'notifications',
         priority: 'medium',
-        setupUrl: '/connect/email',
-        docsUrl: '/docs/notifications'
+        setupUrl: '/setup?service=email-notifications',
+        docsUrl: '/setup?service=email-notifications'
       },
       {
         id: 'slack-integration',
@@ -129,46 +150,129 @@ export default function DevProfilePage() {
         status: 'disconnected',
         category: 'notifications',
         priority: 'low',
-        setupUrl: '/connect/slack',
-        docsUrl: '/docs/slack'
+        setupUrl: '/setup?service=slack-integration',
+        docsUrl: '/setup?service=slack-integration'
       }
     ]
 
-    // Check each connection status
+    // Check each connection status with retry logic
     for (const connection of connectionChecks) {
-      try {
-        switch (connection.id) {
-          case 'google-oauth':
-            const authResponse = await fetch('/api/auth/status')
-            const authData = await authResponse.json()
-            connection.status = authData.connected ? 'connected' : 'disconnected'
-            connection.lastChecked = new Date().toISOString()
-            break
-            
-          case 'database':
-            try {
-              const dbResponse = await fetch('/api/metrics')
-              connection.status = dbResponse.ok ? 'connected' : 'error'
+      let retryCount = 0
+      const maxRetries = 2
+
+      while (retryCount <= maxRetries) {
+        try {
+          switch (connection.id) {
+            case 'google-oauth':
+              try {
+                const authResponse = await fetch('/api/auth/status', {
+                  method: 'GET',
+                  cache: 'no-cache',
+                  headers: {
+                    'Cache-Control': 'no-cache',
+                  },
+                  signal: AbortSignal.timeout(5000) // 5 second timeout for auth
+                })
+
+                if (!authResponse.ok) {
+                  throw new Error(`HTTP ${authResponse.status}: ${authResponse.statusText}`)
+                }
+
+                const authData = await authResponse.json()
+                connection.status = authData.connected ? 'connected' : 'disconnected'
+                connection.lastChecked = new Date().toISOString()
+                connection.errorMessage = undefined // Clear any previous errors
+              } catch (fetchError) {
+                // Re-throw to be handled by outer catch block
+                throw fetchError
+              }
+              break
+
+            case 'database':
+              try {
+                const dbResponse = await fetch('/api/metrics', {
+                  method: 'GET',
+                  cache: 'no-cache',
+                  headers: {
+                    'Cache-Control': 'no-cache',
+                  },
+                  signal: AbortSignal.timeout(8000) // 8 second timeout for database
+                })
+
+                if (dbResponse.ok) {
+                  const dbData = await dbResponse.json()
+                  // Additional check: ensure we get valid data structure
+                  if (dbData && (Array.isArray(dbData) || typeof dbData === 'object')) {
+                    connection.status = 'connected'
+                    connection.errorMessage = undefined
+                  } else {
+                    connection.status = 'error'
+                    connection.errorMessage = 'Database returned invalid data format'
+                  }
+                } else {
+                  connection.status = 'error'
+                  connection.errorMessage = `Database API error: ${dbResponse.status} ${dbResponse.statusText}`
+                }
+                connection.lastChecked = new Date().toISOString()
+              } catch (fetchError) {
+                // Re-throw to be handled by outer catch block
+                throw fetchError
+              }
+              break
+
+            case 'google-my-business':
+              // Future: Add actual GMB API check
+              // For now, simulate a check
+              connection.status = 'disconnected'
               connection.lastChecked = new Date().toISOString()
-            } catch {
-              connection.status = 'error'
-              connection.errorMessage = 'Database connection timeout'
-            }
-            break
-            
-          default:
-            // For now, mark others as disconnected - you can implement checks later
-            connection.status = 'disconnected'
+              break
+
+            case 'google-analytics':
+              // Future: Add actual GA API check
+              connection.status = 'disconnected'
+              connection.lastChecked = new Date().toISOString()
+              break
+
+            default:
+              // For other services, mark as disconnected
+              connection.status = 'disconnected'
+              connection.lastChecked = new Date().toISOString()
+          }
+          break // Success, exit retry loop
+
+        } catch (error) {
+          retryCount++
+          let errorMessage = 'Unknown error'
+          let shouldRetry = true
+
+          // Handle different types of errors
+          if (error.name === 'AbortError') {
+            errorMessage = 'Connection timeout'
+          } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+            errorMessage = 'Network connection failed (likely HMR reload)'
+            // Don't retry on HMR-related fetch failures
+            if (retryCount === 1) shouldRetry = false
+          } else if (error.message) {
+            errorMessage = error.message
+          }
+
+          if (retryCount > maxRetries || !shouldRetry) {
+            connection.status = 'error'
+            connection.errorMessage = shouldRetry ?
+              `Check failed after ${maxRetries} retries: ${errorMessage}` :
+              `Connection check skipped: ${errorMessage}`
             connection.lastChecked = new Date().toISOString()
+          } else {
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount))
+          }
         }
-      } catch (error) {
-        connection.status = 'error'
-        connection.errorMessage = `Check failed: ${error.message}`
       }
     }
 
     setConnections(connectionChecks)
-    setIsChecking(false)
+    setLastHealthCheck(new Date().toISOString())
+    if (!silent) setIsChecking(false)
   }
 
   const getOverallStatus = () => {
@@ -264,8 +368,23 @@ export default function DevProfilePage() {
           </div>
         </div>
         <div className="header-actions">
-          <button 
-            onClick={checkAllConnections}
+          <div className="health-check-info">
+            {lastHealthCheck && (
+              <span className="last-health-check">
+                Last check: {new Date(lastHealthCheck).toLocaleTimeString()}
+              </span>
+            )}
+            <label className="auto-refresh-toggle">
+              <input
+                type="checkbox"
+                checked={autoRefreshEnabled}
+                onChange={(e) => setAutoRefreshEnabled(e.target.checked)}
+              />
+              Auto-refresh (5min)
+            </label>
+          </div>
+          <button
+            onClick={() => checkAllConnections()}
             disabled={isChecking}
             className="refresh-btn"
           >
@@ -330,34 +449,49 @@ export default function DevProfilePage() {
       {/* Quick Actions for Critical Setup */}
       {overallStatus !== 'connected' && (
         <div className="quick-actions-section">
-          <h3>🚀 Quick Setup Actions</h3>
+          <h3>���� Quick Setup Actions</h3>
           <div className="quick-actions-grid">
             {connections.filter(c => c.priority === 'critical' && c.status !== 'connected').length > 0 && (
               <div className="quick-action-card critical">
                 <div className="action-icon">🚨</div>
                 <div className="action-content">
                   <h4>Connect Critical Services</h4>
-                  <p>Database and Google Search Console are required for core functionality</p>
+                  <p>Connect your database and Google services to unlock full optimization features</p>
                   <div className="action-buttons">
-                    <button
-                      className="action-btn database"
-                      onClick={() => alert('To connect Database:\n\n1. Click "Connect" in top menu\n2. Find "Neon" in MCP list\n3. Connect your Neon database\n4. Configure connection settings')}
-                    >
-                      Connect Database
-                    </button>
-                    <button
-                      className="action-btn google"
-                      onClick={() => {
-                        const googleSection = document.querySelector('#google-auth')
-                        if (googleSection) {
-                          window.location.href = '/#google-auth'
-                        } else {
-                          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-                        }
-                      }}
-                    >
-                      Connect Google
-                    </button>
+                    {connections.find(c => c.id === 'database' && c.status !== 'connected') && (
+                      <button
+                        className="action-btn database"
+                        onClick={() => alert('To connect Database:\n\n1. Click "Connect" in top menu\n2. Find "Neon" in MCP list\n3. Connect your Neon database\n4. Configure connection settings')}
+                      >
+                        Connect Database
+                      </button>
+                    )}
+                    {connections.find(c => c.id === 'google-oauth' && c.status !== 'connected') && (
+                      <button
+                        className="action-btn google-search-console"
+                        onClick={() => {
+                          const googleSection = document.querySelector('#google-auth')
+                          if (googleSection) {
+                            window.location.href = '/#google-auth'
+                          } else {
+                            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+                          }
+                        }}
+                      >
+                        Connect Search Console
+                      </button>
+                    )}
+                    {connections.find(c => c.id === 'google-my-business' && c.status !== 'connected') && (
+                      <button
+                        className="action-btn google-my-business"
+                        onClick={() => {
+                          // Navigate to GMB setup page
+                          window.location.href = '/setup?service=google-my-business'
+                        }}
+                      >
+                        Connect GMB
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -431,7 +565,7 @@ export default function DevProfilePage() {
               
               <div className="connection-grid">
                 {categoryConnections.map(connection => (
-                  <div key={connection.id} className={`connection-card ${connection.status} priority-${connection.priority}`}>
+                  <div key={connection.id} className={`connection-card ${connection.status} priority-${connection.priority}`} data-connection-id={connection.id}>
                     <div className="connection-header">
                       <div className="connection-title">
                         <span
@@ -477,6 +611,9 @@ export default function DevProfilePage() {
                             } else if (connection.setupUrl.startsWith('#')) {
                               // Navigate back to dashboard and scroll to element
                               window.location.href = `/${connection.setupUrl}`
+                            } else if (connection.setupUrl.startsWith('/setup')) {
+                              // Navigate to setup page
+                              window.location.href = connection.setupUrl
                             } else {
                               window.open(connection.setupUrl, '_blank')
                             }
