@@ -464,15 +464,18 @@ export default function DevProfilePage() {
                               const gmbCard = document.querySelector(`[data-connection-id="google-my-business"]`)
                               if (gmbCard) {
                                 gmbCard.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                                // Add temporary highlight
-                                const originalBorder = gmbCard.style.border
-                                const originalBoxShadow = gmbCard.style.boxShadow
-                                gmbCard.style.border = '2px solid #3b82f6'
-                                gmbCard.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.3)'
-                                setTimeout(() => {
-                                  gmbCard.style.border = originalBorder
-                                  gmbCard.style.boxShadow = originalBoxShadow
-                                }, 3000)
+                                // Add temporary highlight with proper type assertion
+                                const gmbCardElement = gmbCard as HTMLElement
+                                if (gmbCardElement.style) {
+                                  const originalBorder = gmbCardElement.style.border
+                                  const originalBoxShadow = gmbCardElement.style.boxShadow
+                                  gmbCardElement.style.border = '2px solid #3b82f6'
+                                  gmbCardElement.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.3)'
+                                  setTimeout(() => {
+                                    gmbCardElement.style.border = originalBorder
+                                    gmbCardElement.style.boxShadow = originalBoxShadow
+                                  }, 3000)
+                                }
                               }
                             }, 100)
                           }
