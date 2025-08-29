@@ -370,6 +370,58 @@ export default function SetupPage() {
     }
   }
 
+  const getStatusIndicator = (serviceId: string) => {
+    if (statusLoading) {
+      return {
+        icon: '⏳',
+        color: '#6b7280',
+        bgColor: '#f3f4f6',
+        text: 'Checking...'
+      }
+    }
+
+    const status = serviceStatuses[serviceId]
+    if (!status) {
+      return {
+        icon: '❓',
+        color: '#6b7280',
+        bgColor: '#f3f4f6',
+        text: 'Unknown'
+      }
+    }
+
+    switch (status.status) {
+      case 'working':
+        return {
+          icon: '👍',
+          color: '#ffffff',
+          bgColor: '#10b981',
+          text: 'Working'
+        }
+      case 'partial':
+        return {
+          icon: '➖',
+          color: '#ffffff',
+          bgColor: '#f59e0b',
+          text: 'Partial'
+        }
+      case 'not-setup':
+        return {
+          icon: '👎',
+          color: '#ffffff',
+          bgColor: '#ef4444',
+          text: 'Not Setup'
+        }
+      default:
+        return {
+          icon: '❓',
+          color: '#6b7280',
+          bgColor: '#f3f4f6',
+          text: 'Unknown'
+        }
+    }
+  }
+
   return (
     <div className="setup-page">
       {/* Header */}
