@@ -90,6 +90,33 @@ export default function SetupPage() {
       ]
     },
     {
+      id: 'ai-ranking-tracker',
+      name: 'AI Ranking Tracker (Alternative)',
+      description: 'AI-powered ranking tracking that bypasses Google Search Console DNS requirements',
+      category: 'critical',
+      icon: '🤖',
+      timeEstimate: '2-3 minutes',
+      difficulty: 'Easy',
+      requirements: [
+        'Neon database connection',
+        'Keywords and locations to track'
+      ],
+      steps: [
+        'Go to /auto-ranking page from the dashboard',
+        'Configure your domain, keywords, and target locations',
+        'Click "Run Ranking Check" to test the system',
+        'Review the automation status and recent data',
+        'Use "Run Now" button to manually trigger checks',
+        'Schedule regular automated checks if desired'
+      ],
+      tips: [
+        'Perfect alternative when you can\'t access DNS for Google Search Console',
+        'Uses AI simulation and can be upgraded to real search APIs',
+        'Tracks 6 solar keywords across 5 locations by default',
+        'For real data, consider upgrading to SerpApi or Bright Data integration'
+      ]
+    },
+    {
       id: 'google-my-business',
       name: 'Google My Business',
       description: 'Track reviews, ratings, and local business performance',
