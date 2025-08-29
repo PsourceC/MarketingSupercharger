@@ -131,15 +131,7 @@ export async function fetchRecentUpdates(): Promise<DataUpdate[]> {
   }
 }
 
-// Competitor data API calls
-export async function fetchCompetitorData() {
-  try {
-    return await apiFetch('/competitors')
-  } catch (error) {
-    console.error('Failed to fetch competitor data:', error)
-    return getMockCompetitors()
-  }
-}
+// Legacy competitor data endpoint (replaced by /competitor-tracking)
 
 // Real-time ranking data
 export async function fetchCurrentRankings(keyword?: string) {
