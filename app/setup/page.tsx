@@ -17,6 +17,15 @@ interface SetupGuide {
   tips?: string[]
 }
 
+interface ServiceStatus {
+  status: 'working' | 'partial' | 'not-setup'
+  message: string
+}
+
+interface ServiceStatuses {
+  [key: string]: ServiceStatus
+}
+
 export default function SetupPage() {
   const [selectedService, setSelectedService] = useState<string>('database')
 
