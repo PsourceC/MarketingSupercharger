@@ -213,17 +213,20 @@ export default function DevProfilePage() {
             }
               break
 
-            case 'google-my-business':
-              // Future: Add actual GMB API check
-              // For now, simulate a check
-              connection.status = 'disconnected'
+            case 'google-my-business': {
+              const mapped = mapServiceToConnection('google-my-business')
+              connection.status = mapped.mapped
+              connection.errorMessage = mapped.note
               connection.lastChecked = new Date().toISOString()
+            }
               break
 
-            case 'google-analytics':
-              // Future: Add actual GA API check
-              connection.status = 'disconnected'
+            case 'google-analytics': {
+              const mapped = mapServiceToConnection('google-analytics')
+              connection.status = mapped.mapped
+              connection.errorMessage = mapped.note
               connection.lastChecked = new Date().toISOString()
+            }
               break
 
             default:
@@ -442,7 +445,7 @@ export default function DevProfilePage() {
       {/* Quick Actions for Critical Setup */}
       {overallStatus !== 'connected' && (
         <div className="quick-actions-section">
-          <h3>���� Quick Setup Actions</h3>
+          <h3>����� Quick Setup Actions</h3>
           <div className="quick-actions-grid">
             {connections.filter(c => c.priority === 'critical' && c.status !== 'connected').length > 0 && (
               <div className="quick-action-card critical">
