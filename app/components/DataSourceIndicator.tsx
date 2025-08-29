@@ -24,14 +24,17 @@ export default function DataSourceIndicator() {
 
   const checkDataSource = async () => {
     const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 6000) => {
-      const controller = new AbortController()
-      const id = setTimeout(() => controller.abort(), timeoutMs)
-      try { return await fetch(input, { ...init, signal: controller.signal }) }
-      catch (err: any) {
-        const body = JSON.stringify({ error: err?.message || 'fetch failed' })
-        return new Response(body, { status: 599, headers: { 'Content-Type': 'application/json' } })
-      }
-      finally { clearTimeout(id) }
+      return await new Promise<Response>((resolve) => {
+        const timeoutId = setTimeout(() => {
+          resolve(new Response(JSON.stringify({ error: 'timeout' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+        }, timeoutMs)
+        fetch(input, init)
+          .then((res) => { clearTimeout(timeoutId); resolve(res) })
+          .catch((err: any) => {
+            clearTimeout(timeoutId)
+            resolve(new Response(JSON.stringify({ error: err?.message || 'fetch failed' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+          })
+      })
     }
     try {
       const [svcRes, authRes] = await Promise.allSettled([
