@@ -130,10 +130,81 @@ export async function GET() {
     message: 'Basic setup complete, needs API keys' 
   }
 
+  // Check Citation Monitoring Status
+  try {
+    const citationCheck = await query(`
+      SELECT COUNT(*) as citation_count,
+             AVG(consistency_score) as avg_consistency
+      FROM solar_citations
+      WHERE last_checked > NOW() - INTERVAL '48 hours'
+    `)
+
+    const citationCount = Number(citationCheck.rows[0]?.citation_count || 0)
+    const avgConsistency = Number(citationCheck.rows[0]?.avg_consistency || 0)
+
+    if (citationCount > 5) {
+      services['citation-monitoring'] = {
+        status: 'working',
+        message: `${citationCount} citations monitored, ${Math.round(avgConsistency)}% consistency`
+      }
+    } else if (citationCount > 0) {
+      services['citation-monitoring'] = {
+        status: 'partial',
+        message: `${citationCount} citations checked - needs more data`
+      }
+    } else {
+      services['citation-monitoring'] = {
+        status: 'not-setup',
+        message: 'Custom citation monitoring ready to start'
+      }
+    }
+  } catch (error) {
+    services['citation-monitoring'] = {
+      status: 'not-setup',
+      message: 'Custom citation monitoring service not initialized'
+    }
+  }
+
+  // Check Competitor Tracking Status
+  try {
+    const competitorCheck = await query(`
+      SELECT COUNT(DISTINCT c.id) as competitor_count,
+             COUNT(cr.id) as ranking_count
+      FROM solar_competitors c
+      LEFT JOIN solar_competitor_rankings cr ON c.id = cr.competitor_id
+      WHERE c.last_updated > NOW() - INTERVAL '48 hours'
+    `)
+
+    const competitorCount = Number(competitorCheck.rows[0]?.competitor_count || 0)
+    const rankingCount = Number(competitorCheck.rows[0]?.ranking_count || 0)
+
+    if (competitorCount > 0 && rankingCount > 0) {
+      services['competitor-tracking'] = {
+        status: 'working',
+        message: `${competitorCount} competitors tracked, ${rankingCount} rankings monitored`
+      }
+    } else if (competitorCount > 0) {
+      services['competitor-tracking'] = {
+        status: 'partial',
+        message: `${competitorCount} competitors found - gathering ranking data`
+      }
+    } else {
+      services['competitor-tracking'] = {
+        status: 'not-setup',
+        message: 'Custom competitor tracking ready to start'
+      }
+    }
+  } catch (error) {
+    services['competitor-tracking'] = {
+      status: 'not-setup',
+      message: 'Custom competitor tracking service not initialized'
+    }
+  }
+
   // Check Citation Builder Status (simulate)
-  services['citation-builder'] = { 
-    status: 'not-setup', 
-    message: 'Directory automation not configured' 
+  services['citation-builder'] = {
+    status: 'not-setup',
+    message: 'Directory automation not configured'
   }
 
   return NextResponse.json({ services })
