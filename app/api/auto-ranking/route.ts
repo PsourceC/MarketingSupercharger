@@ -1,50 +1,134 @@
 import { NextResponse } from 'next/server'
 import { query } from '../../lib/server-only'
+import { brightData } from '../../lib/brightdata'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   try {
     const { keywords, locations, domain } = await request.json()
-    
+
     const results = []
-    
+    const errors = []
+
+    console.log(`Starting ranking check for ${keywords.length} keywords across ${locations.length} locations`)
+
     for (const location of locations) {
       for (const keyword of keywords) {
-        // Simulate search ranking check using web search
-        const ranking = await checkKeywordRanking(keyword, location, domain)
-        
-        if (ranking) {
-          // Store in database
-          const locationRecord = await query(
-            'SELECT id FROM solar_locations WHERE location_name = $1',
-            [location]
-          )
-          
-          if (locationRecord.rows.length > 0) {
-            const locationId = locationRecord.rows[0].id
-            
+        try {
+          // Use real Bright Data search results
+          const ranking = await checkKeywordRankingWithBrightData(keyword, location, domain)
+
+          if (ranking) {
+            // Store in database
+            const locationRecord = await query(
+              'SELECT id FROM solar_locations WHERE location_name = $1',
+              [location]
+            )
+
+            let locationId: number
+            if (locationRecord.rows.length === 0) {
+              // Create location if it doesn't exist
+              const newLocation = await query(
+                `INSERT INTO solar_locations (location_name, latitude, longitude, overall_score)
+                 VALUES ($1, $2, $3, $4) RETURNING id`,
+                [location, 0, 0, 75]
+              )
+              locationId = newLocation.rows[0].id
+            } else {
+              locationId = locationRecord.rows[0].id
+            }
+
             await query(
-              `INSERT INTO solar_keyword_rankings 
+              `INSERT INTO solar_keyword_rankings
                (location_id, keyword, ranking_position, clicks, impressions, ctr, created_at)
                VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
               [locationId, keyword, ranking.position, ranking.estimatedClicks, ranking.estimatedImpressions, ranking.estimatedCTR]
             )
-            
+
             results.push({
               location,
               keyword,
               position: ranking.position,
               estimatedClicks: ranking.estimatedClicks,
-              estimatedImpressions: ranking.estimatedImpressions
+              estimatedImpressions: ranking.estimatedImpressions,
+              url: ranking.url,
+              source: 'brightdata'
+            })
+          } else {
+            results.push({
+              location,
+              keyword,
+              position: null,
+              estimatedClicks: 0,
+              estimatedImpressions: 0,
+              source: 'brightdata',
+              message: 'Domain not found in top 100 results'
             })
           }
+        } catch (error: any) {
+          console.error(`Error checking ranking for ${keyword} in ${location}:`, error.message)
+          errors.push({
+            location,
+            keyword,
+            error: error.message
+          })
+
+          // Fallback to simulated data if Bright Data fails
+          const fallbackRanking = generateFallbackRanking(keyword, location)
+
+          const locationRecord = await query(
+            'SELECT id FROM solar_locations WHERE location_name = $1',
+            [location]
+          )
+
+          let locationId: number
+          if (locationRecord.rows.length === 0) {
+            const newLocation = await query(
+              `INSERT INTO solar_locations (location_name, latitude, longitude, overall_score)
+               VALUES ($1, $2, $3, $4) RETURNING id`,
+              [location, 0, 0, 75]
+            )
+            locationId = newLocation.rows[0].id
+          } else {
+            locationId = locationRecord.rows[0].id
+          }
+
+          await query(
+            `INSERT INTO solar_keyword_rankings
+             (location_id, keyword, ranking_position, clicks, impressions, ctr, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+            [locationId, keyword, fallbackRanking.position, fallbackRanking.estimatedClicks, fallbackRanking.estimatedImpressions, fallbackRanking.estimatedCTR]
+          )
+
+          results.push({
+            location,
+            keyword,
+            position: fallbackRanking.position,
+            estimatedClicks: fallbackRanking.estimatedClicks,
+            estimatedImpressions: fallbackRanking.estimatedImpressions,
+            source: 'fallback',
+            message: 'Used fallback data due to API error'
+          })
         }
+
+        // Add delay between requests to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1000))
       }
     }
-    
-    return NextResponse.json({ success: true, results })
+
+    return NextResponse.json({
+      success: true,
+      results,
+      errors: errors.length > 0 ? errors : undefined,
+      summary: {
+        total: results.length,
+        brightDataResults: results.filter(r => r.source === 'brightdata').length,
+        fallbackResults: results.filter(r => r.source === 'fallback').length
+      }
+    })
   } catch (error: any) {
+    console.error('Auto-ranking API error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
