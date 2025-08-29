@@ -580,6 +580,9 @@ export default function DevProfilePage() {
                             } else if (connection.setupUrl.startsWith('#')) {
                               // Navigate back to dashboard and scroll to element
                               window.location.href = `/${connection.setupUrl}`
+                            } else if (connection.setupUrl.startsWith('/setup')) {
+                              // Navigate to setup page
+                              window.location.href = connection.setupUrl
                             } else {
                               window.open(connection.setupUrl, '_blank')
                             }
