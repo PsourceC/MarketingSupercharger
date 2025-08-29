@@ -27,6 +27,10 @@ export default function DataSourceIndicator() {
       const controller = new AbortController()
       const id = setTimeout(() => controller.abort(), timeoutMs)
       try { return await fetch(input, { ...init, signal: controller.signal }) }
+      catch (err: any) {
+        const body = JSON.stringify({ error: err?.message || 'fetch failed' })
+        return new Response(body, { status: 599, headers: { 'Content-Type': 'application/json' } })
+      }
       finally { clearTimeout(id) }
     }
     try {
