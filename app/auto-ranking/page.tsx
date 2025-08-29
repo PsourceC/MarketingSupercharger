@@ -33,7 +33,38 @@ export default function AutoRankingPage() {
 
   useEffect(() => {
     loadRecentRankings()
+    loadAutomationStatus()
   }, [])
+
+  const loadAutomationStatus = async () => {
+    try {
+      const response = await fetch('/api/auto-schedule')
+      const data = await response.json()
+      setAutomationStatus(data)
+    } catch (error) {
+      console.error('Error loading automation status:', error)
+    }
+  }
+
+  const runScheduledCheck = async () => {
+    setIsRunning(true)
+    try {
+      const response = await fetch('/api/auto-schedule', { method: 'POST' })
+      const data = await response.json()
+
+      if (data.success) {
+        alert(`Automated check completed! Processed ${data.processed} keyword/location combinations.`)
+        loadRecentRankings()
+        loadAutomationStatus()
+      } else {
+        alert('Error: ' + data.error)
+      }
+    } catch (error) {
+      alert('Error running automated check: ' + error)
+    } finally {
+      setIsRunning(false)
+    }
+  }
 
   const loadRecentRankings = async () => {
     try {
