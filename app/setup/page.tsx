@@ -441,7 +441,17 @@ export default function SetupPage() {
       <div className="setup-content">
         {/* Service Selector */}
         <div className="service-selector">
-          <h2>Choose a Service to Set Up</h2>
+          <div className="selector-header">
+            <h2>Choose a Service to Set Up</h2>
+            <button
+              onClick={fetchStatuses}
+              disabled={statusLoading}
+              className="refresh-button"
+              title="Refresh service statuses"
+            >
+              {statusLoading ? '⏳' : '🔄'} Refresh
+            </button>
+          </div>
           <div className="service-grid">
             {setupGuides.map(guide => (
               <button
