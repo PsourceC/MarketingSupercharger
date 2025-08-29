@@ -88,7 +88,7 @@ export async function POST() {
 
     `CREATE TABLE IF NOT EXISTS solar_competitor_rankings (
       id SERIAL PRIMARY KEY,
-      competitor_id VARCHAR(100) REFERENCES solar_competitors(id) ON DELETE CASCADE,
+      competitor_id VARCHAR(100) NOT NULL,
       keyword VARCHAR(200) NOT NULL,
       position INTEGER CHECK (position > 0),
       ranking_url TEXT,
@@ -99,6 +99,14 @@ export async function POST() {
       created_at TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(competitor_id, keyword)
     )`,
+
+    // Add foreign key constraints after tables are created
+    `ALTER TABLE solar_competitor_rankings
+     DROP CONSTRAINT IF EXISTS solar_competitor_rankings_competitor_id_fkey`,
+
+    `ALTER TABLE solar_competitor_rankings
+     ADD CONSTRAINT solar_competitor_rankings_competitor_id_fkey
+     FOREIGN KEY (competitor_id) REFERENCES solar_competitors(id) ON DELETE CASCADE`,
 
     // Add indexes for performance
     'CREATE INDEX IF NOT EXISTS idx_solar_citations_last_checked ON solar_citations(last_checked)',
