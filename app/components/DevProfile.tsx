@@ -17,32 +17,35 @@ export default function DevProfile() {
   }, [])
 
   const checkQuickStatus = async () => {
-    let connectedCount = 0
-    const totalCount = 9 // Total number of possible connections
-
     try {
-      // Quick check of key connections
-      const authResponse = await fetch('/api/auth/status')
-      const authData = await authResponse.json()
-      if (authData.connected) connectedCount++
+      const res = await fetch('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } })
+      if (res.ok) {
+        const data = await res.json()
+        const services = data.services || {}
+        const totalCount = Object.keys(services).length || 0
+        const connectedCount = Object.values(services).filter((s: any) => s.status === 'working').length
 
-      // Could add more quick checks here...
+        const percentage = totalCount ? connectedCount / totalCount : 0
+        let overallStatus = 'disconnected'
+        if (percentage >= 0.8) overallStatus = 'connected'
+        else if (percentage >= 0.5 || connectedCount > 0) overallStatus = 'partial'
+
+        setConnectionStatus({ connected: connectedCount, total: totalCount || 0, overallStatus })
+        return
+      }
     } catch (error) {
       console.log('Quick status check failed:', error)
     }
 
-    const percentage = connectedCount / totalCount
-    let overallStatus = 'disconnected'
-
-    if (percentage >= 0.8) overallStatus = 'connected'
-    else if (percentage >= 0.5) overallStatus = 'partial'
-    else if (connectedCount > 0) overallStatus = 'partial'
-
-    setConnectionStatus({
-      connected: connectedCount,
-      total: totalCount,
-      overallStatus
-    })
+    // Fallback to auth-only check
+    try {
+      const authResponse = await fetch('/api/auth/status', { cache: 'no-cache' })
+      const authData = await authResponse.json()
+      const connectedCount = authData.connected ? 1 : 0
+      const totalCount = 1
+      const overallStatus = connectedCount > 0 ? 'partial' : 'disconnected'
+      setConnectionStatus({ connected: connectedCount, total: totalCount, overallStatus })
+    } catch {}
   }
 
   const getStatusColor = (status: string) => {
