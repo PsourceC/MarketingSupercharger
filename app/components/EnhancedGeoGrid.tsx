@@ -225,7 +225,7 @@ export default function EnhancedGeoGrid() {
   const [showCompetitors, setShowCompetitors] = useState(true)
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
   const [mapReady, setMapReady] = useState(false)
-  const [lastRefresh, setLastRefresh] = useState(new Date())
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [competitorComparisonMode, setCompetitorComparisonMode] = useState(false)
   const [selectedCompetitor, setSelectedCompetitor] = useState<string>('all')
 
