@@ -251,6 +251,26 @@ export default function EnhancedGeoGrid() {
     return () => clearInterval(interval)
   }, [])
 
+  // Reconcile legend source when either competitors or top list changes
+  useEffect(() => {
+    const mapNames = competitors.map(c => c.name.toLowerCase())
+    const topNames = topCompetitorsList.map(c => c.name.toLowerCase())
+    if (!topNames.length) {
+      setUseFallbackLegend(true)
+      setDataNotice('Competitor tracking unavailable. Showing local competitors list.')
+      return
+    }
+    const missingFromTop = mapNames.filter(n => !topNames.includes(n))
+    const missingFromMap = topNames.filter(n => !mapNames.includes(n))
+    if (missingFromTop.length > 0 || missingFromMap.length > 0) {
+      setUseFallbackLegend(true)
+      setDataNotice('Live tracking list differs from map competitors. Showing local competitors list.')
+    } else {
+      setUseFallbackLegend(false)
+      setDataNotice(null)
+    }
+  }, [competitors, topCompetitorsList])
+
   const refreshCompetitorSummary = async () => {
     try {
       const res = await fetch('/api/competitor-tracking', { cache: 'no-cache' })
@@ -356,7 +376,10 @@ export default function EnhancedGeoGrid() {
 
   const refreshData = async () => {
     setLastRefresh(new Date())
-    try { await loadData() } catch {}
+    try {
+      await loadData()
+      await refreshCompetitorSummary()
+    } catch {}
   }
 
   const onMapCreated = (map: any) => {
