@@ -98,8 +98,8 @@ export default function DataRefreshSystem() {
       }
     })
 
-    // Start polling for updates - reduced frequency
-    dataSubscription.startPolling(300000) // Poll every 5 minutes instead of 1 minute
+    // Start polling for updates - much reduced frequency to prevent performance issues
+    dataSubscription.startPolling(600000) // Poll every 10 minutes to reduce load
 
     // Load initial updates
     loadRecentUpdates()
