@@ -215,10 +215,14 @@ export default function GMBAutomation() {
   }
 
   const handleAddMediaUrl = (postId: string) => {
-    const url = prompt('Paste image/video URL:')
+    const url = prompt('Paste image/video URL (supports Builder CMS asset URLs):')
     if (!url) return
     const type: 'image' | 'video' = url.match(/\.(mp4|webm|mov)(\?|$)/i) ? 'video' : 'image'
     addMediaToPost(postId, [{ id: `${Date.now()}-url`, type, url }])
+  }
+
+  const handleAddSuggested = (postId: string, item: { type: 'image' | 'video'; url: string; name: string }) => {
+    addMediaToPost(postId, [{ id: `${Date.now()}-suggested`, type: item.type, url: item.url, name: item.name }])
   }
 
   const generateBrandedImage = async (template: PostTemplate): Promise<string> => {
@@ -571,7 +575,7 @@ export default function GMBAutomation() {
                   onChange={(e) => handleFileSelect(template.id, e.target.files)}
                 />
                 <button className="action-btn" onClick={() => handleAddMediaUrl(template.id)}>🔗 Add URL</button>
-                <button className="action-btn" onClick={() => setLibrary({ postId: template.id })}>🗂️ Find Media</button>
+                <button className="action-btn" onClick={() => setLibrary({ postId: template.id })}>🗂�� Find Media</button>
                 <button
                   className="action-btn"
                   onClick={() => handleSchedulePost(template)}
