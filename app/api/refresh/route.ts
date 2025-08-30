@@ -1,26 +1,71 @@
 import { NextResponse } from 'next/server'
 
-// This would trigger refresh across all your connected data sources
+import { NextResponse } from 'next/server'
+import { query } from '../../lib/server-only'
 
+// Orchestrate safe, rate-limited refreshes for data sources
 export async function POST() {
   try {
-    // TODO: Implement actual data refresh logic
-    // Example: await refreshGoogleSearchConsole()
-    // Example: await refreshGoogleMyBusiness()
-    // Example: await refreshRankingData()
-    // Example: await refreshCitationData()
-    
-    console.log('Data refresh triggered - connect APIs to enable real refresh')
-    
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Refresh completed - connect real APIs for live data updates',
+    const results: Record<string, any> = {}
+
+    // Determine last refresh times from DB
+    const [{ rows: citRows }, { rows: compRows }] = await Promise.all([
+      query("SELECT MAX(last_checked) AS last FROM solar_citations"),
+      query("SELECT MAX(last_updated) AS last FROM solar_competitors"),
+    ])
+
+    const now = Date.now()
+    const lastCit = citRows?.[0]?.last ? new Date(citRows[0].last).getTime() : 0
+    const lastComp = compRows?.[0]?.last ? new Date(compRows[0].last).getTime() : 0
+
+    // Policies: citations <= 1/day, competitors <= 6 hours
+    const shouldRefreshCitations = now - lastCit > 24 * 60 * 60 * 1000
+    const shouldRefreshCompetitors = now - lastComp > 6 * 60 * 60 * 1000
+
+    // Helper to call internal APIs safely
+    const call = async (url: string, init?: RequestInit) => {
+      const res = await fetch(url, { cache: 'no-store', ...init })
+      const text = await res.text()
+      try {
+        return { ok: res.ok, status: res.status, data: JSON.parse(text) }
+      } catch {
+        return { ok: res.ok, status: res.status, data: text }
+      }
+    }
+
+    // Refresh Citations (free workaround checks)
+    if (shouldRefreshCitations) {
+      await call(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/citations`, { method: 'POST', body: JSON.stringify({ action: 'refresh' }) })
+      const cit = await call(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/citations`)
+      results.citations = cit
+      // Be polite between services
+      await new Promise(r => setTimeout(r, 800))
+    } else {
+      results.citations = { skipped: true, reason: 'recent-data', last: lastCit }
+    }
+
+    // Refresh Competitors (free SERP simulation)
+    if (shouldRefreshCompetitors) {
+      await call(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/competitor-tracking`, { method: 'POST', body: JSON.stringify({ action: 'refresh' }) })
+      const comp = await call(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/competitor-tracking`)
+      results.competitors = comp
+    } else {
+      results.competitors = { skipped: true, reason: 'recent-data', last: lastComp }
+    }
+
+    return NextResponse.json({
+      success: true,
+      results,
+      policies: {
+        citations: '24h cadence (free directory checks)',
+        competitors: '6h cadence (free SERP simulation)'
+      },
       timestamp: new Date().toISOString()
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error during data refresh:', error)
     return NextResponse.json(
-      { error: 'Failed to refresh data' },
+      { error: 'Failed to refresh data', details: error?.message || String(error) },
       { status: 500 }
     )
   }
