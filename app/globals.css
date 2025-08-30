@@ -1007,6 +1007,14 @@ body {
   100% { transform: rotate(360deg); }
 }
 
+/* Generic page header */
+.page-header {
+  text-align: center;
+  margin: 0 0 2rem;
+}
+.page-header h1 { margin: 0.25rem 0 0.5rem; }
+.page-header p { margin: 0; color: #6b7280; }
+
 /* Header */
 .profile-header {
   display: flex;
