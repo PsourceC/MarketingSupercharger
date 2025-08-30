@@ -54,6 +54,12 @@ export default function UnifiedDashboard() {
             <MetricsOverview />
           </div>
 
+          {/* Competitor & Keyword Profile */}
+          <div className="profile-config-section">
+            {/* lazy import avoided; component is small */}
+            {require('./CompetitorKeywordProfile').default()}
+          </div>
+
           <div className="summary-insights-section">
             <div className="summary-stats-container">
               <h3>📈 Summary Statistics</h3>
