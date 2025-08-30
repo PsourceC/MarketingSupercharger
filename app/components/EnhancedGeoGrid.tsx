@@ -508,10 +508,6 @@ export default function EnhancedGeoGrid() {
           <div className="performance-legend">
             <h4>🎯 Performance Guide</h4>
             <div className="legend-grid">
-              <div className="legend-item">
-                <div className="legend-circle" style={{ backgroundColor: '#6b7280' }}></div>
-                <span>Competitor marker</span>
-              </div>
               <div className="legend-item excellent">
                 <div className="legend-circle" style={{ backgroundColor: '#10b981' }}></div>
                 <span>Top 5 Positions</span>
