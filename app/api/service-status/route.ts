@@ -107,10 +107,14 @@ export async function GET() {
   }
 
   // Check Google My Business Status
-  if (process.env.GMB_STORE_CODE || process.env.GMB_BUSINESS_PROFILE_ID) {
+  if (process.env.GMB_STORE_CODE || process.env.GMB_BUSINESS_PROFILE_ID || process.env.GMB_OAUTH_CLIENT_ID) {
+    const parts: string[] = []
+    if (process.env.GMB_STORE_CODE) parts.push('Store Code set')
+    if (process.env.GMB_BUSINESS_PROFILE_ID) parts.push('Business Profile ID set')
+    if (process.env.GMB_OAUTH_CLIENT_ID) parts.push('OAuth Client ID set')
     services['google-my-business'] = {
       status: 'partial',
-      message: `IDs configured${process.env.GMB_STORE_CODE ? ' (Store Code set)' : ''}${process.env.GMB_BUSINESS_PROFILE_ID ? ' (Business Profile ID set)' : ''} - API credentials not configured`
+      message: `IDs configured (${parts.join(', ')}) - API credentials not configured`
     }
   } else {
     services['google-my-business'] = {
