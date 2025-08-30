@@ -646,7 +646,14 @@ export default function DevProfilePage() {
                               try {
                                 const res = await fetch('/api/auth/gmb')
                                 const data = await res.json()
-                                if (data.authUrl) window.location.href = data.authUrl
+                                if (data.authUrl) {
+                                  try {
+                                    if (window.top) (window.top as Window).location.href = data.authUrl
+                                    else window.location.href = data.authUrl
+                                  } catch {
+                                    window.location.href = data.authUrl
+                                  }
+                                }
                               } catch {}
                             }}
                           >
