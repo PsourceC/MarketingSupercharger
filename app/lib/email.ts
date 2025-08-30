@@ -1,5 +1,7 @@
 import nodemailer from 'nodemailer'
 
+import { query } from './database'
+
 export interface EmailConfig {
   host?: string
   port?: number
@@ -24,14 +26,41 @@ function getConfig(): EmailConfig {
 
 export function isEmailConfigured() {
   const cfg = getConfig()
-  return !!(cfg.host && cfg.port && cfg.user && cfg.pass && cfg.from && cfg.to)
+  // Only require SMTP creds here; recipient may be stored in DB
+  return !!(cfg.host && cfg.port && cfg.user && cfg.pass && cfg.from)
 }
 
-export async function sendEmail(subject: string, html: string, text?: string) {
+async function resolveStoredRecipient(): Promise<string | null> {
+  try {
+    const res = await query(
+      `CREATE TABLE IF NOT EXISTS notification_settings (
+         id SERIAL PRIMARY KEY,
+         recipients TEXT[],
+         updated_at TIMESTAMP DEFAULT NOW()
+       );`
+    )
+    const rows = await query(
+      `SELECT recipients FROM notification_settings ORDER BY updated_at DESC LIMIT 1`
+    )
+    const arr = rows.rows?.[0]?.recipients as string[] | undefined
+    if (arr && arr.length > 0) return arr[0]
+  } catch (e) {
+    // ignore
+  }
+  return null
+}
+
+export async function sendEmail(subject: string, html: string, text?: string, toOverride?: string) {
   const cfg = getConfig()
   if (!isEmailConfigured()) {
-    console.warn('Email not configured; skipping send. Set SMTP_* and ALERT_EMAIL_* env vars.')
+    console.warn('Email SMTP not configured; skipping send. Set SMTP_* and ALERT_EMAIL_FROM/USER.')
     return { sent: false, reason: 'not_configured' }
+  }
+
+  const to = toOverride || cfg.to || await resolveStoredRecipient()
+  if (!to) {
+    console.warn('No recipient configured; set ALERT_EMAIL_TO or save recipients in settings.')
+    return { sent: false, reason: 'no_recipient' }
   }
 
   const transporter = nodemailer.createTransport({
@@ -43,7 +72,7 @@ export async function sendEmail(subject: string, html: string, text?: string) {
 
   const info = await transporter.sendMail({
     from: cfg.from!,
-    to: cfg.to!,
+    to,
     subject,
     text: text || html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
     html,
