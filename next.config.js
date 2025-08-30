@@ -44,6 +44,14 @@ const nextConfig = {
     pagesBufferLength: 2,
   },
 
+  // Server configuration
+  async rewrites() {
+    return []
+  },
+
+  // Output configuration for deployment
+  output: 'standalone',
+
   // Configure allowed dev origins for better CORS handling
   ...(process.env.NODE_ENV === 'development' && {
     allowedDevOrigins: [
