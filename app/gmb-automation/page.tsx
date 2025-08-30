@@ -254,14 +254,24 @@ export default function GMBAutomation() {
               </div>
               
               <div className="template-actions">
-                <button 
+                <button
                   onClick={() => setSelectedTemplate(template)}
                   className="action-btn primary"
                 >
                   ✏️ Edit
                 </button>
-                <button className="action-btn">📅 Schedule</button>
-                <button className="action-btn success">🚀 Publish</button>
+                <button
+                  className="action-btn"
+                  onClick={() => handleSchedulePost(template)}
+                >
+                  📅 Schedule
+                </button>
+                <button
+                  className="action-btn success"
+                  onClick={() => handlePublishPost(template)}
+                >
+                  🚀 Publish
+                </button>
               </div>
               
               {template.publishDate && (
