@@ -234,6 +234,15 @@ export default function DevProfilePage() {
               connection.status = mapped.mapped
               connection.errorMessage = mapped.note
               connection.lastChecked = new Date().toISOString()
+              if (mapped.mapped === 'pending' && (mapped.note || '').toLowerCase().includes('missing tables')) {
+                const key = 'auto-migrated'
+                if (!localStorage.getItem(key)) {
+                  try {
+                    await fetch('/api/migrate', { method: 'POST' })
+                    localStorage.setItem(key, '1')
+                  } catch {}
+                }
+              }
             }
               break
 
