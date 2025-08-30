@@ -487,15 +487,17 @@
   border-radius: 10px;
   padding: 0.75rem 1rem;
   margin-bottom: 0.75rem;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-.impact-grid { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.impact-grid { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; row-gap: 0.5rem; }
 .impact-total { font-weight: 700; color: #111827; }
 .accuracy-badge { display: inline-block; padding: 0.2rem 0.5rem; background: #eef2ff; color: #3730a3; border-radius: 6px; font-size: 0.75rem; margin-top: 0.25rem; }
-.impact-breakdown { display: flex; gap: 0.75rem; }
-.impact-row { display: flex; gap: 0.4rem; align-items: center; color: #374151; }
+.impact-breakdown { display: grid; grid-template-columns: repeat(3, minmax(90px, 1fr)); gap: 0.5rem; width: 100%; max-width: 520px; }
+.impact-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; color: #374151; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.35rem 0.6rem; }
 
-.impact-inline { color: #d1d5db; margin: 0.25rem 0 0.75rem; }
+.impact-inline { color: #d1d5db; margin: 0.25rem 0 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .media-preview-modal {
   position: fixed;
@@ -541,6 +543,8 @@
 .media-meta {
   padding: 1rem 1.25rem;
   background: #0b1220;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .media-caption {
