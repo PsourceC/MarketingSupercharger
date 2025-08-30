@@ -242,6 +242,7 @@
   cursor: pointer;
   font-size: 0.85rem;
   transition: all 0.2s ease;
+  color: #111827;
 }
 
 .action-btn.lg { padding: 0.6rem 1.1rem; font-weight: 700; }
@@ -576,6 +577,13 @@
   height: 32px;
   border-radius: 6px;
   cursor: pointer;
+}
+
+/* Ensure readable buttons in dark modal */
+.media-preview-content .action-btn {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  color: #111827;
 }
 
 .media-library {
