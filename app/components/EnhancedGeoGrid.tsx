@@ -251,6 +251,24 @@ export default function EnhancedGeoGrid() {
     return () => clearInterval(interval)
   }, [])
 
+  // Suppress benign FullStory HMR fetch errors that do not affect app functionality
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const suppress = (e: any) => {
+      const msg = String(e?.reason?.message || e?.message || '')
+      const stack = String(e?.reason?.stack || '')
+      if (msg.includes('Failed to fetch') && (stack.includes('fullstory') || stack.includes('edge.fullstory.com'))) {
+        e.preventDefault?.()
+      }
+    }
+    window.addEventListener('unhandledrejection', suppress)
+    window.addEventListener('error', suppress)
+    return () => {
+      window.removeEventListener('unhandledrejection', suppress)
+      window.removeEventListener('error', suppress)
+    }
+  }, [])
+
   // Reconcile legend source when either competitors or top list changes
   useEffect(() => {
     const mapNames = competitors.map(c => c.name.toLowerCase())
