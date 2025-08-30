@@ -11,6 +11,79 @@ export default function PriorityActionsPanel() {
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
 
+  // Action handlers
+  const handleStartAction = async (action: PriorityAction) => {
+    try {
+      // Mark action as in progress
+      const response = await fetch('/api/actions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: action.id,
+          status: 'in_progress',
+          completionPercentage: 0
+        })
+      })
+
+      if (response.ok) {
+        // Navigate to appropriate page based on action category
+        const targetPage = getActionTargetPage(action)
+        if (targetPage) {
+          window.open(targetPage, '_blank')
+        }
+
+        // Refresh actions list
+        const data = await fetchPriorityActions()
+        setPriorityActions(data)
+      }
+    } catch (error) {
+      console.error('Error starting action:', error)
+    }
+  }
+
+  const handleScheduleAction = (action: PriorityAction) => {
+    // For now, navigate to the relevant page with schedule parameter
+    const targetPage = getActionTargetPage(action)
+    if (targetPage) {
+      window.open(`${targetPage}?schedule=true`, '_blank')
+    }
+  }
+
+  const handleAutomateAction = async (action: PriorityAction) => {
+    try {
+      // Enable automation for this action
+      const response = await fetch('/api/auto-schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          actionId: action.id,
+          automation: true
+        })
+      })
+
+      if (response.ok) {
+        alert(`Automation enabled for: ${action.title}\n\nThis action will now run automatically based on triggers.`)
+
+        // Refresh actions list
+        const data = await fetchPriorityActions()
+        setPriorityActions(data)
+      }
+    } catch (error) {
+      console.error('Error automating action:', error)
+    }
+  }
+
+  const getActionTargetPage = (action: PriorityAction): string | null => {
+    switch (action.category) {
+      case 'GMB': return '/gmb-automation'
+      case 'SEO': return '/seo-tracking'
+      case 'Reviews': return '/review-management'
+      case 'Content': return '/content-calendar'
+      case 'Technical': return '/setup'
+      default: return '/dev-profile'
+    }
+  }
+
   // Load priority actions from API
   useEffect(() => {
     const loadActions = async () => {
@@ -410,7 +483,7 @@ export default function PriorityActionsPanel() {
                       <button className="action-btn primary">Start Now</button>
                       <button className="action-btn secondary">Schedule</button>
                       {action.automatable && (
-                        <button className="action-btn automation">🤖 Automate</button>
+                        <button className="action-btn automation">�� Automate</button>
                       )}
                     </div>
                   </div>
