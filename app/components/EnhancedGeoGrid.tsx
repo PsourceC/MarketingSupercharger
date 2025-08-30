@@ -235,6 +235,8 @@ export default function EnhancedGeoGrid() {
   const [competitors, setCompetitors] = useState<Competitor[]>([])
   const [topCompetitor, setTopCompetitor] = useState<{ name: string; score: number } | null>(null)
   const [profileName, setProfileName] = useState<string>('Your Business')
+  const [leadersOnly, setLeadersOnly] = useState<boolean>(true)
+  const [topCompetitorsList, setTopCompetitorsList] = useState<Array<{ name: string; domain: string; averagePosition: number; visibilityScore: number }>>([])
 
   useEffect(() => {
     setMapReady(true)
