@@ -2,12 +2,14 @@
 
 import { useState, useEffect, Fragment } from 'react'
 import dynamic from 'next/dynamic'
+import L from 'leaflet'
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false })
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false })
 const CircleMarker = dynamic(() => import('react-leaflet').then(mod => mod.CircleMarker), { ssr: false })
 const Circle = dynamic(() => import('react-leaflet').then(mod => mod.Circle), { ssr: false })
+const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false })
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false })
 const Tooltip = dynamic(() => import('react-leaflet').then(mod => mod.Tooltip), { ssr: false })
 
@@ -390,7 +392,7 @@ export default function EnhancedGeoGrid() {
               checked={competitorComparisonMode}
               onChange={(e) => setCompetitorComparisonMode(e.target.checked)}
             />
-            <span className="toggle-text">📊 Comparison Mode</span>
+            <span className="toggle-text">�� Comparison Mode</span>
           </label>
         </div>
 
@@ -412,7 +414,11 @@ export default function EnhancedGeoGrid() {
             <div className="legend-grid">
               <div className="legend-item">
                 <div className="legend-circle" style={{ backgroundColor: '#3b82f6', border: '3px solid #fff' }}></div>
-                <span>{profileName} marker</span>
+                <span>{profileName} marker + coverage</span>
+              </div>
+              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 14, height: 14, backgroundColor: '#6b7280', borderRadius: 3 }}></div>
+                <span>#1 Competitor (square)</span>
               </div>
               <div className="legend-item">
                 <div className="legend-circle" style={{ backgroundColor: '#6b7280' }}></div>
@@ -647,19 +653,11 @@ export default function EnhancedGeoGrid() {
                     const yourLocation = locations.find(l => l.name === loc.areaName)
                     const yourScore = yourLocation ? getPositionRanking(yourLocation, selectedKeyword) : 20
                     const gap = getCompetitiveGap(yourScore, loc.score)
-                    const markerSize = competitorComparisonMode ? (loc.marketShare / 5) : 8
+                    const markerSize = competitorComparisonMode ? (loc.marketShare / 4) : 10
+                    const pos: [number, number] = [loc.lat + 0.01, loc.lng + 0.01]
 
-                    return (
-                      <CircleMarker
-                        key={`comp-${competitor.name}-${idx}`}
-                        center={[loc.lat + 0.01, loc.lng + 0.01]}
-                        radius={markerSize}
-                        fillColor={competitor.color}
-                        color={competitorComparisonMode ? gap.color : "white"}
-                        weight={competitorComparisonMode ? 3 : 2}
-                        opacity={0.8}
-                        fillOpacity={competitorComparisonMode ? 0.7 : 0.6}
-                      >
+                    const popupContent = (
+                      <>
                         <Tooltip>
                           <div className="competitor-tooltip-enhanced">
                             <strong>{competitor.name}</strong><br/>
@@ -677,7 +675,6 @@ export default function EnhancedGeoGrid() {
                             </span>
                           </div>
                         </Tooltip>
-
                         <Popup>
                           <div className="competitor-popup">
                             <h3>{competitor.name} - {loc.areaName}</h3>
@@ -728,6 +725,34 @@ export default function EnhancedGeoGrid() {
                             </div>
                           </div>
                         </Popup>
+                      </>
+                    )
+
+                    if (loc.score === 1) {
+                      const icon = L.divIcon({
+                        className: 'comp-square-marker-icon',
+                        html: `<div style="width:${markerSize * 2}px;height:${markerSize * 2}px;background:${competitor.color};border:${competitorComparisonMode ? 3 : 2}px solid ${competitorComparisonMode ? gap.color : '#ffffff'};transform:translate(-50%,-50%);"></div>`,
+                        iconSize: [markerSize * 2, markerSize * 2],
+                      })
+                      return (
+                        <Marker key={`comp-${competitor.name}-${idx}`} position={pos} icon={icon} zIndexOffset={1000}>
+                          {popupContent}
+                        </Marker>
+                      )
+                    }
+
+                    return (
+                      <CircleMarker
+                        key={`comp-${competitor.name}-${idx}`}
+                        center={pos}
+                        radius={markerSize}
+                        fillColor={competitor.color}
+                        color={competitorComparisonMode ? gap.color : "white"}
+                        weight={competitorComparisonMode ? 3 : 2}
+                        opacity={0.8}
+                        fillOpacity={competitorComparisonMode ? 0.7 : 0.6}
+                      >
+                        {popupContent}
                       </CircleMarker>
                     )
                   })}
