@@ -1,0 +1,104 @@
+/* Error Boundary Styles */
+.error-boundary {
+  padding: 2rem;
+  margin: 2rem auto;
+  max-width: 600px;
+  background: #fee;
+  border: 2px solid #f56565;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.error-boundary h2 {
+  color: #c53030;
+  margin-bottom: 1rem;
+}
+
+.error-boundary details {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.error-boundary summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: #4a5568;
+}
+
+.error-boundary button {
+  background: #3182ce;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.error-boundary button:hover {
+  background: #2c5282;
+}
+
+/* Development Mode Indicator */
+.dev-mode-active {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 100, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* Suppress known development warnings in UI */
+.suppress-dev-warnings [data-nextjs-dialog] {
+  display: none !important;
+}
+
+/* Better loading states */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Improve button feedback */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button:not(:disabled):hover {
+  opacity: 0.9;
+}
+
+/* Prevent layout shift during hot reloads */
+.prevent-layout-shift {
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Hide FullStory elements in development */
+[data-fullstory] {
+  display: none !important;
+}
+
+iframe[src*="fullstory"] {
+  display: none !important;
+}
