@@ -470,6 +470,88 @@
   margin-bottom: 0.75rem;
 }
 
+.media-preview-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.media-preview-content {
+  background: #111827;
+  color: #e5e7eb;
+  border-radius: 12px;
+  width: min(1000px, 92vw);
+  max-height: 88vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.media-preview-body {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 0;
+}
+
+.media-stage {
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 520px;
+}
+
+.media-stage img,
+.media-stage video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.media-meta {
+  padding: 1rem 1.25rem;
+  background: #0b1220;
+}
+
+.media-caption {
+  color: #9ca3af;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.media-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.relevance-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.relevance-badge.high { background: rgba(16,185,129,0.2); color: #10b981; }
+.relevance-badge.medium { background: rgba(245,158,11,0.2); color: #f59e0b; }
+.relevance-badge.low { background: rgba(239,68,68,0.2); color: #ef4444; }
+
+.media-preview-content .close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
 @media (max-width: 768px) {
   .gmb-automation {
     padding: 1rem;
@@ -487,5 +569,9 @@
   .template-actions,
   .editor-actions {
     flex-direction: column;
+  }
+
+  .media-preview-body {
+    grid-template-columns: 1fr;
   }
 }
