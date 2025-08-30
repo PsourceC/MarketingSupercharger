@@ -25,10 +25,10 @@ try {
 const pool = new Pool({
   connectionString,
   ssl,
-  max: 10,
-  idleTimeoutMillis: 60000,
-  connectionTimeoutMillis: 10000,
-  acquireTimeoutMillis: 20000,
+  max: 5, // Reduced from 10 to prevent connection exhaustion
+  idleTimeoutMillis: 30000, // Reduced idle timeout
+  connectionTimeoutMillis: 15000, // Increased connection timeout
+  acquireTimeoutMillis: 30000, // Increased acquire timeout
   allowExitOnIdle: true,
 })
 
