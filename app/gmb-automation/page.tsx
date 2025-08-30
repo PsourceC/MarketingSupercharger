@@ -658,7 +658,7 @@ export default function GMBAutomation() {
                 <button className="action-btn" onClick={() => handleRegenerateText(template)}>♻️ Regenerate Text</button>
                 <button className="action-btn" onClick={() => handleGenerateMedia(template, 'image')}>✨ New Image</button>
                 <button className="action-btn" onClick={() => handleGenerateMedia(template, 'video')}>🎞️ New Video</button>
-                <button className="action-btn" onClick={() => fileInputRef.current?.click()}>�� Add Media</button>
+                <button className="action-btn" onClick={() => fileInputRef.current?.click()}>📁 Add Media</button>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -823,6 +823,9 @@ export default function GMBAutomation() {
                     {current && (
                       <div className={`relevance-badge ${rel.level.toLowerCase()}`}>Relevance: {rel.level}</div>
                     )}
+                    <div className="impact-inline">
+                      {(() => { const im = computeImpact(tmpl, getPostMedia(preview.postId)); return <span>Projected Impact: <strong>+{im.total}%</strong> • Accuracy {im.accuracy}%</span> })()}
+                    </div>
                     <div className="media-controls">
                       <button disabled={!media.length || preview.index===0} onClick={() => setPreview(p => p && ({ ...p, index: Math.max(0, p.index-1) }))}>⟵ Prev</button>
                       <button disabled={!media.length || preview.index>=media.length-1} onClick={() => setPreview(p => p && ({ ...p, index: Math.min(media.length-1, p.index+1) }))}>Next ⟶</button>
