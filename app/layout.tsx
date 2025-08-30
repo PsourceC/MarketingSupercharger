@@ -39,6 +39,7 @@ export default function RootLayout({
           <div className="prevent-layout-shift">
             {children}
           </div>
+          <HealthCheck />
         </ErrorBoundary>
       </body>
     </html>
