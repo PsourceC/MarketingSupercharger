@@ -79,22 +79,95 @@ export default function GMBAutomation() {
 
   const generateNewPost = async (type: PostTemplate['type']) => {
     setIsGenerating(true)
-    
-    // Simulate AI generation
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    const newPost: PostTemplate = {
+
+    try {
+      // Call the API to generate a new post
+      const response = await fetch('/api/gmb-posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, business: 'Astrawatt Solar' })
+      })
+
+      if (response.ok) {
+        const generatedData = await response.json()
+        const newPost: PostTemplate = {
+          id: Date.now().toString(),
+          type,
+          title: generatedData.title || `${type.charAt(0).toUpperCase() + type.slice(1)} Post`,
+          content: generatedData.content || getDefaultContent(type),
+          keywords: generatedData.keywords || ['austin solar', 'solar installation'],
+          cta: generatedData.cta || 'Call now',
+          status: 'draft'
+        }
+
+        setGeneratedPosts([newPost, ...generatedPosts])
+
+        // Show success message
+        alert('✅ New post generated successfully! Review and edit before publishing.')
+      } else {
+        // Fallback to template-based generation if API fails
+        const newPost = generateTemplatePost(type)
+        setGeneratedPosts([newPost, ...generatedPosts])
+        console.log('Using template fallback for post generation')
+      }
+    } catch (error) {
+      console.error('Error generating post:', error)
+      // Fallback to template generation
+      const newPost = generateTemplatePost(type)
+      setGeneratedPosts([newPost, ...generatedPosts])
+    }
+
+    setIsGenerating(false)
+  }
+
+  const generateTemplatePost = (type: PostTemplate['type']): PostTemplate => {
+    const templates = {
+      service: {
+        title: 'Expert Solar Installation Services',
+        content: `🌞 Professional solar installation in Austin & surrounding areas!\n\n⚡ Custom solar designs for every home\n💰 Federal tax credits + local rebates\n🔧 Full-service installation & maintenance\n🏆 Veteran-owned & Enphase certified\n\nServing Austin, Cedar Park, Georgetown, Round Rock & beyond. Make the switch to clean energy today!`,
+        keywords: ['solar installation', 'Austin solar', 'solar services'],
+        cta: 'Get Free Quote'
+      },
+      product: {
+        title: 'Premium Solar Products & Equipment',
+        content: `🔋 High-quality solar equipment for maximum efficiency!\n\n⚡ REC solar panels - 25 year warranty\n🔋 Tesla Powerwall integration available\n📱 Enphase monitoring systems\n🌟 Tier 1 equipment only\n\nUpgrade your Austin home with the best solar technology. Quality products, expert installation, unbeatable performance.`,
+        keywords: ['solar panels', 'Tesla Powerwall', 'solar equipment'],
+        cta: 'View Products'
+      },
+      update: {
+        title: 'Austin Solar Industry Update',
+        content: `📈 Solar continues growing in Central Texas!\n\n🌞 Austin Energy rebates still available\n⚡ Net metering benefits for homeowners\n💰 Federal tax credit extended through 2032\n🏠 Home values increase with solar\n\nNow is the perfect time to go solar in Austin. Don't miss out on these incredible incentives!`,
+        keywords: ['Austin solar news', 'solar incentives', 'solar rebates'],
+        cta: 'Learn More'
+      },
+      offer: {
+        title: 'Limited Time Solar Special Offer',
+        content: `🎉 SPECIAL OFFER: $1,000 OFF Solar Installation!\n\n💰 Additional savings on top of federal credits\n⚡ Free energy consultation included\n🔧 Professional installation by certified team\n📞 Limited time - book by month end\n\nDon't wait! This exclusive offer won't last long. Join hundreds of Austin families saving with solar.`,
+        keywords: ['solar deal', 'Austin solar offer', 'solar discount'],
+        cta: 'Claim Offer'
+      }
+    }
+
+    const template = templates[type]
+    return {
       id: Date.now().toString(),
       type,
-      title: `Auto-Generated ${type.charAt(0).toUpperCase() + type.slice(1)} Post`,
-      content: `Generated content for ${type} post targeting Austin solar market...`,
-      keywords: ['austin solar', 'solar installation', 'renewable energy'],
-      cta: 'Call now',
+      title: template.title,
+      content: template.content,
+      keywords: template.keywords,
+      cta: template.cta,
       status: 'draft'
     }
-    
-    setGeneratedPosts([newPost, ...generatedPosts])
-    setIsGenerating(false)
+  }
+
+  const getDefaultContent = (type: PostTemplate['type']): string => {
+    switch (type) {
+      case 'service': return 'Professional solar installation services in Austin...'
+      case 'product': return 'Premium solar products and equipment...'
+      case 'update': return 'Latest updates from your Austin solar company...'
+      case 'offer': return 'Special solar installation offer...'
+      default: return 'Solar content for Austin homeowners...'
+    }
   }
 
   return (
