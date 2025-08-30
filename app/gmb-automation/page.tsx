@@ -19,6 +19,43 @@ const SUGGESTED_MEDIA: { type: 'image' | 'video'; url: string; name: string }[] 
   { type: 'video', url: 'https://videos.pexels.com/video-files/8853465/8853465-sd_640_360_24fps.mp4', name: 'Solar Install Timelapse' }
 ]
 
+// Curated, license-free media mapped to common solar topics
+const CURATED_IMAGE_LIBRARY: { tags: string[]; urls: string[] }[] = [
+  { tags: ['tesla powerwall','battery','home energy storage'], urls: [
+    'https://images.pexels.com/photos/1108572/pexels-photo-1108572.jpeg',
+    'https://images.pexels.com/photos/4498367/pexels-photo-4498367.jpeg'
+  ]},
+  { tags: ['solar panel','solar panels','installation','installer','crew'], urls: [
+    'https://images.pexels.com/photos/9875408/pexels-photo-9875408.jpeg',
+    'https://images.pexels.com/photos/8853502/pexels-photo-8853502.jpeg',
+    'https://images.pexels.com/photos/4254168/pexels-photo-4254168.jpeg'
+  ]},
+  { tags: ['roof','rooftop','austin','house'], urls: [
+    'https://images.pexels.com/photos/393533/pexels-photo-393533.jpeg',
+    'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg'
+  ]},
+  { tags: ['electric','utility','meter','net metering','rebate'], urls: [
+    'https://images.pexels.com/photos/1439865/pexels-photo-1439865.jpeg',
+    'https://images.pexels.com/photos/4254166/pexels-photo-4254166.jpeg'
+  ]},
+  { tags: ['enphase','monitoring','app','mobile','dashboard'], urls: [
+    'https://images.pexels.com/photos/192273/pexels-photo-192273.jpeg',
+    'https://images.pexels.com/photos/1092644/pexels-photo-1092644.jpeg'
+  ]}
+]
+
+function pickRelevantImage(template: PostTemplate): string | null {
+  const hay = (template.title + ' ' + template.content + ' ' + template.keywords.join(' ')).toLowerCase()
+  for (const entry of CURATED_IMAGE_LIBRARY) {
+    if (entry.tags.some(t => hay.includes(t))) {
+      return entry.urls[Math.floor(Math.random() * entry.urls.length)]
+    }
+  }
+  // Fallback to a generic but relevant solar image
+  const fallback = CURATED_IMAGE_LIBRARY.find(e => e.tags.includes('solar panel'))
+  return fallback ? fallback.urls[0] : null
+}
+
 const postTemplates: PostTemplate[] = [
   {
     id: '1',
@@ -243,40 +280,10 @@ export default function GMBAutomation() {
   }
 
   const generateBrandedImage = async (template: PostTemplate): Promise<string> => {
-    const canvas = document.createElement('canvas')
-    canvas.width = 1200
-    canvas.height = 628
-    const ctx = canvas.getContext('2d')!
-
-    const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
-    grad.addColorStop(0, '#0ea5e9')
-    grad.addColorStop(1, '#22c55e')
-    ctx.fillStyle = grad
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    ctx.fillStyle = 'rgba(255,255,255,0.12)'
-    for (let i = 0; i < 12; i++) {
-      ctx.beginPath()
-      ctx.arc(100 + i * 100, 300 + Math.sin(i) * 40, 60 + (i % 3) * 12, 0, Math.PI * 2)
-      ctx.fill()
-    }
-
-    ctx.fillStyle = 'white'
-    ctx.font = 'bold 58px system-ui, -apple-system, Segoe UI, Roboto'
-    const title = template.title.length > 60 ? template.title.slice(0, 57) + '…' : template.title
-    ctx.fillText(title, 60, 200)
-
-    ctx.font = '400 28px system-ui, -apple-system, Segoe UI, Roboto'
-    const subtitle = (template.keywords.join(' • ').slice(0, 80))
-    ctx.fillText(subtitle, 60, 250)
-
-    ctx.font = 'bold 22px system-ui, -apple-system, Segoe UI, Roboto'
-    ctx.fillText('Astrawatt Solar • Austin, TX', 60, 580)
-
-    ctx.font = 'bold 80px system-ui, -apple-system, Segoe UI, Roboto'
-    ctx.fillText('☀️', 1080, 120)
-
-    return canvas.toDataURL('image/png')
+    const chosen = pickRelevantImage(template)
+    if (chosen) return chosen
+    // Final fallback (should rarely happen)
+    return 'https://images.pexels.com/photos/9875408/pexels-photo-9875408.jpeg'
   }
 
   const generateBrandedVideo = async (template: PostTemplate): Promise<string> => {
@@ -342,33 +349,30 @@ export default function GMBAutomation() {
 
   const handleGenerateMedia = async (template: PostTemplate, kind: 'image' | 'video') => {
     if (kind === 'image') {
-      const dataUrl = await generateBrandedImage(template)
-      const att: MediaAttachment = { id: `${Date.now()}-genimg`, type: 'image', url: dataUrl, name: `${template.keywords.join('-')}` }
+      const url = await generateBrandedImage(template)
+      const att: MediaAttachment = { id: `${Date.now()}-genimg`, type: 'image', url, name: `${template.keywords.join('-')}` }
       const rel = computeRelevance(template, att)
-      if (rel.level !== 'High') {
-        alert('Regenerating image to achieve higher relevance...')
-        return handleGenerateMedia(template, 'image')
+      if (rel.level === 'Low') {
+        alert('Generated image wasn\'t relevant enough. Please try again or choose from library.')
+        return
       }
       addMediaToPost(template.id, [att])
     } else {
       const vidUrl = await generateBrandedVideo(template)
       const att: MediaAttachment = { id: `${Date.now()}-genvid`, type: 'video', url: vidUrl, name: `${template.keywords.join('-')}-${template.cta}` }
-      const rel = computeRelevance(template, att)
-      if (rel.level !== 'High') {
-        alert('Regenerating video to achieve higher relevance...')
-        return handleGenerateMedia(template, 'video')
-      }
       addMediaToPost(template.id, [att])
     }
   }
 
   const computeRelevance = (template: PostTemplate, att: MediaAttachment): { level: 'High' | 'Medium' | 'Low'; score: number } => {
-    const text = (template.title + ' ' + template.content + ' ' + template.keywords.join(' ')).toLowerCase()
-    const name = (att.name || att.url).toLowerCase()
+    const hay = (template.title + ' ' + template.content + ' ' + template.keywords.join(' ')).toLowerCase()
+    const needle = (att.name || att.url).toLowerCase()
+    const solarTerms = ['solar','panel','panels','rooftop','installer','installation','tesla','powerwall','battery','enphase','inverter','rebate','net metering','austin']
     let hits = 0
-    template.keywords.forEach(k => { if (name.includes(k.toLowerCase())) hits++ })
-    const score = Math.min(100, hits * 30 + (text.includes('austin') ? 10 : 0))
-    const level = score >= 60 ? 'High' : score >= 30 ? 'Medium' : 'Low'
+    for (const k of template.keywords) if (needle.includes(k.toLowerCase())) hits++
+    for (const term of solarTerms) if (needle.includes(term) && hay.includes(term)) hits++
+    const score = Math.min(100, hits * 20)
+    const level = score >= 60 ? 'High' : score >= 40 ? 'Medium' : 'Low'
     return { level, score }
   }
 
@@ -488,7 +492,7 @@ export default function GMBAutomation() {
   }
 
   // Fetch metrics to calibrate impact estimates
-  const [metrics, setMetrics] = useState<any | null>(null)
+  const [metrics, setMetrics] = useState<any[] | null>(null)
   useEffect(() => {
     ;(async () => {
       try {
@@ -502,30 +506,47 @@ export default function GMBAutomation() {
     const hasHighImage = media.some(m => m.type === 'image' && computeRelevance(template, m).level === 'High')
     const hasHighVideo = media.some(m => m.type === 'video' && computeRelevance(template, m).level === 'High')
 
-    let ctr = 0, engagement = 0, conversions = 0
-    if (hasHighImage) { ctr += 14; engagement += 12 }
-    if (hasHighVideo) { ctr += 20; engagement += 22; conversions += 10 }
+    const metricsArr = Array.isArray(metrics) ? metrics : []
+    const ctrMetric = metricsArr.find(m => m.id === 'search-ctr')
+    const clicksMetric = metricsArr.find(m => m.id === 'search-clicks')
+    const baseCtr = ctrMetric ? parseFloat(String(ctrMetric.value).toString().replace('%','')) || 0 : 0
+    const clicks = clicksMetric ? parseFloat(String(clicksMetric.value)) || 0 : 0
 
     const textQuality = Math.min(100, template.keywords.length * 12 + (template.content.length > 300 ? 24 : 0))
-    ctr += Math.floor(textQuality / 7)
-    engagement += Math.floor(textQuality / 9)
 
-    if (metrics?.total_clicks) {
-      conversions += Math.min(18, Math.floor(metrics.total_clicks / 900))
+    // CTR improvement grounded to baseline
+    let ctrLift = 0
+    if (hasHighImage) ctrLift += Math.min(20, baseCtr * 0.4)
+    if (hasHighVideo) ctrLift += Math.min(35, baseCtr * 0.7)
+    ctrLift += Math.min(10, Math.floor(textQuality / 12))
+
+    // Engagement modeled by content richness and media variety
+    let engagement = 0
+    if (hasHighImage) engagement += 12
+    if (hasHighVideo) engagement += 22
+    engagement += Math.min(12, Math.floor(textQuality / 8))
+
+    // Conversion lift loosely tied to recent click volume
+    let conversions = 0
+    if (clicks > 0) {
+      const mediaFactor = (hasHighImage ? 0.08 : 0) + (hasHighVideo ? 0.12 : 0)
+      conversions += Math.min(25, Math.floor((clicks / 1000) * 10 + mediaFactor * 100))
     }
 
-    const total = Math.min(100, ctr * 0.5 + engagement * 0.3 + conversions * 0.2)
+    const total = Math.min(100, ctrLift * 0.5 + engagement * 0.3 + conversions * 0.2)
 
-    const freshness = 0.8
-    const sample = metrics ? 0.75 : 0.45
-    const accuracy = Math.round((0.6 + freshness * 0.25 + sample * 0.15) * 100)
+    // Accuracy = data coverage (metrics present) + asset quality + text quality
+    const dataFactor = metricsArr.length > 0 ? 0.85 : 0.55
+    const assetFactor = (hasHighImage ? 0.1 : 0) + (hasHighVideo ? 0.15 : 0)
+    const textFactor = Math.min(0.2, textQuality / 500)
+    const accuracy = Math.round((0.5 + dataFactor * 0.3 + assetFactor + textFactor) * 100)
 
     return {
       total: Math.round(total),
-      breakdown: { ctr: Math.round(ctr), engagement: Math.round(engagement), conversions: Math.round(conversions) },
+      breakdown: { ctr: Math.round(ctrLift), engagement: Math.round(engagement), conversions: Math.round(conversions) },
       accuracy,
       goals: [
-        { label: 'Increase CTR', percent: Math.round(ctr) },
+        { label: 'Increase CTR', percent: Math.round(ctrLift) },
         { label: 'Boost Local Engagement', percent: Math.round(engagement) },
         { label: 'Drive Conversions', percent: Math.round(conversions) }
       ]
@@ -753,7 +774,7 @@ export default function GMBAutomation() {
                 <h4>Media</h4>
                 <div className="media-actions">
                   <button className="action-btn" onClick={() => fileInputRef.current?.click()}>📁 Upload</button>
-                  <button className="action-btn" onClick={() => handleAddMediaUrl(selectedTemplate.id)}>��� Add URL</button>
+                  <button className="action-btn" onClick={() => handleAddMediaUrl(selectedTemplate.id)}>🔗 Add URL</button>
                   <button className="action-btn" onClick={() => handleGenerateMedia(selectedTemplate, 'image')}>✨ Generate Image</button>
                   <button className="action-btn" onClick={() => handleGenerateMedia(selectedTemplate, 'video')}>🎞️ Generate Video</button>
                   <input
