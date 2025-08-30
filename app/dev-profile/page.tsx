@@ -644,25 +644,45 @@ export default function DevProfilePage() {
                     <div className="connection-footer">
                       <div className="connection-actions">
                         {connection.id === 'google-my-business' && connection.status !== 'connected' && (
-                          <button
-                            className={`setup-btn ${connection.priority === 'critical' ? 'critical' : ''}`}
-                            onClick={async () => {
-                              try {
-                                const res = await fetch('/api/auth/gmb')
-                                const data = await res.json()
-                                if (data.authUrl) {
-                                  try {
-                                    if (window.top) (window.top as Window).location.href = data.authUrl
-                                    else window.location.href = data.authUrl
-                                  } catch {
-                                    window.location.href = data.authUrl
+                          <>
+                            <button
+                              className={`setup-btn ${connection.priority === 'critical' ? 'critical' : ''}`}
+                              onClick={async () => {
+                                try {
+                                  const res = await fetch('/api/auth/gmb')
+                                  const data = await res.json()
+                                  if (data.authUrl) {
+                                    try {
+                                      if (window.top) (window.top as Window).location.href = data.authUrl
+                                      else window.location.href = data.authUrl
+                                    } catch {
+                                      window.location.href = data.authUrl
+                                    }
                                   }
+                                } catch {}
+                              }}
+                            >
+                              OAuth Connect
+                            </button>
+                            <button
+                              className="setup-btn"
+                              onClick={async () => {
+                                try {
+                                  const res = await fetch('/api/auth/gmb/refresh', { method: 'POST' })
+                                  if (res.ok) {
+                                    await checkAllConnections()
+                                  } else {
+                                    const data = await res.json().catch(() => ({}))
+                                    alert(data.error || 'Repair failed. Please re-connect via OAuth.')
+                                  }
+                                } catch (e: any) {
+                                  alert(e?.message || 'Repair failed. Please re-connect via OAuth.')
                                 }
-                              } catch {}
-                            }}
-                          >
-                            OAuth Connect
-                          </button>
+                              }}
+                            >
+                              Repair
+                            </button>
+                          </>
                         )}
                         <button
                           className={`setup-btn ${connection.priority === 'critical' ? 'critical' : ''}`}
