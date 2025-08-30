@@ -664,6 +664,7 @@ export default function EnhancedGeoGrid() {
               .map(competitor => (
                 <Fragment key={`comp-group-${competitor.name}`}>
                   {competitor.locations.map((loc, idx) => {
+                    if (leadersOnly && loc.score !== 1) return null
                     const yourLocation = locations.find(l => l.name === loc.areaName)
                     const yourScore = yourLocation ? getPositionRanking(yourLocation, selectedKeyword) : 20
                     const gap = getCompetitiveGap(yourScore, loc.score)
