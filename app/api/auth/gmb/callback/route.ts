@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { getGmbTokensFromCode } from '../../../../../lib/gmb-auth'
+import { getGmbTokensFromCode } from '../../../../lib/gmb-auth'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
