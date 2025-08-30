@@ -96,7 +96,7 @@ export default function DataSourceIndicator() {
         )}
       </div>
       
-      {!status.connected && (
+      {!status.connected && status.source !== 'AI Ranking Tracker (Live)' && (
         <p className="connection-prompt">
           💡 <strong>Connect Google Search Console</strong> above to see your real data!
         </p>
