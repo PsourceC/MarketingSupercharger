@@ -173,17 +173,17 @@ export async function GET() {
       if (citationCount > 5) {
         services['citation-monitoring'] = {
           status: 'working',
-          message: `${citationCount} citations monitored, ${Math.round(avgConsistency)}% consistency`
+          message: `${citationCount} citations monitored, ${Math.round(avgConsistency)}% consistency (workaround active: free directory checks)`
         }
       } else if (citationCount > 0) {
         services['citation-monitoring'] = {
           status: 'partial',
-          message: `${citationCount} citations checked - needs more data`
+          message: `${citationCount} citations checked - needs more data (workaround active: free directory checks)`
         }
       } else {
         services['citation-monitoring'] = {
           status: 'not-setup',
-          message: 'Custom citation monitoring ready to start'
+          message: 'Custom citation monitoring ready to start (workaround available: free directory checks)'
         }
       }
     }
@@ -220,17 +220,17 @@ export async function GET() {
       if (competitorCount > 0 && rankingCount > 0) {
         services['competitor-tracking'] = {
           status: 'working',
-          message: `${competitorCount} competitors tracked, ${rankingCount} rankings monitored`
+          message: `${competitorCount} competitors tracked, ${rankingCount} rankings monitored (workaround active: free SERP simulation)`
         }
       } else if (competitorCount > 0) {
         services['competitor-tracking'] = {
           status: 'partial',
-          message: `${competitorCount} competitors found - gathering ranking data`
+          message: `${competitorCount} competitors found - gathering ranking data (workaround active: free SERP simulation)`
         }
       } else {
         services['competitor-tracking'] = {
           status: 'not-setup',
-          message: 'Custom competitor tracking ready to start'
+          message: 'Custom competitor tracking ready to start (workaround available: free SERP simulation)'
         }
       }
     }
