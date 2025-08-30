@@ -564,8 +564,24 @@ export default function EnhancedGeoGrid() {
                   setTopCompetitorsList(list)
                   const top = data.summary.topCompetitors[0]
                   setTopCompetitor({ name: top.name, score: top.averagePosition })
+                  const mapNames = competitors.map(c => c.name.toLowerCase())
+                  const topNames = list.map((c: any) => c.name.toLowerCase())
+                  const missingFromTop = mapNames.filter(n => !topNames.includes(n))
+                  if (missingFromTop.length > 0) {
+                    setUseFallbackLegend(true)
+                    setDataNotice('Some map competitors are not in tracking yet. Showing local competitors list.')
+                  } else {
+                    setUseFallbackLegend(false)
+                    setDataNotice(null)
+                  }
+                } else {
+                  setUseFallbackLegend(true)
+                  setDataNotice('Competitor tracking returned no data. Showing local competitors list.')
                 }
-              } catch {}
+              } catch {
+                setUseFallbackLegend(true)
+                setDataNotice('Competitor tracking unavailable. Showing local competitors list.')
+              }
             }}>🔍 Refresh Competitors</button>
           </div>
         </div>
