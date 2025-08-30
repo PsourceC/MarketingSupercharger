@@ -328,7 +328,7 @@ export default function EnhancedGeoGrid() {
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
     switch(trend) {
       case 'up': return '📈'
-      case 'down': return '📉'
+      case 'down': return '���'
       default: return '➡️'
     }
   }
@@ -529,6 +529,13 @@ export default function EnhancedGeoGrid() {
                 const res = await fetch('/api/competitor-tracking', { cache: 'no-cache' })
                 const data = await res.json()
                 if (res.ok && data?.summary?.topCompetitors?.length) {
+                  const list = data.summary.topCompetitors.slice(0, 10).map((c: any) => ({
+                    name: c.name,
+                    domain: c.domain,
+                    averagePosition: c.averagePosition,
+                    visibilityScore: c.visibilityScore
+                  }))
+                  setTopCompetitorsList(list)
                   const top = data.summary.topCompetitors[0]
                   setTopCompetitor({ name: top.name, score: top.averagePosition })
                 }
