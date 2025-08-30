@@ -470,18 +470,20 @@ export default function EnhancedGeoGrid() {
             <div className="competitor-legend">
               <h4>🥊 Competitors</h4>
               <div className="competitor-list">
-                {competitors.map(comp => (
-                  <div key={comp.name} className="competitor-item">
-                    <div 
-                      className="competitor-marker" 
-                      style={{ backgroundColor: comp.color }}
-                    ></div>
-                    <div className="competitor-info">
-                      <span className="competitor-name">{comp.name}</span>
-                      <span className="competitor-score">Avg: #{comp.score}</span>
+                {(topCompetitorsList.length ? topCompetitorsList : competitors.map(c => ({ name: c.name, domain: '', averagePosition: c.score, visibilityScore: 0 })) )
+                  .slice(0, 10)
+                  .map((comp: any) => (
+                    <div key={comp.name} className="competitor-item">
+                      <div
+                        className="competitor-marker"
+                        style={{ backgroundColor: '#6b7280' }}
+                      ></div>
+                      <div className="competitor-info">
+                        <span className="competitor-name">{comp.name}</span>
+                        <span className="competitor-score">Avg: #{comp.averagePosition}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           )}
