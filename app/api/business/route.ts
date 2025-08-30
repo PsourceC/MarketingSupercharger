@@ -16,8 +16,10 @@ export async function GET() {
       target_keywords TEXT[],
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`)
+    await query(`ALTER TABLE solar_business_info ADD COLUMN IF NOT EXISTS website_url TEXT`)
+    await query(`ALTER TABLE solar_business_info ADD COLUMN IF NOT EXISTS website TEXT`)
 
-    const res = await query(`SELECT business_name, website_url, primary_location, service_areas, target_keywords FROM solar_business_info ORDER BY created_at DESC LIMIT 1`)
+    const res = await query(`SELECT business_name, COALESCE(website_url, website) AS website_url, primary_location, service_areas, target_keywords FROM solar_business_info ORDER BY created_at DESC LIMIT 1`)
     return NextResponse.json({ profile: res.rows?.[0] || null })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 })
@@ -54,10 +56,12 @@ export async function POST(request: NextRequest) {
       target_keywords TEXT[],
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`)
+    await query(`ALTER TABLE solar_business_info ADD COLUMN IF NOT EXISTS website_url TEXT`)
+    await query(`ALTER TABLE solar_business_info ADD COLUMN IF NOT EXISTS website TEXT`)
 
     await query(
-      `INSERT INTO solar_business_info (business_name, website_url, primary_location, service_areas, target_keywords, created_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
+      `INSERT INTO solar_business_info (business_name, website_url, website, primary_location, service_areas, target_keywords, created_at)
+       VALUES ($1, $2, $2, $3, $4, $5, NOW())`,
       [name || null, website || null, primaryLocation || null, serviceAreas.length ? serviceAreas : null, keywords.length ? keywords : null]
     )
 
