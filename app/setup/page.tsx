@@ -1,5 +1,7 @@
 'use client'
 
+'use client'
+
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import './setup-styles.css'
@@ -467,6 +469,92 @@ export default function SetupPage() {
     }
   }
 
+  const EmailNotificationSettings = () => {
+    const [recipientInput, setRecipientInput] = useState('')
+    const [loading, setLoading] = useState(false)
+    const [message, setMessage] = useState('')
+
+    useEffect(() => {
+      const load = async () => {
+        try {
+          const res = await fetch('/api/notifications/settings', { cache: 'no-cache' })
+          if (res.ok) {
+            const data = await res.json()
+            const existing = Array.isArray(data.recipients) ? data.recipients.join(', ') : ''
+            setRecipientInput(existing)
+          }
+        } catch {}
+      }
+      load()
+    }, [])
+
+    const save = async (sendTest?: boolean) => {
+      setLoading(true)
+      setMessage('')
+      try {
+        const res = await fetch('/api/notifications/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recipients: recipientInput, sendTest: !!sendTest })
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Failed to save settings')
+        setMessage(sendTest ? 'Saved and test email sent (if SMTP configured).' : 'Recipients saved.')
+      } catch (e: any) {
+        setMessage(e?.message || 'Error saving settings')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const sendTestOnly = async () => {
+      setLoading(true)
+      setMessage('')
+      try {
+        const res = await fetch('/api/notifications/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: recipientInput.split(/[;,\n\s]+/)[0] || '' })
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Failed to send test')
+        setMessage('Test email sent (if SMTP configured).')
+      } catch (e: any) {
+        setMessage(e?.message || 'Error sending test')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    return (
+      <div className="guide-section">
+        <h3>📧 Notification Recipients</h3>
+        <p>Enter one or more emails (comma or space separated). We’ll use SMTP settings from project configuration.</p>
+        <div className="email-settings-row">
+          <input
+            type="text"
+            value={recipientInput}
+            onChange={e => setRecipientInput(e.target.value)}
+            placeholder="name@example.com, team@example.com"
+            className="input-text"
+          />
+          <div className="email-actions">
+            <button className="btn-secondary" disabled={loading} onClick={() => save(false)}>
+              💾 Save
+            </button>
+            <button className="btn-secondary" disabled={loading} onClick={() => save(true)}>
+              💾 Save & ✉️ Send Test
+            </button>
+            <button className="btn-secondary" disabled={loading} onClick={sendTestOnly}>
+              ✉️ Send Test Only
+            </button>
+          </div>
+        </div>
+        {message && <p className="status-message">{message}</p>}
+      </div>
+    )
+  }
+
   return (
     <div className="setup-page">
       {/* Header */}
@@ -615,17 +703,22 @@ export default function SetupPage() {
             </div>
           )}
 
+          {/* Email Notification Settings */}
+          {selectedGuide.id === 'email-notifications' && (
+            <EmailNotificationSettings />
+          )}
+
           {/* Action Buttons */}
           <div className="guide-actions">
-            <Link 
-              href="/dev-profile" 
+            <Link
+              href="/dev-profile"
               className="btn-primary"
             >
               Return to Dev Profile
             </Link>
-            <button 
+            <button
               className="btn-secondary"
-              onClick={() => window.open(selectedGuide.id === 'database' ? 'https://neon.tech' : 
+              onClick={() => window.open(selectedGuide.id === 'database' ? 'https://neon.tech' :
                                      selectedGuide.id === 'google-search-console' ? 'https://search.google.com/search-console' :
                                      selectedGuide.id === 'google-my-business' ? 'https://business.google.com' :
                                      selectedGuide.id === 'google-analytics' ? 'https://analytics.google.com' :
