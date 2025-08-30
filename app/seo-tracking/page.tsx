@@ -280,28 +280,48 @@ export default function SEOTracking() {
             <h3>🚨 Critical: Page Speed</h3>
             <p>Mobile: 42, Desktop: 66</p>
             <p><strong>Action:</strong> Optimize images and reduce JS bundle size</p>
-            <button className="action-btn">🔧 Fix Issues</button>
+            <button
+              className="action-btn"
+              onClick={() => window.open('/dev-profile?focus=page-speed', '_blank')}
+            >
+              🔧 Fix Issues
+            </button>
           </div>
           
           <div className="recommendation-card important">
             <h3>📋 Missing Schema Markup</h3>
             <p>No LocalBusiness schema detected</p>
             <p><strong>Action:</strong> Add structured data for better SERP features</p>
-            <button className="action-btn">⚡ Add Schema</button>
+            <button
+              className="action-btn"
+              onClick={() => window.open('/dev-profile?focus=schema', '_blank')}
+            >
+              ⚡ Add Schema
+            </button>
           </div>
           
           <div className="recommendation-card">
             <h3>📝 Content Gaps</h3>
             <p>Missing blog posts compared to competitors</p>
             <p><strong>Action:</strong> Create 2-3 posts monthly on solar topics</p>
-            <button className="action-btn">✍️ Create Content</button>
+            <button
+              className="action-btn"
+              onClick={() => window.open('/content-calendar?action=create', '_blank')}
+            >
+              ✍️ Create Content
+            </button>
           </div>
           
           <div className="recommendation-card">
             <h3>🔗 Link Building</h3>
             <p>Good backlink profile but could improve quality</p>
             <p><strong>Action:</strong> Target local directory listings and partnerships</p>
-            <button className="action-btn">🎯 Build Links</button>
+            <button
+              className="action-btn"
+              onClick={() => window.open('/citation-builder?action=build-links', '_blank')}
+            >
+              🎯 Build Links
+            </button>
           </div>
         </div>
       </div>
