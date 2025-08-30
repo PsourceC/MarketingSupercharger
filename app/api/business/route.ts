@@ -18,6 +18,9 @@ export async function GET() {
     )`)
     await query(`ALTER TABLE solar_business_info ADD COLUMN IF NOT EXISTS website_url TEXT`)
     await query(`ALTER TABLE solar_business_info ADD COLUMN IF NOT EXISTS website TEXT`)
+    await query(`ALTER TABLE solar_business_info ADD COLUMN IF NOT EXISTS primary_location TEXT`)
+    await query(`ALTER TABLE solar_business_info ADD COLUMN IF NOT EXISTS service_areas TEXT[]`)
+    await query(`ALTER TABLE solar_business_info ADD COLUMN IF NOT EXISTS target_keywords TEXT[]`)
 
     const res = await query(`SELECT business_name, COALESCE(website_url, website) AS website_url, primary_location, service_areas, target_keywords FROM solar_business_info ORDER BY created_at DESC LIMIT 1`)
     return NextResponse.json({ profile: res.rows?.[0] || null })
