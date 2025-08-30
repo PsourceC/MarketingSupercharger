@@ -13,6 +13,13 @@ export default function DevModeHandler() {
     // Create a more stable fetch wrapper
     window.fetch = async function(input: RequestInfo | URL, init?: RequestInit) {
       try {
+        const urlStr = typeof input === 'string' ? input : (input instanceof URL ? input.href : (input as Request).url)
+        if (typeof urlStr === 'string') {
+          const host = (() => { try { return new URL(urlStr, window.location.href).hostname } catch { return '' } })()
+          if (host.includes('fullstory') || host.includes('edge.fullstory.com')) {
+            return new Response('', { status: 204 })
+          }
+        }
         // Add timeout and retry logic for development
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
@@ -30,6 +37,10 @@ export default function DevModeHandler() {
           console.warn('Fetch timeout, retrying...', input)
           // Retry without timeout for hot reloading
           return originalFetch(input, init)
+        }
+
+        if (typeof input === 'string' && (input.includes('fullstory') || input.includes('edge.fullstory.com'))) {
+          return new Response('', { status: 204 })
         }
 
         if (error.message.includes('Failed to fetch')) {
