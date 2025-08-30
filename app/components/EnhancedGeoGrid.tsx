@@ -237,6 +237,8 @@ export default function EnhancedGeoGrid() {
   const [leafletLib, setLeafletLib] = useState<any>(null)
   const [leadersOnly, setLeadersOnly] = useState<boolean>(true)
   const [topCompetitorsList, setTopCompetitorsList] = useState<Array<{ name: string; domain: string; averagePosition: number; visibilityScore: number }>>([])
+  const [dataNotice, setDataNotice] = useState<string | null>(null)
+  const [useFallbackLegend, setUseFallbackLegend] = useState<boolean>(false)
 
   useEffect(() => {
     setMapReady(true)
@@ -262,8 +264,24 @@ export default function EnhancedGeoGrid() {
         }))
         setTopCompetitorsList(list)
         if (list.length) setTopCompetitor({ name: list[0].name, score: list[0].averagePosition })
+        const mapNames = competitors.map(c => c.name.toLowerCase())
+        const topNames = list.map((c: any) => c.name.toLowerCase())
+        const missingFromTop = mapNames.filter(n => !topNames.includes(n))
+        if (missingFromTop.length > 0) {
+          setUseFallbackLegend(true)
+          setDataNotice('Some map competitors are not in tracking yet. Showing local competitors list.')
+        } else {
+          setUseFallbackLegend(false)
+          setDataNotice(null)
+        }
+      } else {
+        setUseFallbackLegend(true)
+        setDataNotice('Competitor tracking returned no data. Showing local competitors list.')
       }
-    } catch {}
+    } catch {
+      setUseFallbackLegend(true)
+      setDataNotice('Competitor tracking unavailable. Showing local competitors list.')
+    }
   }
 
   const loadData = async () => {
@@ -331,7 +349,7 @@ export default function EnhancedGeoGrid() {
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
     switch(trend) {
       case 'up': return '📈'
-      case 'down': return '���'
+      case 'down': return '📉'
       default: return '➡️'
     }
   }
@@ -484,14 +502,27 @@ export default function EnhancedGeoGrid() {
           {showCompetitors && (
             <div className="competitor-legend">
               <h4>🥊 Competitors</h4>
+              {dataNotice && (
+                <div className="data-status-banner">
+                  {dataNotice}
+                </div>
+              )}
               <div className="competitor-list">
-                {(topCompetitorsList.length ? topCompetitorsList : competitors.map(c => ({ name: c.name, domain: '', averagePosition: c.score, visibilityScore: 0 })) )
+                {(
+                  useFallbackLegend || !topCompetitorsList.length
+                    ? competitors.map(c => ({ name: c.name, averagePosition: c.score, color: c.color }))
+                    : topCompetitorsList.map(c => ({
+                        name: c.name,
+                        averagePosition: c.averagePosition,
+                        color: (competitors.find(cc => cc.name.toLowerCase() === c.name.toLowerCase())?.color) || '#6b7280'
+                      }))
+                )
                   .slice(0, 10)
                   .map((comp: any) => (
                     <div key={comp.name} className="competitor-item">
                       <div
                         className="competitor-marker"
-                        style={{ backgroundColor: '#6b7280' }}
+                        style={{ backgroundColor: comp.color }}
                       ></div>
                       <div className="competitor-info">
                         <span className="competitor-name">{comp.name}</span>
@@ -704,7 +735,6 @@ export default function EnhancedGeoGrid() {
               .map(competitor => (
                 <Fragment key={`comp-group-${competitor.name}`}>
                   {competitor.locations.map((loc, idx) => {
-                    if (loc.score === 1) return null
                     const yourLocation = locations.find(l => l.name === loc.areaName)
                     const yourScore = yourLocation ? getPositionRanking(yourLocation, selectedKeyword) : 20
                     const gap = getCompetitiveGap(yourScore, loc.score)
