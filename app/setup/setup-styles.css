@@ -509,6 +509,18 @@
   gap: 8px;
 }
 
+/* Business Profile form */
+.form-grid {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 10px 12px;
+  align-items: center;
+}
+.form-label {
+  color: #374151;
+  font-weight: 600;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 1024px) {
   .setup-content {
