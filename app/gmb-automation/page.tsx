@@ -536,7 +536,7 @@ export default function GMBAutomation() {
     <div className="gmb-automation">
       <header className="page-header">
         <Link href="/" className="back-button">← Back to Dashboard</Link>
-        <h1>���� GMB Content Automation</h1>
+        <h1>🤖 GMB Content Automation</h1>
         <p>Generate and schedule Google My Business posts to maintain consistent presence</p>
       </header>
 
