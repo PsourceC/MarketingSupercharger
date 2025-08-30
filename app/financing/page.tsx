@@ -605,8 +605,12 @@ export default function Financing() {
               </div>
 
               <div className="form-actions">
-                <button className="submit-pre-approval">
-                  ✅ Check Pre-Approval Options
+                <button
+                  className="submit-pre-approval"
+                  onClick={handlePreApprovalSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? '⏳ Submitting...' : '✅ Check Pre-Approval Options'}
                 </button>
                 <p className="form-disclaimer">
                   <small>Soft credit check only - no impact to your credit score</small>
