@@ -149,7 +149,7 @@ export default function PriorityActionsPanel() {
       case 'SEO': return '🔍'
       case 'Reviews': return '⭐'
       case 'Content': return '📝'
-      case 'Technical': return '⚙️'
+      case 'Technical': return '���️'
       default: return '📊'
     }
   }
@@ -445,12 +445,12 @@ export default function PriorityActionsPanel() {
           <div className="actions-section">
             <h4 className="section-title medium">⚡ Medium Priority - This Month</h4>
             {mediumActions.map(action => (
-              <div 
-                key={action.id} 
+              <div
+                key={action.id}
                 className={`action-item medium ${expandedAction === action.id ? 'expanded' : ''}`}
                 style={{ borderLeftColor: getPriorityColor(action.priority) }}
               >
-                <div 
+                <div
                   className="action-header"
                   onClick={() => setExpandedAction(expandedAction === action.id ? null : action.id)}
                 >
@@ -467,13 +467,13 @@ export default function PriorityActionsPanel() {
                     <span className="expand-icon">{expandedAction === action.id ? '▼' : '▶'}</span>
                   </div>
                 </div>
-                
+
                 <p className="action-description">{action.description}</p>
-                
+
                 {action.completionPercentage !== undefined && (
                   <div className="progress-section">
                     <div className="progress-bar">
-                      <div 
+                      <div
                         className="progress-fill"
                         style={{ width: `${action.completionPercentage}%` }}
                       ></div>
@@ -481,7 +481,7 @@ export default function PriorityActionsPanel() {
                     <span className="progress-text">{action.completionPercentage}% complete</span>
                   </div>
                 )}
-                
+
                 {expandedAction === action.id && (
                   <div className="action-details">
                     <div className="details-grid">
@@ -491,7 +491,7 @@ export default function PriorityActionsPanel() {
                       </div>
                       <div className="detail-item">
                         <span className="detail-label">Effort:</span>
-                        <span 
+                        <span
                           className="effort-badge"
                           style={{ color: getEffortColor(action.effort) }}
                         >
@@ -499,7 +499,7 @@ export default function PriorityActionsPanel() {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="next-steps">
                       <h6>Next Steps:</h6>
                       <ul>
@@ -508,12 +508,27 @@ export default function PriorityActionsPanel() {
                         ))}
                       </ul>
                     </div>
-                    
+
                     <div className="action-buttons">
-                      <button className="action-btn primary">Start Now</button>
-                      <button className="action-btn secondary">Schedule</button>
+                      <button
+                        className="action-btn primary"
+                        onClick={() => handleStartAction(action)}
+                      >
+                        Start Now
+                      </button>
+                      <button
+                        className="action-btn secondary"
+                        onClick={() => handleScheduleAction(action)}
+                      >
+                        Schedule
+                      </button>
                       {action.automatable && (
-                        <button className="action-btn automation">🤖 Automate</button>
+                        <button
+                          className="action-btn automation"
+                          onClick={() => handleAutomateAction(action)}
+                        >
+                          🤖 Automate
+                        </button>
                       )}
                     </div>
                   </div>
@@ -557,7 +572,12 @@ export default function PriorityActionsPanel() {
         <div className="no-actions">
           <h4>🎯 No Actions Available</h4>
           <p>Connect your business APIs to generate personalized priority actions.</p>
-          <button className="setup-actions-btn">⚙️ Setup Action Tracking</button>
+          <button
+            className="setup-actions-btn"
+            onClick={() => window.open('/setup?focus=actions', '_blank')}
+          >
+            ⚙️ Setup Action Tracking
+          </button>
         </div>
       )}
     </div>
