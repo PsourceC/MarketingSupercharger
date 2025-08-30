@@ -12,7 +12,7 @@
   color: white;
 }
 
-.back-button {
+.gmb-automation .back-button {
   display: inline-block;
   color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
@@ -22,7 +22,7 @@
   transition: background 0.3s;
 }
 
-.back-button:hover {
+.gmb-automation .back-button:hover {
   background: rgba(255, 255, 255, 0.1);
   color: white;
 }
