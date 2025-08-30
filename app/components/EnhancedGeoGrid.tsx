@@ -429,7 +429,7 @@ export default function EnhancedGeoGrid() {
               checked={competitorComparisonMode}
               onChange={(e) => setCompetitorComparisonMode(e.target.checked)}
             />
-            <span className="toggle-text">�� Comparison Mode</span>
+            <span className="toggle-text">📊 Comparison Mode</span>
           </label>
         </div>
 
