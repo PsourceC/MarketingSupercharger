@@ -28,7 +28,6 @@ const pool = new Pool({
   max: 10,
   idleTimeoutMillis: 60000,
   connectionTimeoutMillis: 10000,
-  acquireTimeoutMillis: 20000,
   allowExitOnIdle: true,
 })
 
