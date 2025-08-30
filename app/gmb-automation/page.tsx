@@ -170,6 +170,89 @@ export default function GMBAutomation() {
     }
   }
 
+  const handleSchedulePost = async (template: PostTemplate) => {
+    const scheduleDate = prompt('Enter schedule date (YYYY-MM-DD):')
+    if (!scheduleDate) return
+
+    try {
+      const response = await fetch('/api/gmb-posts/schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: template.id,
+          scheduleDate,
+          content: template.content,
+          title: template.title
+        })
+      })
+
+      if (response.ok) {
+        // Update the post status in local state
+        const updatedPosts = generatedPosts.map(post =>
+          post.id === template.id
+            ? { ...post, status: 'scheduled' as const, publishDate: scheduleDate }
+            : post
+        )
+        setGeneratedPosts(updatedPosts)
+        alert(`✅ Post scheduled for ${scheduleDate}`)
+      } else {
+        // Fallback: just update local state
+        const updatedPosts = generatedPosts.map(post =>
+          post.id === template.id
+            ? { ...post, status: 'scheduled' as const, publishDate: scheduleDate }
+            : post
+        )
+        setGeneratedPosts(updatedPosts)
+        alert(`📅 Post scheduled locally for ${scheduleDate}. Note: Connect GMB API for automatic posting.`)
+      }
+    } catch (error) {
+      console.error('Error scheduling post:', error)
+      alert('⚠️ Could not schedule post. Please check your GMB API connection.')
+    }
+  }
+
+  const handlePublishPost = async (template: PostTemplate) => {
+    const confirmed = confirm(`Publish "${template.title}" to Google My Business now?`)
+    if (!confirmed) return
+
+    try {
+      const response = await fetch('/api/gmb-posts/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: template.id,
+          content: template.content,
+          title: template.title,
+          keywords: template.keywords
+        })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        // Update the post status
+        const updatedPosts = generatedPosts.map(post =>
+          post.id === template.id
+            ? { ...post, status: 'published' as const }
+            : post
+        )
+        setGeneratedPosts(updatedPosts)
+        alert('🚀 Post published successfully to Google My Business!')
+      } else {
+        // Fallback: just update local state
+        const updatedPosts = generatedPosts.map(post =>
+          post.id === template.id
+            ? { ...post, status: 'published' as const }
+            : post
+        )
+        setGeneratedPosts(updatedPosts)
+        alert('📱 Post marked as published. Note: Connect GMB API for automatic posting to Google.')
+      }
+    } catch (error) {
+      console.error('Error publishing post:', error)
+      alert('⚠️ Could not publish to GMB. Please check your Google My Business API connection.')
+    }
+  }
+
   return (
     <div className="gmb-automation">
       <header className="page-header">
@@ -227,7 +310,7 @@ export default function GMBAutomation() {
             disabled={isGenerating}
             className="generate-btn offer"
           >
-            {isGenerating ? '⏳ Generating...' : '💰 Generate Special Offer'}
+            {isGenerating ? '�� Generating...' : '💰 Generate Special Offer'}
           </button>
         </div>
       </div>
