@@ -25,12 +25,19 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const isDevelopment = process.env.NODE_ENV === 'development'
+
   return (
     <html lang="en">
-      <body>
+      <body className={isDevelopment ? 'suppress-dev-warnings' : ''}>
         <ErrorBoundary>
           <DevModeHandler />
-          {children}
+          {isDevelopment && (
+            <div className="dev-mode-active">DEV MODE</div>
+          )}
+          <div className="prevent-layout-shift">
+            {children}
+          </div>
         </ErrorBoundary>
       </body>
     </html>
