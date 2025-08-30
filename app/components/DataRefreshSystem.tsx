@@ -114,13 +114,45 @@ export default function DataRefreshSystem() {
     setRefreshStatus(prev => ({ ...prev, isRefreshing: true }))
 
     try {
-      // Trigger API data refresh
-      const refreshSuccess = await triggerDataRefresh()
+      // Trigger API data refresh with timeout and retry logic
+      let refreshSuccess = false
+      let retryCount = 0
+      const maxRetries = 2
+
+      while (!refreshSuccess && retryCount <= maxRetries) {
+        try {
+          refreshSuccess = await triggerDataRefresh()
+
+          if (!refreshSuccess && retryCount < maxRetries) {
+            console.warn(`Refresh attempt ${retryCount + 1} failed, retrying...`)
+            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))) // Exponential backoff
+            retryCount++
+          } else {
+            break
+          }
+        } catch (retryError: any) {
+          console.warn(`Refresh retry ${retryCount + 1} error:`, retryError.message)
+
+          // Don't retry on certain error types
+          if (retryError.message.includes('Failed to fetch') && retryCount === 0) {
+            console.warn('Network issue detected, attempting one retry...')
+            await new Promise(resolve => setTimeout(resolve, 2000))
+            retryCount++
+          } else {
+            retryCount = maxRetries + 1 // Exit retry loop
+          }
+        }
+      }
 
       if (refreshSuccess) {
         // Load fresh updates
-        await loadRecentUpdates()
-        setRefreshCount(prev => prev + 1)
+        try {
+          await loadRecentUpdates()
+          setRefreshCount(prev => prev + 1)
+        } catch (updateError) {
+          console.warn('Failed to load updates after refresh:', updateError)
+          // Continue anyway, refresh might have worked
+        }
       }
 
       const now = new Date()
@@ -142,9 +174,29 @@ export default function DataRefreshSystem() {
         }
       }))
 
-    } catch (error) {
-      console.error('Refresh failed:', error)
-      setRefreshStatus(prev => ({ ...prev, isRefreshing: false }))
+    } catch (error: any) {
+      console.error('Data refresh failed:', error)
+
+      // Set refresh as complete even on error to prevent stuck state
+      const now = new Date()
+      const nextRefresh = new Date(now.getTime() + refreshStatus.refreshInterval * 60 * 1000)
+
+      setRefreshStatus(prev => ({
+        ...prev,
+        isRefreshing: false,
+        lastRefresh: now,
+        nextRefresh
+      }))
+
+      // Still trigger the event so components know refresh attempted
+      window.dispatchEvent(new CustomEvent('dataRefresh', {
+        detail: {
+          timestamp: now,
+          refreshCount: refreshCount,
+          success: false,
+          error: error.message
+        }
+      }))
     }
   }, [loadRecentUpdates, refreshStatus.refreshInterval, refreshCount])
 
