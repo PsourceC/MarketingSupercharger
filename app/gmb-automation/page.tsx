@@ -551,6 +551,10 @@ export default function GMBAutomation() {
                 >
                   ✏️ Edit
                 </button>
+                <button className="action-btn" onClick={() => setPreview({ postId: template.id, index: 0 })}>👀 Preview</button>
+                <button className="action-btn" onClick={() => handleRegenerateText(template)}>♻️ Regenerate Text</button>
+                <button className="action-btn" onClick={() => handleGenerateMedia(template, 'image')}>✨ New Image</button>
+                <button className="action-btn" onClick={() => handleGenerateMedia(template, 'video')}>🎞️ New Video</button>
                 <button className="action-btn" onClick={() => fileInputRef.current?.click()}>📁 Add Media</button>
                 <input
                   ref={fileInputRef}
@@ -561,8 +565,6 @@ export default function GMBAutomation() {
                   onChange={(e) => handleFileSelect(template.id, e.target.files)}
                 />
                 <button className="action-btn" onClick={() => handleAddMediaUrl(template.id)}>🔗 Add URL</button>
-                <button className="action-btn" onClick={() => handleGenerateMedia(template, 'image')}>✨ Generate Image</button>
-                <button className="action-btn" onClick={() => handleGenerateMedia(template, 'video')}>🎞️ Generate Video</button>
                 <button
                   className="action-btn"
                   onClick={() => handleSchedulePost(template)}
