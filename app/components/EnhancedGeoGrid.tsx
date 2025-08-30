@@ -791,8 +791,8 @@ export default function EnhancedGeoGrid() {
                       </>
                     )
 
-                    if (loc.score === 1) {
-                      const icon = L.divIcon({
+                    if (loc.score === 1 && leafletLib?.divIcon) {
+                      const icon = leafletLib.divIcon({
                         className: 'comp-square-marker-icon',
                         html: `<div style="width:${markerSize * 2}px;height:${markerSize * 2}px;background:${competitor.color};border:${competitorComparisonMode ? 3 : 2}px solid ${competitorComparisonMode ? gap.color : '#ffffff'};transform:translate(-50%,-50%);"></div>`,
                         iconSize: [markerSize * 2, markerSize * 2],
