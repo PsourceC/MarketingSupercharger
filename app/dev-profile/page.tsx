@@ -29,6 +29,7 @@ export default function DevProfilePage() {
   const [isChecking, setIsChecking] = useState(false)
   const [lastHealthCheck, setLastHealthCheck] = useState<string>('')
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
+  const [aiLive, setAiLive] = useState(false)
   const isDevelopment = process.env.NODE_ENV === 'development'
 
   useEffect(() => {
@@ -172,6 +173,8 @@ export default function DevProfilePage() {
     } catch (e) {
       console.warn('Failed to load unified service statuses:', e)
     }
+
+    setAiLive(unifiedStatuses['ai-ranking-tracker']?.status === 'working')
 
     const mapServiceToConnection = (svcId: string): { mapped: 'connected' | 'pending' | 'disconnected'; note?: string } => {
       const svc = unifiedStatuses[svcId]
@@ -501,7 +504,7 @@ export default function DevProfilePage() {
                         Connect Database
                       </button>
                     )}
-                    {connections.find(c => c.id === 'google-oauth' && c.status !== 'connected') && (
+                    {connections.find(c => c.id === 'google-oauth' && c.status !== 'connected') && !aiLive && (
                       <button
                         className="action-btn google-search-console"
                         onClick={() => {
@@ -540,11 +543,13 @@ export default function DevProfilePage() {
       <div className="data-import-section">
         <h3>📊 Data Sources & Import</h3>
         <div className="import-grid">
-          <div className="import-card">
-            <h4>🔗 Google Search Console Connection</h4>
-            <p>Connect to Google Search Console to get real ranking and performance data</p>
-            <GoogleAuthButton />
-          </div>
+          {!aiLive && (
+            <div className="import-card">
+              <h4>🔗 Google Search Console Connection</h4>
+              <p>Connect to Google Search Console to get real ranking and performance data</p>
+              <GoogleAuthButton />
+            </div>
+          )}
 
           <div className="import-card">
             <h4>📈 Data Source Status</h4>
