@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
 
-import { NextResponse } from 'next/server'
-
 export async function GET() {
   try {
     // Check if we have stored OAuth tokens
