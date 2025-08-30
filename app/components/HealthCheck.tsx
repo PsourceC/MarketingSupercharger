@@ -76,8 +76,8 @@ export default function HealthCheck() {
     // Run initial check
     runHealthCheck()
 
-    // Run periodic checks
-    const interval = setInterval(runHealthCheck, 30000) // Every 30 seconds
+    // Run periodic checks less frequently to reduce load
+    const interval = setInterval(runHealthCheck, 120000) // Every 2 minutes
 
     return () => clearInterval(interval)
   }, [])
