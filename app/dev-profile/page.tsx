@@ -97,22 +97,26 @@ export default function DevProfilePage() {
       {
         id: 'citation-tracking',
         name: 'Citation Monitoring',
-        description: 'Track business listings across directories (Moz Local, BrightLocal)',
+        description: 'Track business listings across directories (free, custom crawler)',
         status: 'disconnected',
         category: 'optimization',
         priority: 'high',
         setupUrl: '/setup?service=citation-tracking',
-        docsUrl: '/setup?service=citation-tracking'
+        docsUrl: '/setup?service=citation-tracking',
+        workaroundActive: true,
+        workaroundText: 'Using free directory checks (no paid APIs)'
       },
       {
         id: 'competitor-api',
         name: 'Competitor Tracking',
-        description: 'Monitor competitor rankings and performance (SEMrush, Ahrefs)',
+        description: 'Monitor competitor rankings and performance (free SERP simulation)',
         status: 'disconnected',
         category: 'optimization',
         priority: 'medium',
         setupUrl: '/setup?service=competitor-tracking',
-        docsUrl: '/setup?service=competitor-tracking'
+        docsUrl: '/setup?service=competitor-tracking',
+        workaroundActive: true,
+        workaroundText: 'Using free SERP-based tracking (no paid tools)'
       },
 
       // Analytics & Monitoring
