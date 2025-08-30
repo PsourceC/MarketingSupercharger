@@ -107,7 +107,12 @@ export async function GET() {
   }
 
   // Check Google My Business Status
-  if (process.env.GMB_STORE_CODE || process.env.GMB_BUSINESS_PROFILE_ID || process.env.GMB_OAUTH_CLIENT_ID || process.env.GMB_CREDENTIALS_JSON) {
+  if (process.env.GMB_ACCESS_TOKEN || process.env.GMB_REFRESH_TOKEN) {
+    services['google-my-business'] = {
+      status: 'working',
+      message: 'Authorized with Google My Business'
+    }
+  } else if (process.env.GMB_STORE_CODE || process.env.GMB_BUSINESS_PROFILE_ID || process.env.GMB_OAUTH_CLIENT_ID || process.env.GMB_CREDENTIALS_JSON) {
     const parts: string[] = []
     if (process.env.GMB_STORE_CODE) parts.push('Store Code set')
     if (process.env.GMB_BUSINESS_PROFILE_ID) parts.push('Business Profile ID set')
