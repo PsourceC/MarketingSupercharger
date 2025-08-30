@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { query } from '../../lib/server-only'
 import { brightData } from '../../lib/brightdata'
+import { isEmailConfigured } from '../../lib/email'
 
 export const dynamic = 'force-dynamic'
 
@@ -106,27 +107,50 @@ export async function GET() {
     message: 'Google authentication not configured' 
   }
 
-  // Check Google My Business Status
-  if (process.env.GMB_ACCESS_TOKEN || process.env.GMB_REFRESH_TOKEN) {
-    services['google-my-business'] = {
-      status: 'working',
-      message: 'Authorized with Google My Business'
+  // Check Google My Business Status (env or DB-stored tokens)
+  try {
+    let gmbTokenFound = !!(process.env.GMB_ACCESS_TOKEN || process.env.GMB_REFRESH_TOKEN)
+    if (!gmbTokenFound) {
+      const t = await query(`
+        CREATE TABLE IF NOT EXISTS gmb_tokens (
+          id SERIAL PRIMARY KEY,
+          access_token TEXT,
+          refresh_token TEXT,
+          token_type TEXT,
+          expiry_date BIGINT,
+          updated_at TIMESTAMP DEFAULT NOW()
+        );
+      `)
+      const r = await query(`SELECT access_token, refresh_token FROM gmb_tokens ORDER BY updated_at DESC LIMIT 1`)
+      const row = r.rows?.[0]
+      gmbTokenFound = !!(row?.access_token || row?.refresh_token)
     }
-  } else if (process.env.GMB_STORE_CODE || process.env.GMB_BUSINESS_PROFILE_ID || process.env.GMB_OAUTH_CLIENT_ID || process.env.GMB_CREDENTIALS_JSON) {
-    const parts: string[] = []
-    if (process.env.GMB_STORE_CODE) parts.push('Store Code set')
-    if (process.env.GMB_BUSINESS_PROFILE_ID) parts.push('Business Profile ID set')
-    if (process.env.GMB_OAUTH_CLIENT_ID) parts.push('OAuth Client ID set')
-    if (process.env.GMB_CREDENTIALS_JSON) parts.push('Credentials JSON loaded')
+    if (gmbTokenFound) {
+      services['google-my-business'] = {
+        status: 'working',
+        message: 'Authorized with Google My Business'
+      }
+    } else if (process.env.GMB_STORE_CODE || process.env.GMB_BUSINESS_PROFILE_ID || process.env.GMB_OAUTH_CLIENT_ID || process.env.GMB_CREDENTIALS_JSON || process.env.GOOGLE_CLIENT_ID) {
+      const parts: string[] = []
+      if (process.env.GMB_STORE_CODE) parts.push('Store Code set')
+      if (process.env.GMB_BUSINESS_PROFILE_ID) parts.push('Business Profile ID set')
+      if (process.env.GMB_OAUTH_CLIENT_ID || process.env.GOOGLE_CLIENT_ID) parts.push('OAuth Client ID set')
+      if (process.env.GMB_CREDENTIALS_JSON) parts.push('Credentials JSON loaded')
 
-    services['google-my-business'] = {
-      status: 'partial',
-      message: `Configuration detected (${parts.join(', ')})`
+      services['google-my-business'] = {
+        status: 'partial',
+        message: `Configuration detected (${parts.join(', ')})`
+      }
+    } else {
+      services['google-my-business'] = {
+        status: 'not-setup',
+        message: 'GMB API credentials not configured'
+      }
     }
-  } else {
+  } catch (e: any) {
     services['google-my-business'] = {
       status: 'not-setup',
-      message: 'GMB API credentials not configured'
+      message: 'Failed to check GMB status'
     }
   }
 
@@ -142,11 +166,30 @@ export async function GET() {
     message: 'Social media accounts not connected'
   }
 
-  // Check Email Notifications (SMTP-based)
-  const smtpReady = !!(process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.SMTP_USER && process.env.SMTP_PASS && (process.env.ALERT_EMAIL_TO || process.env.NOTIFY_EMAIL_TO))
-  services['email-notifications'] = smtpReady
-    ? { status: 'working', message: 'SMTP configured - alerts enabled' }
-    : { status: 'not-setup', message: 'Set SMTP_HOST/PORT/USER/PASS and ALERT_EMAIL_TO' }
+  // Check Email Notifications (SMTP + recipient)
+  try {
+    const smtpConfigured = isEmailConfigured()
+    let hasRecipient = !!(process.env.ALERT_EMAIL_TO || process.env.NOTIFY_EMAIL_TO)
+    if (!hasRecipient) {
+      await query(`CREATE TABLE IF NOT EXISTS notification_settings (
+        id SERIAL PRIMARY KEY,
+        recipients TEXT[],
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`)
+      const rs = await query(`SELECT recipients FROM notification_settings ORDER BY updated_at DESC LIMIT 1`)
+      const arr = rs.rows?.[0]?.recipients as string[] | undefined
+      hasRecipient = !!(arr && arr.length > 0)
+    }
+    if (smtpConfigured && hasRecipient) {
+      services['email-notifications'] = { status: 'working', message: 'SMTP configured - alerts enabled' }
+    } else if (smtpConfigured) {
+      services['email-notifications'] = { status: 'partial', message: 'SMTP configured but no recipient saved' }
+    } else {
+      services['email-notifications'] = { status: 'not-setup', message: 'Set SMTP_HOST/PORT/USER/PASS' }
+    }
+  } catch (e: any) {
+    services['email-notifications'] = { status: 'not-setup', message: 'Failed to check email settings' }
+  }
 
   // Check Review Management Status (simulate)
   services['review-management'] = {
