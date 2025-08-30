@@ -9,7 +9,7 @@ export default function MetricsOverview() {
   const [metrics, setMetrics] = useState<Metric[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   // Fetch real metrics data
   useEffect(() => {
@@ -141,7 +141,7 @@ export default function MetricsOverview() {
           </div>
           <div className="data-status">
             <span className="data-indicator live">🟢</span>
-            <span className="data-time">Updated: {lastUpdated.toLocaleTimeString()}</span>
+            <span className="data-time">Updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : '—'}</span>
           </div>
         </div>
       </div>
