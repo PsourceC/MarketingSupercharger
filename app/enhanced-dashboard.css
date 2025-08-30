@@ -608,6 +608,44 @@
   font-size: 0.9rem;
 }
 
+.comparison-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.comparison-note p {
+  margin: 0;
+  color: #374151;
+  font-size: 0.85rem;
+}
+
+.comparison-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.comp-refresh-btn, .comp-setup-btn {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.comp-refresh-btn:hover, .comp-setup-btn:hover {
+  background: #f3f4f6;
+}
+
 .comparison-bars {
   display: flex;
   flex-direction: column;
