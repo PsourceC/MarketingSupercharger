@@ -147,7 +147,7 @@ export default function GoogleAuthButton() {
             ⚠️ OAuth setup needed. Add this redirect URI to Google Cloud Console:
           </p>
           <code className="redirect-uri-code">
-            https://da6999115c974d4388527cf50744332c-14cf5492-00a1-4a72-bec8-711809.fly.dev/api/auth/google/callback
+            {window.location.origin}/api/auth/google/callback
           </code>
           <p className="auth-help-text">
             💡 <strong>Quick alternative:</strong> Use sample data below while setting up OAuth!
