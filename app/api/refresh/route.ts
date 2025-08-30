@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { NextResponse } from 'next/server'
 import { query } from '../../lib/server-only'
+import { isEmailConfigured, sendEmail } from '../../lib/email'
 
 // Orchestrate safe, rate-limited refreshes for data sources
 export async function POST() {
