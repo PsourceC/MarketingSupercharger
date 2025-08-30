@@ -326,10 +326,22 @@ export default function GMBAutomation() {
   const handleGenerateMedia = async (template: PostTemplate, kind: 'image' | 'video') => {
     if (kind === 'image') {
       const dataUrl = await generateBrandedImage(template)
-      addMediaToPost(template.id, [{ id: `${Date.now()}-genimg`, type: 'image', url: dataUrl }])
+      const att: MediaAttachment = { id: `${Date.now()}-genimg`, type: 'image', url: dataUrl, name: `${template.keywords.join('-')}` }
+      const rel = computeRelevance(template, att)
+      if (rel.level !== 'High') {
+        alert('Regenerating image to achieve higher relevance...')
+        return handleGenerateMedia(template, 'image')
+      }
+      addMediaToPost(template.id, [att])
     } else {
       const vidUrl = await generateBrandedVideo(template)
-      addMediaToPost(template.id, [{ id: `${Date.now()}-genvid`, type: 'video', url: vidUrl }])
+      const att: MediaAttachment = { id: `${Date.now()}-genvid`, type: 'video', url: vidUrl, name: `${template.keywords.join('-')}-${template.cta}` }
+      const rel = computeRelevance(template, att)
+      if (rel.level !== 'High') {
+        alert('Regenerating video to achieve higher relevance...')
+        return handleGenerateMedia(template, 'video')
+      }
+      addMediaToPost(template.id, [att])
     }
   }
 
