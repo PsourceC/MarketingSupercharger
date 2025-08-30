@@ -614,7 +614,26 @@ export default function GMBAutomation() {
                   <span key={keyword} className="keyword-tag">#{keyword}</span>
                 ))}
               </div>
-              
+
+              <div className="impact-panel">
+                {(() => {
+                  const impact = computeImpact(template, getPostMedia(template.id))
+                  return (
+                    <div className="impact-grid">
+                      <div>
+                        <div className="impact-total">Projected Impact: +{impact.total}%</div>
+                        <div className="accuracy-badge">Accuracy: {impact.accuracy}%</div>
+                      </div>
+                      <div className="impact-breakdown">
+                        <div className="impact-row"><span>CTR</span><strong>+{impact.breakdown.ctr}%</strong></div>
+                        <div className="impact-row"><span>Engagement</span><strong>+{impact.breakdown.engagement}%</strong></div>
+                        <div className="impact-row"><span>Conversions</span><strong>+{impact.breakdown.conversions}%</strong></div>
+                      </div>
+                    </div>
+                  )
+                })()}
+              </div>
+
               <div className="media-strip">
                 {getPostMedia(template.id).map(att => (
                   <div key={att.id} className="media-thumb">
@@ -639,7 +658,7 @@ export default function GMBAutomation() {
                 <button className="action-btn" onClick={() => handleRegenerateText(template)}>♻️ Regenerate Text</button>
                 <button className="action-btn" onClick={() => handleGenerateMedia(template, 'image')}>✨ New Image</button>
                 <button className="action-btn" onClick={() => handleGenerateMedia(template, 'video')}>🎞️ New Video</button>
-                <button className="action-btn" onClick={() => fileInputRef.current?.click()}>📁 Add Media</button>
+                <button className="action-btn" onClick={() => fileInputRef.current?.click()}>�� Add Media</button>
                 <input
                   ref={fileInputRef}
                   type="file"
