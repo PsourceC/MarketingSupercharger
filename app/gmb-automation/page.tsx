@@ -156,7 +156,7 @@ export default function GMBAutomation() {
       },
       offer: {
         title: 'Limited Time Solar Special Offer',
-        content: `🎉 SPECIAL OFFER: $1,000 OFF Solar Installation!\n\n💰 Additional savings on top of federal credits\n⚡ Free energy consultation included\n🔧 Professional installation by certified team\n📞 Limited time - book by month end\n\nDon't wait! This exclusive offer won't last long. Join hundreds of Austin families saving with solar.`,
+        content: `🎉 SPECIAL OFFER: $1,000 OFF Solar Installation!\n\n💰 Additional savings on top of federal credits\n⚡ Free energy consultation included\n🔧 Professional installation by certified team\n���� Limited time - book by month end\n\nDon't wait! This exclusive offer won't last long. Join hundreds of Austin families saving with solar.`,
         keywords: ['solar deal', 'Austin solar offer', 'solar discount'],
         cta: 'Claim Offer'
       }
@@ -218,7 +218,16 @@ export default function GMBAutomation() {
     const url = prompt('Paste image/video URL (supports Builder CMS asset URLs):')
     if (!url) return
     const type: 'image' | 'video' = url.match(/\.(mp4|webm|mov)(\?|$)/i) ? 'video' : 'image'
-    addMediaToPost(postId, [{ id: `${Date.now()}-url`, type, url }])
+    const temp: MediaAttachment = { id: `${Date.now()}-url`, type, url, name: url.split('/').pop() || 'external-media' }
+    const tmpl = combinedTemplates.find(t => t.id === postId)
+    if (tmpl) {
+      const rel = computeRelevance(tmpl, temp)
+      if (rel.level !== 'High') {
+        alert('Only highly relevant media is allowed. Please choose a more relevant asset or use Generate to create a perfect match.')
+        return
+      }
+    }
+    addMediaToPost(postId, [temp])
   }
 
   const handleAddSuggested = (postId: string, item: { type: 'image' | 'video'; url: string; name: string }) => {
