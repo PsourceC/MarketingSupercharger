@@ -756,6 +756,7 @@ export default function EnhancedGeoGrid() {
                       )
                     }
 
+                    if (leadersOnly) return null
                     return (
                       <CircleMarker
                         key={`comp-${competitor.name}-${idx}`}
