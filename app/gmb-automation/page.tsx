@@ -144,7 +144,7 @@ export default function GMBAutomation() {
       },
       product: {
         title: 'Premium Solar Products & Equipment',
-        content: `🔋 High-quality solar equipment for maximum efficiency!\n\n⚡ REC solar panels - 25 year warranty\n🔋 Tesla Powerwall integration available\n📱 Enphase monitoring systems\n���� Tier 1 equipment only\n\nUpgrade your Austin home with the best solar technology. Quality products, expert installation, unbeatable performance.`,
+        content: `🔋 High-quality solar equipment for maximum efficiency!\n\n⚡ REC solar panels - 25 year warranty\n🔋 Tesla Powerwall integration available\n📱 Enphase monitoring systems\n🌟 Tier 1 equipment only\n\nUpgrade your Austin home with the best solar technology. Quality products, expert installation, unbeatable performance.`,
         keywords: ['solar panels', 'Tesla Powerwall', 'solar equipment'],
         cta: 'View Products'
       },
@@ -484,6 +484,51 @@ export default function GMBAutomation() {
     } catch (error) {
       console.error('Error publishing post:', error)
       alert('⚠️ Could not publish to GMB. Please check your Google My Business API connection.')
+    }
+  }
+
+  // Fetch metrics to calibrate impact estimates
+  const [metrics, setMetrics] = useState<any | null>(null)
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const r = await fetch('/api/metrics')
+        if (r.ok) setMetrics(await r.json())
+      } catch {}
+    })()
+  }, [])
+
+  const computeImpact = (template: PostTemplate, media: MediaAttachment[]) => {
+    const hasHighImage = media.some(m => m.type === 'image' && computeRelevance(template, m).level === 'High')
+    const hasHighVideo = media.some(m => m.type === 'video' && computeRelevance(template, m).level === 'High')
+
+    let ctr = 0, engagement = 0, conversions = 0
+    if (hasHighImage) { ctr += 14; engagement += 12 }
+    if (hasHighVideo) { ctr += 20; engagement += 22; conversions += 10 }
+
+    const textQuality = Math.min(100, template.keywords.length * 12 + (template.content.length > 300 ? 24 : 0))
+    ctr += Math.floor(textQuality / 7)
+    engagement += Math.floor(textQuality / 9)
+
+    if (metrics?.total_clicks) {
+      conversions += Math.min(18, Math.floor(metrics.total_clicks / 900))
+    }
+
+    const total = Math.min(100, ctr * 0.5 + engagement * 0.3 + conversions * 0.2)
+
+    const freshness = 0.8
+    const sample = metrics ? 0.75 : 0.45
+    const accuracy = Math.round((0.6 + freshness * 0.25 + sample * 0.15) * 100)
+
+    return {
+      total: Math.round(total),
+      breakdown: { ctr: Math.round(ctr), engagement: Math.round(engagement), conversions: Math.round(conversions) },
+      accuracy,
+      goals: [
+        { label: 'Increase CTR', percent: Math.round(ctr) },
+        { label: 'Boost Local Engagement', percent: Math.round(engagement) },
+        { label: 'Drive Conversions', percent: Math.round(conversions) }
+      ]
     }
   }
 
