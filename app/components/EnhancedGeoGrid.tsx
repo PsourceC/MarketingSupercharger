@@ -370,19 +370,31 @@ export default function EnhancedGeoGrid() {
         </div>
 
         {showCompetitors && (
-          <div className="control-group">
-            <label className="control-label">🎯 Compare With:</label>
-            <select
-              value={selectedCompetitor}
-              onChange={(e) => setSelectedCompetitor(e.target.value)}
-              className="enhanced-select competitor-select"
-            >
-              <option value="all">All Competitors</option>
-              {competitors.map(comp => (
-                <option key={comp.name} value={comp.name}>{comp.name}</option>
-              ))}
-            </select>
-          </div>
+          <>
+            <div className="control-group">
+              <label className="control-label">🎯 Compare With:</label>
+              <select
+                value={selectedCompetitor}
+                onChange={(e) => setSelectedCompetitor(e.target.value)}
+                className="enhanced-select competitor-select"
+              >
+                <option value="all">All Competitors</option>
+                {competitors.map(comp => (
+                  <option key={comp.name} value={comp.name}>{comp.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="control-group">
+              <label className="toggle-control">
+                <input
+                  type="checkbox"
+                  checked={leadersOnly}
+                  onChange={(e) => setLeadersOnly(e.target.checked)}
+                />
+                <span className="toggle-text">🏁 Show Leaders Only</span>
+              </label>
+            </div>
+          </>
         )}
 
         <div className="control-group">
