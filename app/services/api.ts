@@ -219,9 +219,65 @@ export async function fetchCitationData(): Promise<CitationDataResponse> {
 }
 
 // Competitor tracking
-export async function fetchCompetitorData() {
+export interface CompetitorAnalysisRecord {
+  competitor: {
+    id: string
+    name: string
+    domain: string
+    location: string
+    businessType: string
+    lastUpdated: Date
+  }
+  rankings: Array<{
+    keyword: string
+    position: number | null
+    url: string
+    title: string
+    estimatedTraffic: number
+  }>
+  averagePosition: number
+  totalKeywords: number
+  estimatedTraffic: number
+  visibilityScore: number
+  trending: 'up' | 'down' | 'stable'
+}
+
+export interface CompetitorSummaryData {
+  totalCompetitors: number
+  averagePosition: number
+  marketShare: number
+  topCompetitors: Array<{
+    name: string
+    domain: string
+    averagePosition: number
+    visibilityScore: number
+  }>
+  keywordGaps: Array<{
+    keyword: string
+    competitorCount: number
+    opportunity: 'high' | 'medium' | 'low'
+  }>
+  lastUpdated: Date
+}
+
+export interface CompetitorInsight {
+  insight: string
+  type: 'opportunity' | 'threat' | 'trend'
+  priority: 'high' | 'medium' | 'low'
+  actionable: boolean
+}
+
+export interface CompetitorDataResponse {
+  competitors: CompetitorAnalysisRecord[]
+  summary: CompetitorSummaryData
+  insights: CompetitorInsight[]
+  fromCache?: boolean
+  error?: string
+}
+
+export async function fetchCompetitorData(): Promise<CompetitorDataResponse> {
   try {
-    return await apiFetch('/competitor-tracking')
+    return await apiFetch<CompetitorDataResponse>('/competitor-tracking')
   } catch (error) {
     console.error('Failed to fetch competitor data:', error)
     return {
