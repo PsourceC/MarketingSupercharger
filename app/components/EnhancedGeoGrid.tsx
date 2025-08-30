@@ -241,7 +241,27 @@ export default function EnhancedGeoGrid() {
   useEffect(() => {
     setMapReady(true)
     void loadData()
+    void refreshCompetitorSummary()
+    const interval = setInterval(() => { void refreshCompetitorSummary() }, 5 * 60 * 1000)
+    return () => clearInterval(interval)
   }, [])
+
+  const refreshCompetitorSummary = async () => {
+    try {
+      const res = await fetch('/api/competitor-tracking', { cache: 'no-cache' })
+      const data = await res.json()
+      if (res.ok && data?.summary?.topCompetitors) {
+        const list = data.summary.topCompetitors.slice(0, 10).map((c: any) => ({
+          name: c.name,
+          domain: c.domain,
+          averagePosition: c.averagePosition,
+          visibilityScore: c.visibilityScore
+        }))
+        setTopCompetitorsList(list)
+        if (list.length) setTopCompetitor({ name: list[0].name, score: list[0].averagePosition })
+      }
+    } catch {}
+  }
 
   const loadData = async () => {
     try {
