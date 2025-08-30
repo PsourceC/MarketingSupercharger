@@ -66,7 +66,7 @@ export default function MetricsOverview() {
   const getChangeIcon = (changeType: string) => {
     switch (changeType) {
       case 'positive': return '📈'
-      case 'negative': return '����'
+      case 'negative': return '📉'
       default: return '➡️'
     }
   }
