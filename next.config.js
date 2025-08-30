@@ -57,6 +57,7 @@ const nextConfig = {
     allowedDevOrigins: [
       'localhost:3000',
       '127.0.0.1:3000',
+      'da6999115c974d4388527cf50744332c-ac274784-e668-43de-930e-0ef765.fly.dev',
     ],
   }),
 
