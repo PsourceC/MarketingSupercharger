@@ -647,40 +647,34 @@ export default function GMBAutomation() {
                 ))}
               </div>
 
-              <div className="template-actions">
-                <button
-                  onClick={() => setSelectedTemplate(template)}
-                  className="action-btn primary"
-                >
-                  ✏️ Edit
-                </button>
-                <button className="action-btn" onClick={() => setPreview({ postId: template.id, index: 0 })}>��� Preview</button>
-                <button className="action-btn" onClick={() => handleRegenerateText(template)}>♻️ Regenerate Text</button>
-                <button className="action-btn" onClick={() => handleGenerateMedia(template, 'image')}>✨ New Image</button>
-                <button className="action-btn" onClick={() => handleGenerateMedia(template, 'video')}>🎞️ New Video</button>
-                <button className="action-btn" onClick={() => fileInputRef.current?.click()}>📁 Add Media</button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,video/*"
-                  multiple
-                  style={{ display: 'none' }}
-                  onChange={(e) => handleFileSelect(template.id, e.target.files)}
-                />
-                <button className="action-btn" onClick={() => handleAddMediaUrl(template.id)}>🔗 Add URL</button>
-                <button className="action-btn" onClick={() => setLibrary({ postId: template.id })}>🗂️ Find Media</button>
-                <button
-                  className="action-btn"
-                  onClick={() => handleSchedulePost(template)}
-                >
-                  📅 Schedule
-                </button>
-                <button
-                  className="action-btn success"
-                  onClick={() => handlePublishPost(template)}
-                >
-                  🚀 Publish
-                </button>
+              <div className="button-row">
+                <div className="primary-actions">
+                  <button
+                    onClick={() => setSelectedTemplate(template)}
+                    className="action-btn primary lg"
+                  >
+                    ✏️ Edit
+                  </button>
+                  <button className="action-btn success lg" onClick={() => handlePublishPost(template)}>🚀 Publish</button>
+                  <button className="action-btn" onClick={() => setPreview({ postId: template.id, index: 0 })}>👀 Preview</button>
+                </div>
+                <div className="secondary-actions">
+                  <button className="action-btn" onClick={() => handleRegenerateText(template)}>♻️ Regenerate Text</button>
+                  <button className="action-btn" onClick={() => handleGenerateMedia(template, 'image')}>✨ New Image</button>
+                  <button className="action-btn" onClick={() => handleGenerateMedia(template, 'video')}>🎞️ New Video</button>
+                  <button className="action-btn" onClick={() => fileInputRef.current?.click()}>📁 Add Media</button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,video/*"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={(e) => handleFileSelect(template.id, e.target.files)}
+                  />
+                  <button className="action-btn" onClick={() => handleAddMediaUrl(template.id)}>🔗 Add URL</button>
+                  <button className="action-btn" onClick={() => setLibrary({ postId: template.id })}>🗂️ Find Media</button>
+                  <button className="action-btn" onClick={() => handleSchedulePost(template)}>📅 Schedule</button>
+                </div>
               </div>
               
               {template.publishDate && (
@@ -759,7 +753,7 @@ export default function GMBAutomation() {
                 <h4>Media</h4>
                 <div className="media-actions">
                   <button className="action-btn" onClick={() => fileInputRef.current?.click()}>📁 Upload</button>
-                  <button className="action-btn" onClick={() => handleAddMediaUrl(selectedTemplate.id)}>🔗 Add URL</button>
+                  <button className="action-btn" onClick={() => handleAddMediaUrl(selectedTemplate.id)}>��� Add URL</button>
                   <button className="action-btn" onClick={() => handleGenerateMedia(selectedTemplate, 'image')}>✨ Generate Image</button>
                   <button className="action-btn" onClick={() => handleGenerateMedia(selectedTemplate, 'video')}>🎞️ Generate Video</button>
                   <input
