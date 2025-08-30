@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getGmbTokensFromCode } from '../../../../lib/gmb-auth'
 
 export async function GET(request: NextRequest) {
