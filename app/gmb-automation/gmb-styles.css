@@ -133,12 +133,15 @@
 
 .template-card {
   background: rgba(255, 255, 255, 0.95);
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem 1.25rem 1rem;
+  border-radius: 14px;
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.08);
   border-left: 4px solid #6b7280;
   position: relative;
+  transition: box-shadow .2s ease, transform .2s ease;
 }
+
+.template-card:hover { box-shadow: 0 10px 34px rgba(0,0,0,0.12); transform: translateY(-2px); }
 
 .template-card.scheduled {
   border-left-color: #f59e0b;
