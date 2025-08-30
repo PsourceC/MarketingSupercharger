@@ -323,6 +323,46 @@ export default function GMBAutomation() {
     }
   }
 
+  const computeRelevance = (template: PostTemplate, att: MediaAttachment): { level: 'High' | 'Medium' | 'Low'; score: number } => {
+    const text = (template.title + ' ' + template.content + ' ' + template.keywords.join(' ')).toLowerCase()
+    const name = (att.name || att.url).toLowerCase()
+    let hits = 0
+    template.keywords.forEach(k => { if (name.includes(k.toLowerCase())) hits++ })
+    const score = Math.min(100, hits * 30 + (text.includes('austin') ? 10 : 0))
+    const level = score >= 60 ? 'High' : score >= 30 ? 'Medium' : 'Low'
+    return { level, score }
+  }
+
+  const handleRegenerateText = async (template: PostTemplate) => {
+    setIsGenerating(true)
+    try {
+      const res = await fetch('/api/gmb-posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: template.type, business: 'Astrawatt Solar' })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setOverridesById(prev => ({
+          ...prev,
+          [template.id]: {
+            title: data.title,
+            content: data.content,
+            keywords: data.keywords,
+            cta: data.cta
+          }
+        }))
+        alert('✅ Content regenerated')
+      } else {
+        alert('⚠️ Could not regenerate content')
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   const handleSchedulePost = async (template: PostTemplate) => {
     const scheduleDate = prompt('Enter schedule date (YYYY-MM-DD):')
     if (!scheduleDate) return
