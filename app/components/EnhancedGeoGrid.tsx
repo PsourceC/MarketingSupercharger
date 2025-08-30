@@ -282,10 +282,21 @@ export default function EnhancedGeoGrid() {
     }
   }
 
-  const refreshData = () => {
+  const refreshData = async () => {
     setLastRefresh(new Date())
-    // In a real app, this would trigger an API call
-    console.log('Refreshing map data...')
+    try {
+      // Trigger actual data refresh
+      const response = await fetch('/api/refresh', { method: 'POST' })
+      if (response.ok) {
+        // Trigger a global data refresh event
+        window.dispatchEvent(new CustomEvent('dataRefresh'))
+        console.log('Map data refreshed successfully')
+      } else {
+        console.error('Failed to refresh data')
+      }
+    } catch (error) {
+      console.error('Error refreshing data:', error)
+    }
   }
 
   if (!mapReady) {
@@ -669,7 +680,12 @@ export default function EnhancedGeoGrid() {
             </div>
             <p><strong>Pflugerville</strong> is your strongest area at position #3. Push for #1 to dominate this market!</p>
             <div className="insight-action">
-              <button className="insight-btn">📱 Boost Pflugerville GMB</button>
+              <button
+                className="insight-btn"
+                onClick={() => window.open('/gmb-automation?location=pflugerville&action=boost', '_blank')}
+              >
+                📱 Boost Pflugerville GMB
+              </button>
             </div>
           </div>
           
@@ -680,7 +696,12 @@ export default function EnhancedGeoGrid() {
             </div>
             <p><strong>Central Austin</strong> at position #12 needs work. This is your biggest potential market with 12,400 monthly searches.</p>
             <div className="insight-action">
-              <button className="insight-btn">🚀 Launch Austin Campaign</button>
+              <button
+                className="insight-btn"
+                onClick={() => window.open('/seo-tracking?location=austin&action=campaign', '_blank')}
+              >
+                🚀 Launch Austin Campaign
+              </button>
             </div>
           </div>
           
@@ -691,7 +712,12 @@ export default function EnhancedGeoGrid() {
             </div>
             <p><strong>Cedar Park</strong> jumped +3 positions this month! Whatever you're doing there, replicate it elsewhere.</p>
             <div className="insight-action">
-              <button className="insight-btn">📊 Analyze Cedar Park</button>
+              <button
+                className="insight-btn"
+                onClick={() => window.open('/analytics?location=cedar-park&action=analyze', '_blank')}
+              >
+                📊 Analyze Cedar Park
+              </button>
             </div>
           </div>
         </div>
