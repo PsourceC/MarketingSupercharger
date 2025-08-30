@@ -11,6 +11,8 @@ import './gmb-automation/gmb-styles.css'
 import './seo-tracking/seo-styles.css'
 import './review-management/review-styles.css'
 import './recommendations/recommendations-styles.css'
+import ErrorBoundary from './components/ErrorBoundary'
+import DevModeHandler from './components/DevModeHandler'
 
 export const metadata: Metadata = {
   title: 'Astrawatt Solar Marketing Automation',
@@ -24,7 +26,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ErrorBoundary>
+          <DevModeHandler />
+          {children}
+        </ErrorBoundary>
+      </body>
     </html>
   )
 }
