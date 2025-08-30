@@ -60,7 +60,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api'
 // Generic API fetch function
 async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
-  
+
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> 
     throw new Error(`API call failed: ${response.status} ${response.statusText}`)
   }
 
-  return response.json()
+  return response.json() as Promise<T>
 }
 
 // Business metrics API calls
@@ -155,9 +155,49 @@ export async function fetchGMBData() {
 }
 
 // Citation tracking
-export async function fetchCitationData() {
+export interface CitationRecord {
+  directory: string
+  url: string
+  businessName: string
+  phone: string
+  address: string
+  website: string
+  status: 'found' | 'not-found' | 'incorrect' | 'needs-update'
+  lastChecked: string | Date
+  consistency: number
+  issues: string[]
+}
+
+export interface CitationSummaryData {
+  totalDirectories: number
+  foundCitations: number
+  consistentCitations: number
+  inconsistentCitations: number
+  missingCitations: number
+  consistencyScore: number
+  lastUpdated: string | Date
+  topIssues: string[]
+}
+
+export interface CitationRecommendation {
+  priority: 'high' | 'medium' | 'low'
+  action: string
+  description: string
+  impact: string
+  effort: 'Low' | 'Medium' | 'High'
+}
+
+export interface CitationDataResponse {
+  citations: CitationRecord[]
+  summary: CitationSummaryData
+  recommendations: CitationRecommendation[]
+  fromCache?: boolean
+  error?: string
+}
+
+export async function fetchCitationData(): Promise<CitationDataResponse> {
   try {
-    return await apiFetch('/citations')
+    return await apiFetch<CitationDataResponse>('/citations')
   } catch (error) {
     console.error('Failed to fetch citation data:', error)
     return {
