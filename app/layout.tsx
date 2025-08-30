@@ -14,6 +14,7 @@ import './recommendations/recommendations-styles.css'
 import './error-handling.css'
 import ErrorBoundary from './components/ErrorBoundary'
 import DevModeHandler from './components/DevModeHandler'
+import HealthCheck from './components/HealthCheck'
 
 export const metadata: Metadata = {
   title: 'Astrawatt Solar Marketing Automation',
