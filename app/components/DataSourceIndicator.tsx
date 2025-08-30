@@ -23,24 +23,53 @@ export default function DataSourceIndicator() {
   }, [])
 
   const checkDataSource = async () => {
+    const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 6000) => {
+      return await new Promise<Response>((resolve) => {
+        const timeoutId = setTimeout(() => {
+          resolve(new Response(JSON.stringify({ error: 'timeout' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+        }, timeoutMs)
+        fetch(input, init)
+          .then((res) => { clearTimeout(timeoutId); resolve(res) })
+          .catch((err: any) => {
+            clearTimeout(timeoutId)
+            resolve(new Response(JSON.stringify({ error: err?.message || 'fetch failed' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+          })
+      })
+    }
     try {
-      // Check OAuth status
-      const authResponse = await fetch('/api/auth/status')
-      const authData = await authResponse.json()
-      
+      const [svcRes, authRes] = await Promise.allSettled([
+        fetchWithTimeout('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }, 6000),
+        fetchWithTimeout('/api/auth/status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }, 6000)
+      ])
+
+      const svcOk = svcRes.status === 'fulfilled' && svcRes.value.ok
+      const authOk = authRes.status === 'fulfilled' && authRes.value.ok
+
+      const svcJson = svcOk ? await svcRes.value.json() : { services: {} }
+      const services = svcJson.services || {}
+      const authJson = authOk ? await authRes.value.json() : { connected: false }
+
+      const aiLive = services['ai-ranking-tracker']?.status === 'working'
+      const gscLive = !!authJson.connected
+
+      let isLive = false
+      let source = 'Sample Data'
+      if (gscLive) {
+        isLive = true
+        source = 'Google Search Console (Live)'
+      } else if (aiLive) {
+        isLive = true
+        source = 'AI Ranking Tracker (Live)'
+      }
+
       setStatus({
-        connected: authData.connected,
-        isLive: authData.connected,
-        source: authData.connected ? 'Google Search Console (Live)' : 'Sample Data',
+        connected: isLive,
+        isLive,
+        source,
         lastUpdated: new Date().toISOString()
       })
-    } catch (error) {
-      console.error('Error checking data source:', error)
-      setStatus({
-        connected: false,
-        isLive: false,
-        source: 'Sample Data'
-      })
+    } catch {
+      setStatus({ connected: false, isLive: false, source: 'Sample Data' })
     }
   }
 
@@ -67,7 +96,7 @@ export default function DataSourceIndicator() {
         )}
       </div>
       
-      {!status.connected && (
+      {!status.connected && status.source !== 'AI Ranking Tracker (Live)' && (
         <p className="connection-prompt">
           💡 <strong>Connect Google Search Console</strong> above to see your real data!
         </p>

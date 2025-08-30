@@ -19,6 +19,8 @@ interface ConnectionStatus {
   errorMessage?: string
   setupUrl?: string
   docsUrl?: string
+  workaroundActive?: boolean
+  workaroundText?: string
 }
 
 export default function DevProfilePage() {
@@ -27,17 +29,18 @@ export default function DevProfilePage() {
   const [isChecking, setIsChecking] = useState(false)
   const [lastHealthCheck, setLastHealthCheck] = useState<string>('')
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
+  const [aiLive, setAiLive] = useState(false)
   const isDevelopment = process.env.NODE_ENV === 'development'
 
   useEffect(() => {
     setMounted(true)
-    checkAllConnections()
+    void checkAllConnections().catch(() => {})
 
     // Set up automatic health checks - longer interval in development to avoid HMR conflicts
     const healthCheckInterval = setInterval(() => {
       if (autoRefreshEnabled && !isChecking && document.visibilityState === 'visible') {
         console.log('Running automatic health check...')
-        checkAllConnections(true) // Pass true for silent/background check
+        checkAllConnections(true).catch(() => {}) // Pass true for silent/background check
       }
     }, isDevelopment ? 10 * 60 * 1000 : 5 * 60 * 1000) // 10 minutes in dev, 5 minutes in production
 
@@ -121,16 +124,6 @@ export default function DevProfilePage() {
         setupUrl: '/setup?service=google-analytics',
         docsUrl: 'https://developers.google.com/analytics'
       },
-      {
-        id: 'search-console-api',
-        name: 'Search Console API',
-        description: 'Advanced search performance data and indexing status',
-        status: 'disconnected',
-        category: 'analytics',
-        priority: 'medium',
-        setupUrl: '/setup?service=google-search-console',
-        docsUrl: 'https://developers.google.com/webmaster-tools/search-console-api'
-      },
 
       // Notifications & Alerts
       {
@@ -155,7 +148,44 @@ export default function DevProfilePage() {
       }
     ]
 
+    const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 8000) => {
+      return await new Promise<Response>((resolve) => {
+        const timeoutId = setTimeout(() => {
+          resolve(new Response(JSON.stringify({ error: 'timeout' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+        }, timeoutMs)
+        fetch(input, init)
+          .then((res) => { clearTimeout(timeoutId); resolve(res) })
+          .catch((err: any) => {
+            clearTimeout(timeoutId)
+            resolve(new Response(JSON.stringify({ error: err?.message || 'fetch failed' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+          })
+      })
+    }
+
+    // Load unified service statuses for consistent mapping
+    let unifiedStatuses: Record<string, { status: 'working' | 'partial' | 'not-setup'; message: string }> = {}
+    try {
+      const svcRes = await fetchWithTimeout('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }, 8000)
+      if (svcRes.ok) {
+        const svcData = await svcRes.json()
+        unifiedStatuses = svcData.services || {}
+      }
+    } catch (e) {
+      console.warn('Failed to load unified service statuses:', e)
+    }
+
+    setAiLive(unifiedStatuses['ai-ranking-tracker']?.status === 'working')
+
+    const mapServiceToConnection = (svcId: string): { mapped: 'connected' | 'pending' | 'disconnected'; note?: string } => {
+      const svc = unifiedStatuses[svcId]
+      if (!svc) return { mapped: 'disconnected' }
+      if (svc.status === 'working') return { mapped: 'connected' }
+      if (svc.status === 'partial') return { mapped: 'pending', note: svc.message }
+      return { mapped: 'disconnected' }
+    }
+
     // Check each connection status with retry logic
+    try {
     for (const connection of connectionChecks) {
       let retryCount = 0
       const maxRetries = 2
@@ -163,16 +193,13 @@ export default function DevProfilePage() {
       while (retryCount <= maxRetries) {
         try {
           switch (connection.id) {
-            case 'google-oauth':
+            case 'google-oauth': {
               try {
-                const authResponse = await fetch('/api/auth/status', {
+                const authResponse = await fetchWithTimeout('/api/auth/status', {
                   method: 'GET',
                   cache: 'no-cache',
-                  headers: {
-                    'Cache-Control': 'no-cache',
-                  },
-                  signal: AbortSignal.timeout(5000) // 5 second timeout for auth
-                })
+                  headers: { 'Cache-Control': 'no-cache' }
+                }, 5000)
 
                 if (!authResponse.ok) {
                   throw new Error(`HTTP ${authResponse.status}: ${authResponse.statusText}`)
@@ -180,61 +207,78 @@ export default function DevProfilePage() {
 
                 const authData = await authResponse.json()
                 connection.status = authData.connected ? 'connected' : 'disconnected'
-                connection.lastChecked = new Date().toISOString()
-                connection.errorMessage = undefined // Clear any previous errors
-              } catch (fetchError) {
-                // Re-throw to be handled by outer catch block
-                throw fetchError
-              }
-              break
+                connection.errorMessage = undefined
 
-            case 'database':
-              try {
-                const dbResponse = await fetch('/api/metrics', {
-                  method: 'GET',
-                  cache: 'no-cache',
-                  headers: {
-                    'Cache-Control': 'no-cache',
-                  },
-                  signal: AbortSignal.timeout(8000) // 8 second timeout for database
-                })
-
-                if (dbResponse.ok) {
-                  const dbData = await dbResponse.json()
-                  // Additional check: ensure we get valid data structure
-                  if (dbData && (Array.isArray(dbData) || typeof dbData === 'object')) {
-                    connection.status = 'connected'
+                if (!authData.connected) {
+                  const ai = mapServiceToConnection('ai-ranking-tracker')
+                  if (ai.mapped === 'connected') {
+                    connection.status = 'pending'
                     connection.errorMessage = undefined
-                  } else {
-                    connection.status = 'error'
-                    connection.errorMessage = 'Database returned invalid data format'
+                    connection.description = 'OAuth optional right now. Alternative live data is active via AI Ranking Tracker.'
+                    connection.workaroundActive = true
+                    connection.workaroundText = 'AI Ranking Tracker live'
                   }
-                } else {
-                  connection.status = 'error'
-                  connection.errorMessage = `Database API error: ${dbResponse.status} ${dbResponse.statusText}`
                 }
                 connection.lastChecked = new Date().toISOString()
-              } catch (fetchError) {
-                // Re-throw to be handled by outer catch block
-                throw fetchError
+              } catch (fetchError: any) {
+                // Handle locally to avoid bubbling AbortError/TypeError logs
+                connection.status = 'error'
+                connection.errorMessage = `Auth check failed: ${fetchError?.message || 'unknown error'}`
+                connection.lastChecked = new Date().toISOString()
               }
+            }
               break
 
-            case 'google-my-business':
-              // Future: Add actual GMB API check
-              // For now, simulate a check
-              connection.status = 'disconnected'
+            case 'database': {
+              const mapped = mapServiceToConnection('database')
+              connection.status = mapped.mapped
+              connection.errorMessage = mapped.note
               connection.lastChecked = new Date().toISOString()
+              if (mapped.mapped === 'pending' && (mapped.note || '').toLowerCase().includes('missing tables')) {
+                const key = 'auto-migrated'
+                if (!localStorage.getItem(key)) {
+                  try {
+                    await fetch('/api/migrate', { method: 'POST' })
+                    localStorage.setItem(key, '1')
+                  } catch {}
+                }
+              }
+            }
               break
 
-            case 'google-analytics':
-              // Future: Add actual GA API check
-              connection.status = 'disconnected'
+            case 'google-my-business': {
+              const mapped = mapServiceToConnection('google-my-business')
+              connection.status = mapped.mapped
+              connection.errorMessage = mapped.note
               connection.lastChecked = new Date().toISOString()
+            }
+              break
+
+            case 'google-analytics': {
+              const mapped = mapServiceToConnection('google-analytics')
+              connection.status = mapped.mapped
+              connection.errorMessage = mapped.note
+              connection.lastChecked = new Date().toISOString()
+            }
+              break
+
+            case 'citation-tracking': {
+              const mapped = mapServiceToConnection('citation-monitoring')
+              connection.status = mapped.mapped
+              connection.errorMessage = mapped.note
+              connection.lastChecked = new Date().toISOString()
+            }
+              break
+
+            case 'competitor-api': {
+              const mapped = mapServiceToConnection('competitor-tracking')
+              connection.status = mapped.mapped
+              connection.errorMessage = mapped.note
+              connection.lastChecked = new Date().toISOString()
+            }
               break
 
             default:
-              // For other services, mark as disconnected
               connection.status = 'disconnected'
               connection.lastChecked = new Date().toISOString()
           }
@@ -246,9 +290,9 @@ export default function DevProfilePage() {
           let shouldRetry = true
 
           // Handle different types of errors
-          if (error.name === 'AbortError') {
+          if ((error as any).name === 'AbortError') {
             errorMessage = 'Connection timeout'
-          } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+          } else if ((error as any).name === 'TypeError' && (error as any).message?.includes('Failed to fetch')) {
             errorMessage = 'Network connection failed (likely HMR reload)'
             // Don't retry on HMR-related fetch failures
             if (retryCount === 1) shouldRetry = false
@@ -268,6 +312,9 @@ export default function DevProfilePage() {
           }
         }
       }
+    }
+    } catch (loopError) {
+      console.warn('Connection check loop error:', loopError)
     }
 
     setConnections(connectionChecks)
@@ -449,7 +496,7 @@ export default function DevProfilePage() {
       {/* Quick Actions for Critical Setup */}
       {overallStatus !== 'connected' && (
         <div className="quick-actions-section">
-          <h3>���� Quick Setup Actions</h3>
+          <h3>⚡ Quick Setup Actions</h3>
           <div className="quick-actions-grid">
             {connections.filter(c => c.priority === 'critical' && c.status !== 'connected').length > 0 && (
               <div className="quick-action-card critical">
@@ -466,7 +513,7 @@ export default function DevProfilePage() {
                         Connect Database
                       </button>
                     )}
-                    {connections.find(c => c.id === 'google-oauth' && c.status !== 'connected') && (
+                    {connections.find(c => c.id === 'google-oauth' && c.status !== 'connected') && !aiLive && (
                       <button
                         className="action-btn google-search-console"
                         onClick={() => {
@@ -497,23 +544,6 @@ export default function DevProfilePage() {
               </div>
             )}
 
-            <div className="quick-action-card">
-              <div className="action-icon">📊</div>
-              <div className="action-content">
-                <h4>Load Sample Data</h4>
-                <p>Explore the dashboard with sample data while setting up connections</p>
-                <TempDataButton />
-              </div>
-            </div>
-
-            <div className="quick-action-card">
-              <div className="action-icon">📁</div>
-              <div className="action-content">
-                <h4>Import Data</h4>
-                <p>Upload CSV files from Google Search Console for instant analysis</p>
-                <ManualDataImport />
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -522,11 +552,13 @@ export default function DevProfilePage() {
       <div className="data-import-section">
         <h3>📊 Data Sources & Import</h3>
         <div className="import-grid">
-          <div className="import-card">
-            <h4>🔗 Google Search Console Connection</h4>
-            <p>Connect to Google Search Console to get real ranking and performance data</p>
-            <GoogleAuthButton />
-          </div>
+          {!aiLive && (
+            <div className="import-card">
+              <h4>🔗 Google Search Console Connection</h4>
+              <p>Connect to Google Search Console to get real ranking and performance data</p>
+              <GoogleAuthButton />
+            </div>
+          )}
 
           <div className="import-card">
             <h4>📈 Data Source Status</h4>
@@ -578,6 +610,9 @@ export default function DevProfilePage() {
                         <span className={`priority-badge priority-${connection.priority}`}>
                           {connection.priority}
                         </span>
+                        {connection.workaroundActive && (
+                          <span className="priority-badge">WORKAROUND ACTIVE</span>
+                        )}
                       </div>
                       <div className="status-text">
                         <span className={`status-label status-${connection.status}`}>
@@ -602,6 +637,20 @@ export default function DevProfilePage() {
 
                     <div className="connection-footer">
                       <div className="connection-actions">
+                        {connection.id === 'google-my-business' && connection.status !== 'connected' && (
+                          <button
+                            className={`setup-btn ${connection.priority === 'critical' ? 'critical' : ''}`}
+                            onClick={async () => {
+                              try {
+                                const res = await fetch('/api/auth/gmb')
+                                const data = await res.json()
+                                if (data.authUrl) window.location.href = data.authUrl
+                              } catch {}
+                            }}
+                          >
+                            OAuth Connect
+                          </button>
+                        )}
                         <button
                           className={`setup-btn ${connection.priority === 'critical' ? 'critical' : ''}`}
                           onClick={() => {

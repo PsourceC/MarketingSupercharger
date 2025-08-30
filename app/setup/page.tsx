@@ -43,12 +43,27 @@ export default function SetupPage() {
   // Fetch service statuses
   const fetchStatuses = async () => {
     setStatusLoading(true)
+    const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 8000) => {
+      return await new Promise<Response>((resolve) => {
+        const timeoutId = setTimeout(() => {
+          resolve(new Response(JSON.stringify({ error: 'timeout' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+        }, timeoutMs)
+        fetch(input, init)
+          .then((res) => { clearTimeout(timeoutId); resolve(res) })
+          .catch((err: any) => {
+            clearTimeout(timeoutId)
+            resolve(new Response(JSON.stringify({ error: err?.message || 'fetch failed' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+          })
+      })
+    }
     try {
-      const response = await fetch('/api/service-status')
+      const response = await fetchWithTimeout('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }, 8000)
       const data = await response.json()
       setServiceStatuses(data.services || {})
-    } catch (error) {
-      console.error('Error fetching service statuses:', error)
+    } catch (error: any) {
+      if (error?.name !== 'AbortError') {
+        console.warn('Service status fetch issue (non-fatal):', error?.message || error)
+      }
     } finally {
       setStatusLoading(false)
     }
@@ -509,6 +524,9 @@ export default function SetupPage() {
                       >
                         {getStatusIndicator(guide.id).icon} {getStatusIndicator(guide.id).text}
                       </span>
+                      {guide.id === 'google-search-console' && serviceStatuses['ai-ranking-tracker']?.status === 'working' && (
+                        <span className="priority-badge">WORKAROUND ACTIVE</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -538,6 +556,9 @@ export default function SetupPage() {
               <div>
                 <h2>{selectedGuide.name}</h2>
                 <p>{selectedGuide.description}</p>
+                {selectedGuide.id === 'google-search-console' && serviceStatuses['ai-ranking-tracker']?.status === 'working' && (
+                  <p className="status-message">Active workaround: AI Ranking Tracker is live and supplying ranking data.</p>
+                )}
               </div>
             </div>
             <div className="guide-meta">
