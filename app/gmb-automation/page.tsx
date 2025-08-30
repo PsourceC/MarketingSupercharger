@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Link from 'next/link'
 
 interface PostTemplate {
@@ -72,10 +72,16 @@ From Pflugerville to Leander, families trust our commitment to quality and servi
   }
 ]
 
+type MediaAttachment = { id: string; type: 'image' | 'video'; url: string; name?: string }
+
+type PostMediaMap = Record<string, MediaAttachment[]>
+
 export default function GMBAutomation() {
   const [selectedTemplate, setSelectedTemplate] = useState<PostTemplate | null>(null)
   const [generatedPosts, setGeneratedPosts] = useState<PostTemplate[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
+  const [mediaByPost, setMediaByPost] = useState<PostMediaMap>({})
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const generateNewPost = async (type: PostTemplate['type']) => {
     setIsGenerating(true)
@@ -170,6 +176,148 @@ export default function GMBAutomation() {
     }
   }
 
+  const getPostMedia = (postId: string) => mediaByPost[postId] || []
+
+  const addMediaToPost = (postId: string, attachments: MediaAttachment[]) => {
+    setMediaByPost(prev => ({
+      ...prev,
+      [postId]: [...(prev[postId] || []), ...attachments]
+    }))
+  }
+
+  const removeMediaFromPost = (postId: string, mediaId: string) => {
+    setMediaByPost(prev => ({
+      ...prev,
+      [postId]: (prev[postId] || []).filter(m => m.id !== mediaId)
+    }))
+  }
+
+  const handleFileSelect = (postId: string, files: FileList | null) => {
+    if (!files || files.length === 0) return
+    const atts: MediaAttachment[] = []
+    Array.from(files).forEach(file => {
+      const url = URL.createObjectURL(file)
+      const type: 'image' | 'video' = file.type.startsWith('video') ? 'video' : 'image'
+      atts.push({ id: `${Date.now()}-${file.name}`, type, url, name: file.name })
+    })
+    addMediaToPost(postId, atts)
+  }
+
+  const handleAddMediaUrl = (postId: string) => {
+    const url = prompt('Paste image/video URL:')
+    if (!url) return
+    const type: 'image' | 'video' = url.match(/\.(mp4|webm|mov)(\?|$)/i) ? 'video' : 'image'
+    addMediaToPost(postId, [{ id: `${Date.now()}-url`, type, url }])
+  }
+
+  const generateBrandedImage = async (template: PostTemplate): Promise<string> => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1200
+    canvas.height = 628
+    const ctx = canvas.getContext('2d')!
+
+    const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
+    grad.addColorStop(0, '#0ea5e9')
+    grad.addColorStop(1, '#22c55e')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    ctx.fillStyle = 'rgba(255,255,255,0.12)'
+    for (let i = 0; i < 12; i++) {
+      ctx.beginPath()
+      ctx.arc(100 + i * 100, 300 + Math.sin(i) * 40, 60 + (i % 3) * 12, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    ctx.fillStyle = 'white'
+    ctx.font = 'bold 58px system-ui, -apple-system, Segoe UI, Roboto'
+    const title = template.title.length > 60 ? template.title.slice(0, 57) + '…' : template.title
+    ctx.fillText(title, 60, 200)
+
+    ctx.font = '400 28px system-ui, -apple-system, Segoe UI, Roboto'
+    const subtitle = (template.keywords.join(' • ').slice(0, 80))
+    ctx.fillText(subtitle, 60, 250)
+
+    ctx.font = 'bold 22px system-ui, -apple-system, Segoe UI, Roboto'
+    ctx.fillText('Astrawatt Solar • Austin, TX', 60, 580)
+
+    ctx.font = 'bold 80px system-ui, -apple-system, Segoe UI, Roboto'
+    ctx.fillText('☀️', 1080, 120)
+
+    return canvas.toDataURL('image/png')
+  }
+
+  const generateBrandedVideo = async (template: PostTemplate): Promise<string> => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1280
+    canvas.height = 720
+    const ctx = canvas.getContext('2d')!
+
+    const stream = (canvas as HTMLCanvasElement).captureStream(30)
+    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' })
+    const chunks: BlobPart[] = []
+    recorder.ondataavailable = e => chunks.push(e.data)
+
+    let t = 0
+    let rafId = 0
+
+    const draw = () => {
+      const w = canvas.width, h = canvas.height
+      const grad = ctx.createLinearGradient(0, 0, w, h)
+      grad.addColorStop(0, '#1e3a8a')
+      grad.addColorStop(1, '#0ea5e9')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, w, h)
+
+      for (let i = 0; i < 50; i++) {
+        const x = (i * 40 + t * 4) % (w + 80) - 80
+        const y = 200 + Math.sin((i + t / 10) / 5) * 60
+        ctx.fillStyle = 'rgba(255,255,255,0.08)'
+        ctx.fillRect(x, y, 120, 6)
+      }
+
+      ctx.fillStyle = 'white'
+      ctx.font = 'bold 56px system-ui, -apple-system, Segoe UI, Roboto'
+      const title = template.title.length > 28 ? template.title.slice(0, 25) + '…' : template.title
+      ctx.fillText(title, 60, 200)
+
+      ctx.font = '400 28px system-ui, -apple-system, Segoe UI, Roboto'
+      const line = (template.content.replace(/\n/g, ' ').slice(0, 90))
+      ctx.fillText(line, 60, 260)
+
+      ctx.font = 'bold 30px system-ui, -apple-system, Segoe UI, Roboto'
+      ctx.fillText(template.cta, 60, 320)
+
+      ctx.font = 'bold 96px system-ui, -apple-system, Segoe UI, Roboto'
+      ctx.fillText('☀️', w - 140, 120)
+
+      t += 1
+      rafId = requestAnimationFrame(draw)
+    }
+
+    return await new Promise<string>(resolve => {
+      recorder.onstop = () => {
+        cancelAnimationFrame(rafId)
+        const blob = new Blob(chunks, { type: 'video/webm' })
+        const url = URL.createObjectURL(blob)
+        resolve(url)
+      }
+      recorder.start()
+      draw()
+      setTimeout(() => recorder.stop(), 3500)
+    })
+  }
+
+  const handleGenerateMedia = async (template: PostTemplate, kind: 'image' | 'video') => {
+    if (kind === 'image') {
+      const dataUrl = await generateBrandedImage(template)
+      addMediaToPost(template.id, [{ id: `${Date.now()}-genimg`, type: 'image', url: dataUrl }])
+    } else {
+      const vidUrl = await generateBrandedVideo(template)
+      addMediaToPost(template.id, [{ id: `${Date.now()}-genvid`, type: 'video', url: vidUrl }])
+    }
+  }
+
   const handleSchedulePost = async (template: PostTemplate) => {
     const scheduleDate = prompt('Enter schedule date (YYYY-MM-DD):')
     if (!scheduleDate) return
@@ -182,7 +330,8 @@ export default function GMBAutomation() {
           postId: template.id,
           scheduleDate,
           content: template.content,
-          title: template.title
+          title: template.title,
+          media: getPostMedia(template.id)
         })
       })
 
@@ -223,7 +372,8 @@ export default function GMBAutomation() {
           postId: template.id,
           content: template.content,
           title: template.title,
-          keywords: template.keywords
+          keywords: template.keywords,
+          media: getPostMedia(template.id)
         })
       })
 
@@ -336,6 +486,19 @@ export default function GMBAutomation() {
                 ))}
               </div>
               
+              <div className="media-strip">
+                {getPostMedia(template.id).map(att => (
+                  <div key={att.id} className="media-thumb">
+                    {att.type === 'image' ? (
+                      <img src={att.url} alt={att.name || 'image'} />
+                    ) : (
+                      <video src={att.url} />
+                    )}
+                    <button className="remove-media" onClick={() => removeMediaFromPost(template.id, att.id)}>✕</button>
+                  </div>
+                ))}
+              </div>
+
               <div className="template-actions">
                 <button
                   onClick={() => setSelectedTemplate(template)}
@@ -343,6 +506,18 @@ export default function GMBAutomation() {
                 >
                   ✏️ Edit
                 </button>
+                <button className="action-btn" onClick={() => fileInputRef.current?.click()}>📁 Add Media</button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={(e) => handleFileSelect(template.id, e.target.files)}
+                />
+                <button className="action-btn" onClick={() => handleAddMediaUrl(template.id)}>🔗 Add URL</button>
+                <button className="action-btn" onClick={() => handleGenerateMedia(template, 'image')}>✨ Generate Image</button>
+                <button className="action-btn" onClick={() => handleGenerateMedia(template, 'video')}>🎞️ Generate Video</button>
                 <button
                   className="action-btn"
                   onClick={() => handleSchedulePost(template)}
@@ -413,12 +588,12 @@ export default function GMBAutomation() {
                 Title:
                 <input type="text" defaultValue={selectedTemplate.title} />
               </label>
-              
+
               <label>
                 Content:
                 <textarea rows={10} defaultValue={selectedTemplate.content} />
               </label>
-              
+
               <label>
                 Call to Action:
                 <select defaultValue={selectedTemplate.cta}>
@@ -428,7 +603,37 @@ export default function GMBAutomation() {
                   <option value="Get Quote">Get Quote</option>
                 </select>
               </label>
-              
+
+              <div className="media-manager">
+                <h4>Media</h4>
+                <div className="media-actions">
+                  <button className="action-btn" onClick={() => fileInputRef.current?.click()}>📁 Upload</button>
+                  <button className="action-btn" onClick={() => handleAddMediaUrl(selectedTemplate.id)}>🔗 Add URL</button>
+                  <button className="action-btn" onClick={() => handleGenerateMedia(selectedTemplate, 'image')}>✨ Generate Image</button>
+                  <button className="action-btn" onClick={() => handleGenerateMedia(selectedTemplate, 'video')}>🎞️ Generate Video</button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,video/*"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={(e) => handleFileSelect(selectedTemplate.id, e.target.files)}
+                  />
+                </div>
+                <div className="media-strip">
+                  {getPostMedia(selectedTemplate.id).map(att => (
+                    <div key={att.id} className="media-thumb">
+                      {att.type === 'image' ? (
+                        <img src={att.url} alt={att.name || 'image'} />
+                      ) : (
+                        <video src={att.url} controls />
+                      )}
+                      <button className="remove-media" onClick={() => removeMediaFromPost(selectedTemplate.id, att.id)}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="editor-actions">
                 <button className="action-btn primary">💾 Save Changes</button>
                 <button className="action-btn">📅 Schedule Post</button>
