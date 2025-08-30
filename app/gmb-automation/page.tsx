@@ -81,6 +81,8 @@ export default function GMBAutomation() {
   const [generatedPosts, setGeneratedPosts] = useState<PostTemplate[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [mediaByPost, setMediaByPost] = useState<PostMediaMap>({})
+  const [overridesById, setOverridesById] = useState<Record<string, Partial<PostTemplate>>>({})
+  const [preview, setPreview] = useState<{ postId: string; index: number } | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const generateNewPost = async (type: PostTemplate['type']) => {
