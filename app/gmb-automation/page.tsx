@@ -682,11 +682,55 @@ export default function GMBAutomation() {
               </div>
 
               <div className="editor-actions">
+                <button className="action-btn" onClick={() => handleRegenerateText(selectedTemplate)}>♻️ Regenerate Text</button>
                 <button className="action-btn primary">💾 Save Changes</button>
                 <button className="action-btn">📅 Schedule Post</button>
                 <button className="action-btn success">🚀 Publish Now</button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {preview && (
+        <div className="media-preview-modal" onClick={() => setPreview(null)}>
+          <div className="media-preview-content" onClick={(e) => e.stopPropagation()}>
+            {(() => {
+              const media = getPostMedia(preview.postId)
+              const current = media[preview.index]
+              const tmpl = combinedTemplates.find(t => t.id === preview.postId)!
+              const rel = current ? computeRelevance(tmpl, current) : { level: 'Low', score: 0 }
+              return (
+                <div className="media-preview-body">
+                  <div className="media-stage">
+                    {current ? (
+                      current.type === 'image' ? (
+                        <img src={current.url} alt={current.name || tmpl.title} />
+                      ) : (
+                        <video src={current.url} controls autoPlay />
+                      )
+                    ) : (
+                      <div className="no-media">No media yet</div>
+                    )}
+                  </div>
+                  <div className="media-meta">
+                    <h4>{tmpl.title}</h4>
+                    <p className="media-caption">{tmpl.cta} • Keywords: {tmpl.keywords.join(', ')}</p>
+                    {current && (
+                      <div className={`relevance-badge ${rel.level.toLowerCase()}`}>Relevance: {rel.level}</div>
+                    )}
+                    <div className="media-controls">
+                      <button disabled={!media.length || preview.index===0} onClick={() => setPreview(p => p && ({ ...p, index: Math.max(0, p.index-1) }))}>⟵ Prev</button>
+                      <button disabled={!media.length || preview.index>=media.length-1} onClick={() => setPreview(p => p && ({ ...p, index: Math.min(media.length-1, p.index+1) }))}>Next ⟶</button>
+                      <button onClick={() => handleGenerateMedia(tmpl, 'image')}>✨ Regenerate Image</button>
+                      <button onClick={() => handleGenerateMedia(tmpl, 'video')}>🎞️ Regenerate Video</button>
+                      <button onClick={() => handleRegenerateText(tmpl)}>♻️ Regenerate Text</button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+            <button className="close-btn" onClick={() => setPreview(null)}>✕</button>
           </div>
         </div>
       )}
