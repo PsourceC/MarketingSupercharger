@@ -519,7 +519,7 @@ export default function EnhancedGeoGrid() {
               
               const coverageMeters = Math.max(5000, 100000 / Math.max(zoom, 1))
               return (
-                <>
+                <Fragment key={`loc-${location.id}`}>
                   <Circle
                     key={location.id + '-coverage'}
                     center={[location.lat, location.lng]}
@@ -624,7 +624,7 @@ export default function EnhancedGeoGrid() {
                     </div>
                   </Popup>
                   </CircleMarker>
-                </>
+                </Fragment>
               )
             })}
 
