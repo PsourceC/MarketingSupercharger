@@ -462,7 +462,7 @@ export default function GMBAutomation() {
     <div className="gmb-automation">
       <header className="page-header">
         <Link href="/" className="back-button">← Back to Dashboard</Link>
-        <h1>📱 GMB Content Automation</h1>
+        <h1>���� GMB Content Automation</h1>
         <p>Generate and schedule Google My Business posts to maintain consistent presence</p>
       </header>
 
@@ -561,7 +561,7 @@ export default function GMBAutomation() {
                 >
                   ✏️ Edit
                 </button>
-                <button className="action-btn" onClick={() => setPreview({ postId: template.id, index: 0 })}>👀 Preview</button>
+                <button className="action-btn" onClick={() => setPreview({ postId: template.id, index: 0 })}>��� Preview</button>
                 <button className="action-btn" onClick={() => handleRegenerateText(template)}>♻️ Regenerate Text</button>
                 <button className="action-btn" onClick={() => handleGenerateMedia(template, 'image')}>✨ New Image</button>
                 <button className="action-btn" onClick={() => handleGenerateMedia(template, 'video')}>🎞️ New Video</button>
@@ -575,7 +575,7 @@ export default function GMBAutomation() {
                   onChange={(e) => handleFileSelect(template.id, e.target.files)}
                 />
                 <button className="action-btn" onClick={() => handleAddMediaUrl(template.id)}>🔗 Add URL</button>
-                <button className="action-btn" onClick={() => setLibrary({ postId: template.id })}>🗂�� Find Media</button>
+                <button className="action-btn" onClick={() => setLibrary({ postId: template.id })}>🗂️ Find Media</button>
                 <button
                   className="action-btn"
                   onClick={() => handleSchedulePost(template)}
@@ -742,6 +742,43 @@ export default function GMBAutomation() {
               )
             })()}
             <button className="close-btn" onClick={() => setPreview(null)}>✕</button>
+          </div>
+        </div>
+      )}
+
+      {library && (
+        <div className="media-preview-modal" onClick={() => setLibrary(null)}>
+          <div className="media-preview-content" onClick={(e) => e.stopPropagation()}>
+            <div className="media-library">
+              <div className="library-header">
+                <h4>Find Relevant Media</h4>
+                <button className="close-btn" onClick={() => setLibrary(null)}>✕</button>
+              </div>
+              <div className="library-actions">
+                <button className="action-btn" onClick={() => handleAddMediaUrl(library.postId)}>🔗 Paste Builder CMS URL</button>
+              </div>
+              <div className="library-grid">
+                {SUGGESTED_MEDIA.map((item, idx) => {
+                  const tmpl = combinedTemplates.find(t => t.id === library.postId)!
+                  const rel = computeRelevance(tmpl, { id: String(idx), type: item.type, url: item.url, name: item.name })
+                  return (
+                    <div key={idx} className="library-item">
+                      <div className="lib-thumb">
+                        {item.type === 'image' ? (
+                          <img src={item.url} alt={item.name} />
+                        ) : (
+                          <video src={item.url} />
+                        )}
+                      </div>
+                      <div className="lib-meta">
+                        <span className={`relevance-badge ${rel.level.toLowerCase()}`}>Relevance: {rel.level}</span>
+                        <button className="action-btn" onClick={() => handleAddSuggested(library.postId, item)}>Add to Post</button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
