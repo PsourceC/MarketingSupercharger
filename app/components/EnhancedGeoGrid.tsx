@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic'
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false })
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false })
 const CircleMarker = dynamic(() => import('react-leaflet').then(mod => mod.CircleMarker), { ssr: false })
+const Circle = dynamic(() => import('react-leaflet').then(mod => mod.Circle), { ssr: false })
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false })
 const Tooltip = dynamic(() => import('react-leaflet').then(mod => mod.Tooltip), { ssr: false })
 
@@ -41,8 +42,8 @@ interface Competitor {
   }[]
 }
 
-// Austin metro area locations with real coordinates and updated data
-const locations: Location[] = [
+// Fallback demo locations (used if API has no data)
+const fallbackLocations: Location[] = [
   {
     id: 'austin-central',
     name: 'Central Austin',
@@ -186,7 +187,7 @@ const locations: Location[] = [
   }
 ]
 
-const competitors: Competitor[] = [
+const fallbackCompetitors: Competitor[] = [
   {
     name: '512 Solar',
     score: 92,
@@ -226,10 +227,36 @@ export default function EnhancedGeoGrid() {
   const [lastRefresh, setLastRefresh] = useState(new Date())
   const [competitorComparisonMode, setCompetitorComparisonMode] = useState(false)
   const [selectedCompetitor, setSelectedCompetitor] = useState<string>('all')
+  const [zoom, setZoom] = useState<number>(10)
+  const [center, setCenter] = useState<[number, number]>([30.2672, -97.7431])
+  const [locations, setLocations] = useState<Location[]>([])
+  const [competitors, setCompetitors] = useState<Competitor[]>([])
+  const [topCompetitor, setTopCompetitor] = useState<{ name: string; score: number } | null>(null)
+  const [profileName, setProfileName] = useState<string>('Your Business')
 
   useEffect(() => {
     setMapReady(true)
+    void loadData()
   }, [])
+
+  const loadData = async () => {
+    try {
+      const [locRes, profRes] = await Promise.all([
+        fetch('/api/locations', { cache: 'no-cache' }),
+        fetch('/api/business', { cache: 'no-cache' })
+      ])
+      if (locRes.ok) {
+        const locs = await locRes.json()
+        if (Array.isArray(locs) && locs.length > 0) setLocations(locs)
+      }
+      if (profRes.ok) {
+        const data = await profRes.json()
+        if (data?.profile?.business_name) setProfileName(data.profile.business_name)
+      }
+    } catch {}
+    if (locations.length === 0) setLocations(fallbackLocations)
+    setCompetitors(fallbackCompetitors)
+  }
 
   const getScoreColor = (score: number) => {
     if (score <= 5) return '#10b981' // Green - excellent (top 5)
@@ -282,10 +309,21 @@ export default function EnhancedGeoGrid() {
     }
   }
 
-  const refreshData = () => {
+  const refreshData = async () => {
     setLastRefresh(new Date())
-    // In a real app, this would trigger an API call
-    console.log('Refreshing map data...')
+    try { await loadData() } catch {}
+  }
+
+  const onMapCreated = (map: any) => {
+    setZoom(map.getZoom())
+    setCenter([map.getCenter().lat, map.getCenter().lng])
+    map.on('zoomend', () => {
+      setZoom(map.getZoom())
+      setCenter([map.getCenter().lat, map.getCenter().lng])
+    })
+    map.on('moveend', () => {
+      setCenter([map.getCenter().lat, map.getCenter().lng])
+    })
   }
 
   if (!mapReady) {
@@ -372,6 +410,14 @@ export default function EnhancedGeoGrid() {
           <div className="performance-legend">
             <h4>🎯 Performance Guide</h4>
             <div className="legend-grid">
+              <div className="legend-item">
+                <div className="legend-circle" style={{ backgroundColor: '#3b82f6', border: '3px solid #fff' }}></div>
+                <span>{profileName} marker</span>
+              </div>
+              <div className="legend-item">
+                <div className="legend-circle" style={{ backgroundColor: '#6b7280' }}></div>
+                <span>Competitor marker</span>
+              </div>
               <div className="legend-item excellent">
                 <div className="legend-circle" style={{ backgroundColor: '#10b981' }}></div>
                 <span>Top 5 Positions</span>
@@ -425,17 +471,27 @@ export default function EnhancedGeoGrid() {
             <div className="stats-list">
               <div className="stat-item">
                 <span className="stat-label">Best Area:</span>
-                <span className="stat-value">Pflugerville (#3)</span>
+                <span className="stat-value">{locations.slice().sort((a,b)=>a.overallScore-b.overallScore)[0]?.name || 'N/A'}</span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">Needs Focus:</span>
-                <span className="stat-value">Central Austin (#12)</span>
+                <span className="stat-label">Top Competitor:</span>
+                <span className="stat-value">{topCompetitor ? `${topCompetitor.name} (#${topCompetitor.score})` : '—'}</span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">Last Update:</span>
                 <span className="stat-value">{lastRefresh.toLocaleTimeString()}</span>
               </div>
             </div>
+            <button className="refresh-button" onClick={async ()=>{
+              try {
+                const res = await fetch('/api/competitor-tracking', { cache: 'no-cache' })
+                const data = await res.json()
+                if (res.ok && data?.summary?.topCompetitors?.length) {
+                  const top = data.summary.topCompetitors[0]
+                  setTopCompetitor({ name: top.name, score: top.averagePosition })
+                }
+              } catch {}
+            }}>🔍 Refresh Competitors</button>
           </div>
         </div>
 
@@ -443,6 +499,7 @@ export default function EnhancedGeoGrid() {
           <MapContainer
             center={locations.length > 0 ? [locations[0].lat, locations[0].lng] : [30.4518, -97.7431]}
             zoom={10}
+            whenCreated={onMapCreated}
             style={{ height: '500px', width: '100%' }}
             className="austin-map-leaflet"
           >
@@ -460,20 +517,28 @@ export default function EnhancedGeoGrid() {
               const color = getScoreColor(score)
               const size = getScoreSize(score)
               
+              const coverageMeters = Math.max(5000, 100000 / Math.max(zoom, 1))
               return (
-                <CircleMarker
-                  key={location.id}
-                  center={[location.lat, location.lng]}
-                  radius={size}
-                  fillColor={color}
-                  color="white"
-                  weight={3}
-                  opacity={1}
-                  fillOpacity={0.8}
-                  eventHandlers={{
-                    click: () => setSelectedLocation(location.id === selectedLocation ? null : location.id)
-                  }}
-                >
+                <>
+                  <Circle
+                    key={location.id + '-coverage'}
+                    center={[location.lat, location.lng]}
+                    radius={coverageMeters}
+                    pathOptions={{ color: color, fillOpacity: 0.08, opacity: 0.2 }}
+                  />
+                  <CircleMarker
+                    key={location.id}
+                    center={[location.lat, location.lng]}
+                    radius={size}
+                    fillColor={color}
+                    color="white"
+                    weight={3}
+                    opacity={1}
+                    fillOpacity={0.85}
+                    eventHandlers={{
+                      click: () => setSelectedLocation(location.id === selectedLocation ? null : location.id)
+                    }}
+                  >
                   <Tooltip permanent={false} direction="top">
                     <div className="map-tooltip">
                       <strong>{location.name}</strong><br/>
@@ -558,10 +623,21 @@ export default function EnhancedGeoGrid() {
                       </div>
                     </div>
                   </Popup>
-                </CircleMarker>
+                  </CircleMarker>
+                </>
               )
             })}
-            
+
+            {/* Insufficient data note when few or no locations visible */}
+            {locations.length <= 2 && (
+              <Popup position={center as any}>
+                <div style={{ maxWidth: 220 }}>
+                  <strong>Insufficient data</strong>
+                  <p>We don't have enough points in view. Zoom in or add service areas to improve coverage.</p>
+                </div>
+              </Popup>
+            )}
+
             {/* Competitor locations */}
             {showCompetitors && competitors
               .filter(comp => selectedCompetitor === 'all' || comp.name === selectedCompetitor)
