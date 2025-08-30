@@ -238,11 +238,15 @@
   padding: 0.5rem 1rem;
   border: 1px solid #d1d5db;
   background: white;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 0.85rem;
-  transition: all 0.3s;
+  transition: all 0.2s ease;
 }
+
+.action-btn.lg { padding: 0.6rem 1.1rem; font-weight: 700; }
+
+.action-btn:active { transform: translateY(0); }
 
 .action-btn.primary {
   background: #3b82f6;
