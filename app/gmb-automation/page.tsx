@@ -513,7 +513,7 @@ export default function GMBAutomation() {
       <div className="post-templates">
         <h2>📋 Post Templates & Queue</h2>
         <div className="templates-grid">
-          {[...generatedPosts, ...postTemplates].map(template => (
+          {combinedTemplates.map(template => (
             <div key={template.id} className={`template-card ${template.status}`}>
               <div className="template-header">
                 <span className={`type-badge ${template.type}`}>{template.type}</span>
