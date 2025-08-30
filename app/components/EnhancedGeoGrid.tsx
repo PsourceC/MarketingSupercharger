@@ -624,6 +624,22 @@ export default function EnhancedGeoGrid() {
                                 </div>
                               )
                             })}
+                            {(() => {
+                              const areaComps = getAreaCompetitors(location.name) as any[]
+                              if (!areaComps.length) return null
+                              const leader = areaComps.reduce((best, c) => !best || c.location.score < best.location.score ? c : best, null as any)
+                              const nearest = score === 1
+                                ? areaComps.filter(c => c.location.score > 1).sort((a,b)=>a.location.score-b.location.score)[0]
+                                : leader
+                              return (
+                                <div className="leader-note" style={{ marginTop: 8 }}>
+                                  <strong>Market leader:</strong> {leader?.name} #{leader?.location?.score}
+                                  {nearest && score === 1 ? (
+                                    <span> • <strong>Nearest rival:</strong> {nearest.name} #{nearest.location.score}</span>
+                                  ) : null}
+                                </div>
+                              )
+                            })()}
                           </div>
                         )}
 
