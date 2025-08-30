@@ -565,6 +565,7 @@ export default function GMBAutomation() {
                   onChange={(e) => handleFileSelect(template.id, e.target.files)}
                 />
                 <button className="action-btn" onClick={() => handleAddMediaUrl(template.id)}>🔗 Add URL</button>
+                <button className="action-btn" onClick={() => setLibrary({ postId: template.id })}>🗂️ Find Media</button>
                 <button
                   className="action-btn"
                   onClick={() => handleSchedulePost(template)}
