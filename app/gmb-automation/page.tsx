@@ -14,6 +14,11 @@ interface PostTemplate {
   publishDate?: string
 }
 
+const SUGGESTED_MEDIA: { type: 'image' | 'video'; url: string; name: string }[] = [
+  { type: 'image', url: 'https://images.pexels.com/photos/9875408/pexels-photo-9875408.jpeg', name: 'Rooftop Solar Installation' },
+  { type: 'video', url: 'https://videos.pexels.com/video-files/8853465/8853465-sd_640_360_24fps.mp4', name: 'Solar Install Timelapse' }
+]
+
 const postTemplates: PostTemplate[] = [
   {
     id: '1',
