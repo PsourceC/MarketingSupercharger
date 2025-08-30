@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 
 // Dynamically import map components to avoid SSR issues
@@ -219,6 +220,7 @@ const competitors: Competitor[] = [
 ]
 
 export default function EnhancedGeoGrid() {
+  const router = useRouter()
   const [selectedKeyword, setSelectedKeyword] = useState<string>('all')
   const [showCompetitors, setShowCompetitors] = useState(true)
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
@@ -682,13 +684,13 @@ export default function EnhancedGeoGrid() {
             <div className="insight-action">
               <button
                 className="insight-btn"
-                onClick={() => window.open('/gmb-automation?location=pflugerville&action=boost', '_blank')}
+                onClick={() => router.push('/gmb-automation')}
               >
                 📱 Boost Pflugerville GMB
               </button>
             </div>
           </div>
-          
+
           <div className="insight-card warning">
             <div className="insight-header">
               <span className="insight-icon">⚠️</span>
@@ -698,13 +700,13 @@ export default function EnhancedGeoGrid() {
             <div className="insight-action">
               <button
                 className="insight-btn"
-                onClick={() => window.open('/seo-tracking?location=austin&action=campaign', '_blank')}
+                onClick={() => router.push('/seo-tracking')}
               >
                 🚀 Launch Austin Campaign
               </button>
             </div>
           </div>
-          
+
           <div className="insight-card success">
             <div className="insight-header">
               <span className="insight-icon">✅</span>
@@ -714,7 +716,7 @@ export default function EnhancedGeoGrid() {
             <div className="insight-action">
               <button
                 className="insight-btn"
-                onClick={() => window.open('/analytics?location=cedar-park&action=analyze', '_blank')}
+                onClick={() => router.push('/analytics')}
               >
                 📊 Analyze Cedar Park
               </button>
