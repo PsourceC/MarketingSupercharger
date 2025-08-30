@@ -450,14 +450,6 @@ export default function EnhancedGeoGrid() {
             <h4>🎯 Performance Guide</h4>
             <div className="legend-grid">
               <div className="legend-item">
-                <div className="legend-circle" style={{ backgroundColor: '#3b82f6', border: '3px solid #fff' }}></div>
-                <span>{profileName} marker + coverage</span>
-              </div>
-              <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 14, height: 14, backgroundColor: '#6b7280', borderRadius: 3 }}></div>
-                <span>#1 Competitor (square)</span>
-              </div>
-              <div className="legend-item">
                 <div className="legend-circle" style={{ backgroundColor: '#6b7280' }}></div>
                 <span>Competitor marker</span>
               </div>
@@ -712,7 +704,7 @@ export default function EnhancedGeoGrid() {
               .map(competitor => (
                 <Fragment key={`comp-group-${competitor.name}`}>
                   {competitor.locations.map((loc, idx) => {
-                    if (leadersOnly && loc.score !== 1) return null
+                    if (loc.score === 1) return null
                     const yourLocation = locations.find(l => l.name === loc.areaName)
                     const yourScore = yourLocation ? getPositionRanking(yourLocation, selectedKeyword) : 20
                     const gap = getCompetitiveGap(yourScore, loc.score)
@@ -804,7 +796,6 @@ export default function EnhancedGeoGrid() {
                       )
                     }
 
-                    if (leadersOnly) return null
                     return (
                       <CircleMarker
                         key={`comp-${competitor.name}-${idx}`}
