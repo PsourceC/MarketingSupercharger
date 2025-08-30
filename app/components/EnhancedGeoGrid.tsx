@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import dynamic from 'next/dynamic'
 
 // Dynamically import map components to avoid SSR issues
@@ -641,96 +641,98 @@ export default function EnhancedGeoGrid() {
             {/* Competitor locations */}
             {showCompetitors && competitors
               .filter(comp => selectedCompetitor === 'all' || comp.name === selectedCompetitor)
-              .map(competitor =>
-              competitor.locations.map((loc, idx) => {
-                const yourLocation = locations.find(l => l.name === loc.areaName)
-                const yourScore = yourLocation ? getPositionRanking(yourLocation, selectedKeyword) : 20
-                const gap = getCompetitiveGap(yourScore, loc.score)
-                const markerSize = competitorComparisonMode ? (loc.marketShare / 5) : 8
+              .map(competitor => (
+                <Fragment key={`comp-group-${competitor.name}`}>
+                  {competitor.locations.map((loc, idx) => {
+                    const yourLocation = locations.find(l => l.name === loc.areaName)
+                    const yourScore = yourLocation ? getPositionRanking(yourLocation, selectedKeyword) : 20
+                    const gap = getCompetitiveGap(yourScore, loc.score)
+                    const markerSize = competitorComparisonMode ? (loc.marketShare / 5) : 8
 
-                return (
-                  <CircleMarker
-                    key={`${competitor.name}-${idx}`}
-                    center={[loc.lat + 0.01, loc.lng + 0.01]} // Slight offset to avoid overlap
-                    radius={markerSize}
-                    fillColor={competitor.color}
-                    color={competitorComparisonMode ? gap.color : "white"}
-                    weight={competitorComparisonMode ? 3 : 2}
-                    opacity={0.8}
-                    fillOpacity={competitorComparisonMode ? 0.7 : 0.6}
-                  >
-                    <Tooltip>
-                      <div className="competitor-tooltip-enhanced">
-                        <strong>{competitor.name}</strong><br/>
-                        <span>#{loc.score} in {loc.areaName}</span><br/>
-                        <span style={{ color: gap.color, fontWeight: 'bold' }}>
-                          {gap.text}
-                        </span><br/>
-                        <span className="market-share">
-                          {loc.marketShare}% market share
-                        </span><br/>
-                        <span className="trend">
-                          {getTrendIcon(loc.recentTrend)}
-                          {loc.recentTrend === 'up' ? 'Growing' :
-                           loc.recentTrend === 'down' ? 'Declining' : 'Stable'}
-                        </span>
-                      </div>
-                    </Tooltip>
-
-                    <Popup>
-                      <div className="competitor-popup">
-                        <h3>{competitor.name} - {loc.areaName}</h3>
-                        <div className="competitor-popup-content">
-                          <div className="popup-stat">
-                            <span className="popup-label">Their Ranking:</span>
-                            <span className="popup-value">#{loc.score}</span>
-                          </div>
-                          <div className="popup-stat">
-                            <span className="popup-label">Your Ranking:</span>
-                            <span className="popup-value">#{yourScore}</span>
-                          </div>
-                          <div className="popup-stat">
-                            <span className="popup-label">Competitive Gap:</span>
-                            <span className="popup-value" style={{ color: gap.color }}>
+                    return (
+                      <CircleMarker
+                        key={`comp-${competitor.name}-${idx}`}
+                        center={[loc.lat + 0.01, loc.lng + 0.01]}
+                        radius={markerSize}
+                        fillColor={competitor.color}
+                        color={competitorComparisonMode ? gap.color : "white"}
+                        weight={competitorComparisonMode ? 3 : 2}
+                        opacity={0.8}
+                        fillOpacity={competitorComparisonMode ? 0.7 : 0.6}
+                      >
+                        <Tooltip>
+                          <div className="competitor-tooltip-enhanced">
+                            <strong>{competitor.name}</strong><br/>
+                            <span>#{loc.score} in {loc.areaName}</span><br/>
+                            <span style={{ color: gap.color, fontWeight: 'bold' }}>
                               {gap.text}
-                            </span>
-                          </div>
-                          <div className="popup-stat">
-                            <span className="popup-label">Market Share:</span>
-                            <span className="popup-value">{loc.marketShare}%</span>
-                          </div>
-                          <div className="popup-stat">
-                            <span className="popup-label">Recent Trend:</span>
-                            <span className="popup-value">
+                            </span><br/>
+                            <span className="market-share">
+                              {loc.marketShare}% market share
+                            </span><br/>
+                            <span className="trend">
                               {getTrendIcon(loc.recentTrend)}
                               {loc.recentTrend === 'up' ? 'Growing' :
                                loc.recentTrend === 'down' ? 'Declining' : 'Stable'}
                             </span>
                           </div>
+                        </Tooltip>
 
-                          <div className="competitive-insights">
-                            <h4>💡 Opportunity</h4>
-                            {gap.status === 'winning' ? (
-                              <p className="insight-text success">
-                                You're dominating this area! Focus on maintaining your lead.
-                              </p>
-                            ) : gap.status === 'close' ? (
-                              <p className="insight-text warning">
-                                Close competition - small improvements could give you the edge.
-                              </p>
-                            ) : (
-                              <p className="insight-text danger">
-                                Significant gap to close. Consider targeted campaigns here.
-                              </p>
-                            )}
+                        <Popup>
+                          <div className="competitor-popup">
+                            <h3>{competitor.name} - {loc.areaName}</h3>
+                            <div className="competitor-popup-content">
+                              <div className="popup-stat">
+                                <span className="popup-label">Their Ranking:</span>
+                                <span className="popup-value">#{loc.score}</span>
+                              </div>
+                              <div className="popup-stat">
+                                <span className="popup-label">Your Ranking:</span>
+                                <span className="popup-value">#{yourScore}</span>
+                              </div>
+                              <div className="popup-stat">
+                                <span className="popup-label">Competitive Gap:</span>
+                                <span className="popup-value" style={{ color: gap.color }}>
+                                  {gap.text}
+                                </span>
+                              </div>
+                              <div className="popup-stat">
+                                <span className="popup-label">Market Share:</span>
+                                <span className="popup-value">{loc.marketShare}%</span>
+                              </div>
+                              <div className="popup-stat">
+                                <span className="popup-label">Recent Trend:</span>
+                                <span className="popup-value">
+                                  {getTrendIcon(loc.recentTrend)}
+                                  {loc.recentTrend === 'up' ? 'Growing' :
+                                   loc.recentTrend === 'down' ? 'Declining' : 'Stable'}
+                                </span>
+                              </div>
+
+                              <div className="competitive-insights">
+                                <h4>💡 Opportunity</h4>
+                                {gap.status === 'winning' ? (
+                                  <p className="insight-text success">
+                                    You're dominating this area! Focus on maintaining your lead.
+                                  </p>
+                                ) : gap.status === 'close' ? (
+                                  <p className="insight-text warning">
+                                    Close competition - small improvements could give you the edge.
+                                  </p>
+                                ) : (
+                                  <p className="insight-text danger">
+                                    Significant gap to close. Consider targeted campaigns here.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </Popup>
-                  </CircleMarker>
-                )
-              })
-            )}
+                        </Popup>
+                      </CircleMarker>
+                    )
+                  })}
+                </Fragment>
+              ))}
           </MapContainer>
         </div>
       </div>
