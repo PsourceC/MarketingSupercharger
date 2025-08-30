@@ -137,15 +137,21 @@ export async function GET() {
   }
 
   // Check Social Media Status (simulate)
-  services['social-media'] = { 
-    status: 'not-setup', 
-    message: 'Social media accounts not connected' 
+  services['social-media'] = {
+    status: 'not-setup',
+    message: 'Social media accounts not connected'
   }
 
+  // Check Email Notifications (SMTP-based)
+  const smtpReady = !!(process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.SMTP_USER && process.env.SMTP_PASS && (process.env.ALERT_EMAIL_TO || process.env.NOTIFY_EMAIL_TO))
+  services['email-notifications'] = smtpReady
+    ? { status: 'working', message: 'SMTP configured - alerts enabled' }
+    : { status: 'not-setup', message: 'Set SMTP_HOST/PORT/USER/PASS and ALERT_EMAIL_TO' }
+
   // Check Review Management Status (simulate)
-  services['review-management'] = { 
-    status: 'partial', 
-    message: 'Basic setup complete, needs API keys' 
+  services['review-management'] = {
+    status: 'partial',
+    message: 'Basic setup complete, needs API keys'
   }
 
   // Check Citation Monitoring Status
