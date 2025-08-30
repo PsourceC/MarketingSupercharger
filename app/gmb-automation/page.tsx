@@ -180,6 +180,9 @@ export default function GMBAutomation() {
 
   const getPostMedia = (postId: string) => mediaByPost[postId] || []
 
+  const getTemplateWithOverrides = (t: PostTemplate): PostTemplate => ({ ...t, ...(overridesById[t.id] || {}) }) as PostTemplate
+  const combinedTemplates: PostTemplate[] = [...generatedPosts, ...postTemplates].map(getTemplateWithOverrides)
+
   const addMediaToPost = (postId: string, attachments: MediaAttachment[]) => {
     setMediaByPost(prev => ({
       ...prev,
