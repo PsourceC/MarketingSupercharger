@@ -1,5 +1,7 @@
 'use client'
 
+'use client'
+
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import GoogleAuthButton from '../components/GoogleAuthButton'
@@ -95,22 +97,26 @@ export default function DevProfilePage() {
       {
         id: 'citation-tracking',
         name: 'Citation Monitoring',
-        description: 'Track business listings across directories (Moz Local, BrightLocal)',
+        description: 'Track business listings across directories (free, custom crawler)',
         status: 'disconnected',
         category: 'optimization',
         priority: 'high',
         setupUrl: '/setup?service=citation-tracking',
-        docsUrl: '/setup?service=citation-tracking'
+        docsUrl: '/setup?service=citation-tracking',
+        workaroundActive: true,
+        workaroundText: 'Using free directory checks (no paid APIs)'
       },
       {
         id: 'competitor-api',
         name: 'Competitor Tracking',
-        description: 'Monitor competitor rankings and performance (SEMrush, Ahrefs)',
+        description: 'Monitor competitor rankings and performance (free SERP simulation)',
         status: 'disconnected',
         category: 'optimization',
         priority: 'medium',
         setupUrl: '/setup?service=competitor-tracking',
-        docsUrl: '/setup?service=competitor-tracking'
+        docsUrl: '/setup?service=competitor-tracking',
+        workaroundActive: true,
+        workaroundText: 'Using free SERP-based tracking (no paid tools)'
       },
 
       // Analytics & Monitoring
@@ -638,18 +644,45 @@ export default function DevProfilePage() {
                     <div className="connection-footer">
                       <div className="connection-actions">
                         {connection.id === 'google-my-business' && connection.status !== 'connected' && (
-                          <button
-                            className={`setup-btn ${connection.priority === 'critical' ? 'critical' : ''}`}
-                            onClick={async () => {
-                              try {
-                                const res = await fetch('/api/auth/gmb')
-                                const data = await res.json()
-                                if (data.authUrl) window.location.href = data.authUrl
-                              } catch {}
-                            }}
-                          >
-                            OAuth Connect
-                          </button>
+                          <>
+                            <button
+                              className={`setup-btn ${connection.priority === 'critical' ? 'critical' : ''}`}
+                              onClick={async () => {
+                                try {
+                                  const res = await fetch('/api/auth/gmb')
+                                  const data = await res.json()
+                                  if (data.authUrl) {
+                                    try {
+                                      if (window.top) (window.top as Window).location.href = data.authUrl
+                                      else window.location.href = data.authUrl
+                                    } catch {
+                                      window.location.href = data.authUrl
+                                    }
+                                  }
+                                } catch {}
+                              }}
+                            >
+                              OAuth Connect
+                            </button>
+                            <button
+                              className="setup-btn"
+                              onClick={async () => {
+                                try {
+                                  const res = await fetch('/api/auth/gmb/refresh', { method: 'POST' })
+                                  if (res.ok) {
+                                    await checkAllConnections()
+                                  } else {
+                                    const data = await res.json().catch(() => ({}))
+                                    alert(data.error || 'Repair failed. Please re-connect via OAuth.')
+                                  }
+                                } catch (e: any) {
+                                  alert(e?.message || 'Repair failed. Please re-connect via OAuth.')
+                                }
+                              }}
+                            >
+                              Repair
+                            </button>
+                          </>
                         )}
                         <button
                           className={`setup-btn ${connection.priority === 'critical' ? 'critical' : ''}`}

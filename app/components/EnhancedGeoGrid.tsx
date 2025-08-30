@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import dynamic from 'next/dynamic'
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false })
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false })
 const CircleMarker = dynamic(() => import('react-leaflet').then(mod => mod.CircleMarker), { ssr: false })
+const Circle = dynamic(() => import('react-leaflet').then(mod => mod.Circle), { ssr: false })
+const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false })
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false })
 const Tooltip = dynamic(() => import('react-leaflet').then(mod => mod.Tooltip), { ssr: false })
 
@@ -41,8 +43,8 @@ interface Competitor {
   }[]
 }
 
-// Austin metro area locations with real coordinates and updated data
-const locations: Location[] = [
+// Fallback demo locations (used if API has no data)
+const fallbackLocations: Location[] = [
   {
     id: 'austin-central',
     name: 'Central Austin',
@@ -186,7 +188,7 @@ const locations: Location[] = [
   }
 ]
 
-const competitors: Competitor[] = [
+const fallbackCompetitors: Competitor[] = [
   {
     name: '512 Solar',
     score: 92,
@@ -226,10 +228,118 @@ export default function EnhancedGeoGrid() {
   const [lastRefresh, setLastRefresh] = useState(new Date())
   const [competitorComparisonMode, setCompetitorComparisonMode] = useState(false)
   const [selectedCompetitor, setSelectedCompetitor] = useState<string>('all')
+  const [zoom, setZoom] = useState<number>(10)
+  const [center, setCenter] = useState<[number, number]>([30.2672, -97.7431])
+  const [locations, setLocations] = useState<Location[]>([])
+  const [competitors, setCompetitors] = useState<Competitor[]>([])
+  const [topCompetitor, setTopCompetitor] = useState<{ name: string; score: number } | null>(null)
+  const [profileName, setProfileName] = useState<string>('Your Business')
+  const [leafletLib, setLeafletLib] = useState<any>(null)
+  const [leadersOnly, setLeadersOnly] = useState<boolean>(true)
+  const [topCompetitorsList, setTopCompetitorsList] = useState<Array<{ name: string; domain: string; averagePosition: number; visibilityScore: number }>>([])
+  const [dataNotice, setDataNotice] = useState<string | null>(null)
+  const [useFallbackLegend, setUseFallbackLegend] = useState<boolean>(false)
 
   useEffect(() => {
     setMapReady(true)
+    void loadData()
+    void refreshCompetitorSummary()
+    if (typeof window !== 'undefined') {
+      import('leaflet').then((mod: any) => setLeafletLib(mod))
+    }
+    const interval = setInterval(() => { void refreshCompetitorSummary() }, 5 * 60 * 1000)
+    return () => clearInterval(interval)
   }, [])
+
+  // Suppress benign FullStory HMR fetch errors that do not affect app functionality
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const suppress = (e: any) => {
+      const msg = String(e?.reason?.message || e?.message || '')
+      const stack = String(e?.reason?.stack || '')
+      if (msg.includes('Failed to fetch') && (stack.includes('fullstory') || stack.includes('edge.fullstory.com'))) {
+        e.preventDefault?.()
+      }
+    }
+    window.addEventListener('unhandledrejection', suppress)
+    window.addEventListener('error', suppress)
+    return () => {
+      window.removeEventListener('unhandledrejection', suppress)
+      window.removeEventListener('error', suppress)
+    }
+  }, [])
+
+  // Reconcile legend source when either competitors or top list changes
+  useEffect(() => {
+    const mapNames = competitors.map(c => c.name.toLowerCase())
+    const topNames = topCompetitorsList.map(c => c.name.toLowerCase())
+    if (!topNames.length) {
+      setUseFallbackLegend(true)
+      setDataNotice('Competitor tracking unavailable. Showing local competitors list.')
+      return
+    }
+    const missingFromTop = mapNames.filter(n => !topNames.includes(n))
+    const missingFromMap = topNames.filter(n => !mapNames.includes(n))
+    if (missingFromTop.length > 0 || missingFromMap.length > 0) {
+      setUseFallbackLegend(true)
+      setDataNotice('Live tracking list differs from map competitors. Showing local competitors list.')
+    } else {
+      setUseFallbackLegend(false)
+      setDataNotice(null)
+    }
+  }, [competitors, topCompetitorsList])
+
+  const refreshCompetitorSummary = async () => {
+    try {
+      const res = await fetch('/api/competitor-tracking', { cache: 'no-cache' })
+      const data = await res.json()
+      if (res.ok && data?.summary?.topCompetitors) {
+        const list = data.summary.topCompetitors.slice(0, 10).map((c: any) => ({
+          name: c.name,
+          domain: c.domain,
+          averagePosition: c.averagePosition,
+          visibilityScore: c.visibilityScore
+        }))
+        setTopCompetitorsList(list)
+        if (list.length) setTopCompetitor({ name: list[0].name, score: list[0].averagePosition })
+        const mapNames = competitors.map(c => c.name.toLowerCase())
+        const topNames = list.map((c: any) => c.name.toLowerCase())
+        const missingFromTop = mapNames.filter(n => !topNames.includes(n))
+        if (missingFromTop.length > 0) {
+          setUseFallbackLegend(true)
+          setDataNotice('Some map competitors are not in tracking yet. Showing local competitors list.')
+        } else {
+          setUseFallbackLegend(false)
+          setDataNotice(null)
+        }
+      } else {
+        setUseFallbackLegend(true)
+        setDataNotice('Competitor tracking returned no data. Showing local competitors list.')
+      }
+    } catch {
+      setUseFallbackLegend(true)
+      setDataNotice('Competitor tracking unavailable. Showing local competitors list.')
+    }
+  }
+
+  const loadData = async () => {
+    try {
+      const [locRes, profRes] = await Promise.all([
+        fetch('/api/locations', { cache: 'no-cache' }),
+        fetch('/api/business', { cache: 'no-cache' })
+      ])
+      if (locRes.ok) {
+        const locs = await locRes.json()
+        if (Array.isArray(locs) && locs.length > 0) setLocations(locs)
+      }
+      if (profRes.ok) {
+        const data = await profRes.json()
+        if (data?.profile?.business_name) setProfileName(data.profile.business_name)
+      }
+    } catch {}
+    if (locations.length === 0) setLocations(fallbackLocations)
+    setCompetitors(fallbackCompetitors)
+  }
 
   const getScoreColor = (score: number) => {
     if (score <= 5) return '#10b981' // Green - excellent (top 5)
@@ -282,10 +392,24 @@ export default function EnhancedGeoGrid() {
     }
   }
 
-  const refreshData = () => {
+  const refreshData = async () => {
     setLastRefresh(new Date())
-    // In a real app, this would trigger an API call
-    console.log('Refreshing map data...')
+    try {
+      await loadData()
+      await refreshCompetitorSummary()
+    } catch {}
+  }
+
+  const onMapCreated = (map: any) => {
+    setZoom(map.getZoom())
+    setCenter([map.getCenter().lat, map.getCenter().lng])
+    map.on('zoomend', () => {
+      setZoom(map.getZoom())
+      setCenter([map.getCenter().lat, map.getCenter().lng])
+    })
+    map.on('moveend', () => {
+      setCenter([map.getCenter().lat, map.getCenter().lng])
+    })
   }
 
   if (!mapReady) {
@@ -330,19 +454,31 @@ export default function EnhancedGeoGrid() {
         </div>
 
         {showCompetitors && (
-          <div className="control-group">
-            <label className="control-label">🎯 Compare With:</label>
-            <select
-              value={selectedCompetitor}
-              onChange={(e) => setSelectedCompetitor(e.target.value)}
-              className="enhanced-select competitor-select"
-            >
-              <option value="all">All Competitors</option>
-              {competitors.map(comp => (
-                <option key={comp.name} value={comp.name}>{comp.name}</option>
-              ))}
-            </select>
-          </div>
+          <>
+            <div className="control-group">
+              <label className="control-label">🎯 Compare With:</label>
+              <select
+                value={selectedCompetitor}
+                onChange={(e) => setSelectedCompetitor(e.target.value)}
+                className="enhanced-select competitor-select"
+              >
+                <option value="all">All Competitors</option>
+                {competitors.map(comp => (
+                  <option key={comp.name} value={comp.name}>{comp.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="control-group">
+              <label className="toggle-control">
+                <input
+                  type="checkbox"
+                  checked={leadersOnly}
+                  onChange={(e) => setLeadersOnly(e.target.checked)}
+                />
+                <span className="toggle-text">🏁 Show Leaders Only</span>
+              </label>
+            </div>
+          </>
         )}
 
         <div className="control-group">
@@ -372,6 +508,10 @@ export default function EnhancedGeoGrid() {
           <div className="performance-legend">
             <h4>🎯 Performance Guide</h4>
             <div className="legend-grid">
+              <div className="legend-item">
+                <div className="legend-circle" style={{ backgroundColor: '#6b7280' }}></div>
+                <span>Competitor marker</span>
+              </div>
               <div className="legend-item excellent">
                 <div className="legend-circle" style={{ backgroundColor: '#10b981' }}></div>
                 <span>Top 5 Positions</span>
@@ -403,19 +543,34 @@ export default function EnhancedGeoGrid() {
           {showCompetitors && (
             <div className="competitor-legend">
               <h4>🥊 Competitors</h4>
+              {dataNotice && (
+                <div className="data-status-banner">
+                  {dataNotice}
+                </div>
+              )}
               <div className="competitor-list">
-                {competitors.map(comp => (
-                  <div key={comp.name} className="competitor-item">
-                    <div 
-                      className="competitor-marker" 
-                      style={{ backgroundColor: comp.color }}
-                    ></div>
-                    <div className="competitor-info">
-                      <span className="competitor-name">{comp.name}</span>
-                      <span className="competitor-score">Avg: #{comp.score}</span>
+                {(
+                  useFallbackLegend || !topCompetitorsList.length
+                    ? competitors.map(c => ({ name: c.name, averagePosition: c.score, color: c.color }))
+                    : topCompetitorsList.map(c => ({
+                        name: c.name,
+                        averagePosition: c.averagePosition,
+                        color: (competitors.find(cc => cc.name.toLowerCase() === c.name.toLowerCase())?.color) || '#6b7280'
+                      }))
+                )
+                  .slice(0, 10)
+                  .map((comp: any) => (
+                    <div key={comp.name} className="competitor-item">
+                      <div
+                        className="competitor-marker"
+                        style={{ backgroundColor: comp.color }}
+                      ></div>
+                      <div className="competitor-info">
+                        <span className="competitor-name">{comp.name}</span>
+                        <span className="competitor-score">Avg: #{comp.averagePosition}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           )}
@@ -425,17 +580,50 @@ export default function EnhancedGeoGrid() {
             <div className="stats-list">
               <div className="stat-item">
                 <span className="stat-label">Best Area:</span>
-                <span className="stat-value">Pflugerville (#3)</span>
+                <span className="stat-value">{locations.slice().sort((a,b)=>a.overallScore-b.overallScore)[0]?.name || 'N/A'}</span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">Needs Focus:</span>
-                <span className="stat-value">Central Austin (#12)</span>
+                <span className="stat-label">Top Competitor:</span>
+                <span className="stat-value">{topCompetitor ? `${topCompetitor.name} (#${topCompetitor.score})` : '—'}</span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">Last Update:</span>
                 <span className="stat-value">{lastRefresh.toLocaleTimeString()}</span>
               </div>
             </div>
+            <button className="refresh-button" onClick={async ()=>{
+              try {
+                const res = await fetch('/api/competitor-tracking', { cache: 'no-cache' })
+                const data = await res.json()
+                if (res.ok && data?.summary?.topCompetitors?.length) {
+                  const list = data.summary.topCompetitors.slice(0, 10).map((c: any) => ({
+                    name: c.name,
+                    domain: c.domain,
+                    averagePosition: c.averagePosition,
+                    visibilityScore: c.visibilityScore
+                  }))
+                  setTopCompetitorsList(list)
+                  const top = data.summary.topCompetitors[0]
+                  setTopCompetitor({ name: top.name, score: top.averagePosition })
+                  const mapNames = competitors.map(c => c.name.toLowerCase())
+                  const topNames = list.map((c: any) => c.name.toLowerCase())
+                  const missingFromTop = mapNames.filter(n => !topNames.includes(n))
+                  if (missingFromTop.length > 0) {
+                    setUseFallbackLegend(true)
+                    setDataNotice('Some map competitors are not in tracking yet. Showing local competitors list.')
+                  } else {
+                    setUseFallbackLegend(false)
+                    setDataNotice(null)
+                  }
+                } else {
+                  setUseFallbackLegend(true)
+                  setDataNotice('Competitor tracking returned no data. Showing local competitors list.')
+                }
+              } catch {
+                setUseFallbackLegend(true)
+                setDataNotice('Competitor tracking unavailable. Showing local competitors list.')
+              }
+            }}>🔍 Refresh Competitors</button>
           </div>
         </div>
 
@@ -443,6 +631,7 @@ export default function EnhancedGeoGrid() {
           <MapContainer
             center={locations.length > 0 ? [locations[0].lat, locations[0].lng] : [30.4518, -97.7431]}
             zoom={10}
+            whenCreated={onMapCreated}
             style={{ height: '500px', width: '100%' }}
             className="austin-map-leaflet"
           >
@@ -460,20 +649,28 @@ export default function EnhancedGeoGrid() {
               const color = getScoreColor(score)
               const size = getScoreSize(score)
               
+              const coverageMeters = Math.max(5000, 100000 / Math.max(zoom, 1))
               return (
-                <CircleMarker
-                  key={location.id}
-                  center={[location.lat, location.lng]}
-                  radius={size}
-                  fillColor={color}
-                  color="white"
-                  weight={3}
-                  opacity={1}
-                  fillOpacity={0.8}
-                  eventHandlers={{
-                    click: () => setSelectedLocation(location.id === selectedLocation ? null : location.id)
-                  }}
-                >
+                <Fragment key={`loc-${location.id}`}>
+                  <Circle
+                    key={location.id + '-coverage'}
+                    center={[location.lat, location.lng]}
+                    radius={coverageMeters}
+                    pathOptions={{ color: color, fillOpacity: 0.08, opacity: 0.2 }}
+                  />
+                  <CircleMarker
+                    key={location.id}
+                    center={[location.lat, location.lng]}
+                    radius={size}
+                    fillColor={color}
+                    color="white"
+                    weight={3}
+                    opacity={1}
+                    fillOpacity={0.85}
+                    eventHandlers={{
+                      click: () => setSelectedLocation(location.id === selectedLocation ? null : location.id)
+                    }}
+                  >
                   <Tooltip permanent={false} direction="top">
                     <div className="map-tooltip">
                       <strong>{location.name}</strong><br/>
@@ -539,6 +736,22 @@ export default function EnhancedGeoGrid() {
                                 </div>
                               )
                             })}
+                            {(() => {
+                              const areaComps = getAreaCompetitors(location.name) as any[]
+                              if (!areaComps.length) return null
+                              const leader = areaComps.reduce((best, c) => !best || c.location.score < best.location.score ? c : best, null as any)
+                              const nearest = score === 1
+                                ? areaComps.filter(c => c.location.score > 1).sort((a,b)=>a.location.score-b.location.score)[0]
+                                : leader
+                              return (
+                                <div className="leader-note" style={{ marginTop: 8 }}>
+                                  <strong>Market leader:</strong> {leader?.name} #{leader?.location?.score}
+                                  {nearest && score === 1 ? (
+                                    <span> • <strong>Nearest rival:</strong> {nearest.name} #{nearest.location.score}</span>
+                                  ) : null}
+                                </div>
+                              )
+                            })()}
                           </div>
                         )}
 
@@ -558,103 +771,135 @@ export default function EnhancedGeoGrid() {
                       </div>
                     </div>
                   </Popup>
-                </CircleMarker>
+                  </CircleMarker>
+                </Fragment>
               )
             })}
-            
+
+            {/* Insufficient data note when few or no locations visible */}
+            {locations.length <= 2 && (
+              <Popup position={center as any}>
+                <div style={{ maxWidth: 220 }}>
+                  <strong>Insufficient data</strong>
+                  <p>We don't have enough points in view. Zoom in or add service areas to improve coverage.</p>
+                </div>
+              </Popup>
+            )}
+
             {/* Competitor locations */}
             {showCompetitors && competitors
               .filter(comp => selectedCompetitor === 'all' || comp.name === selectedCompetitor)
-              .map(competitor =>
-              competitor.locations.map((loc, idx) => {
-                const yourLocation = locations.find(l => l.name === loc.areaName)
-                const yourScore = yourLocation ? getPositionRanking(yourLocation, selectedKeyword) : 20
-                const gap = getCompetitiveGap(yourScore, loc.score)
-                const markerSize = competitorComparisonMode ? (loc.marketShare / 5) : 8
+              .map(competitor => (
+                <Fragment key={`comp-group-${competitor.name}`}>
+                  {competitor.locations.map((loc, idx) => {
+                    const yourLocation = locations.find(l => l.name === loc.areaName)
+                    const yourScore = yourLocation ? getPositionRanking(yourLocation, selectedKeyword) : 20
+                    const gap = getCompetitiveGap(yourScore, loc.score)
+                    const markerSize = competitorComparisonMode ? (loc.marketShare / 4) : 10
+                    const pos: [number, number] = [loc.lat + 0.01, loc.lng + 0.01]
 
-                return (
-                  <CircleMarker
-                    key={`${competitor.name}-${idx}`}
-                    center={[loc.lat + 0.01, loc.lng + 0.01]} // Slight offset to avoid overlap
-                    radius={markerSize}
-                    fillColor={competitor.color}
-                    color={competitorComparisonMode ? gap.color : "white"}
-                    weight={competitorComparisonMode ? 3 : 2}
-                    opacity={0.8}
-                    fillOpacity={competitorComparisonMode ? 0.7 : 0.6}
-                  >
-                    <Tooltip>
-                      <div className="competitor-tooltip-enhanced">
-                        <strong>{competitor.name}</strong><br/>
-                        <span>#{loc.score} in {loc.areaName}</span><br/>
-                        <span style={{ color: gap.color, fontWeight: 'bold' }}>
-                          {gap.text}
-                        </span><br/>
-                        <span className="market-share">
-                          {loc.marketShare}% market share
-                        </span><br/>
-                        <span className="trend">
-                          {getTrendIcon(loc.recentTrend)}
-                          {loc.recentTrend === 'up' ? 'Growing' :
-                           loc.recentTrend === 'down' ? 'Declining' : 'Stable'}
-                        </span>
-                      </div>
-                    </Tooltip>
-
-                    <Popup>
-                      <div className="competitor-popup">
-                        <h3>{competitor.name} - {loc.areaName}</h3>
-                        <div className="competitor-popup-content">
-                          <div className="popup-stat">
-                            <span className="popup-label">Their Ranking:</span>
-                            <span className="popup-value">#{loc.score}</span>
-                          </div>
-                          <div className="popup-stat">
-                            <span className="popup-label">Your Ranking:</span>
-                            <span className="popup-value">#{yourScore}</span>
-                          </div>
-                          <div className="popup-stat">
-                            <span className="popup-label">Competitive Gap:</span>
-                            <span className="popup-value" style={{ color: gap.color }}>
+                    const popupContent = (
+                      <>
+                        <Tooltip>
+                          <div className="competitor-tooltip-enhanced">
+                            <strong>{competitor.name}</strong><br/>
+                            <span>#{loc.score} in {loc.areaName}</span><br/>
+                            <span style={{ color: gap.color, fontWeight: 'bold' }}>
                               {gap.text}
-                            </span>
-                          </div>
-                          <div className="popup-stat">
-                            <span className="popup-label">Market Share:</span>
-                            <span className="popup-value">{loc.marketShare}%</span>
-                          </div>
-                          <div className="popup-stat">
-                            <span className="popup-label">Recent Trend:</span>
-                            <span className="popup-value">
+                            </span><br/>
+                            <span className="market-share">
+                              {loc.marketShare}% market share
+                            </span><br/>
+                            <span className="trend">
                               {getTrendIcon(loc.recentTrend)}
                               {loc.recentTrend === 'up' ? 'Growing' :
                                loc.recentTrend === 'down' ? 'Declining' : 'Stable'}
                             </span>
                           </div>
+                        </Tooltip>
+                        <Popup>
+                          <div className="competitor-popup">
+                            <h3>{competitor.name} - {loc.areaName}</h3>
+                            <div className="competitor-popup-content">
+                              <div className="popup-stat">
+                                <span className="popup-label">Their Ranking:</span>
+                                <span className="popup-value">#{loc.score}</span>
+                              </div>
+                              <div className="popup-stat">
+                                <span className="popup-label">Your Ranking:</span>
+                                <span className="popup-value">#{yourScore}</span>
+                              </div>
+                              <div className="popup-stat">
+                                <span className="popup-label">Competitive Gap:</span>
+                                <span className="popup-value" style={{ color: gap.color }}>
+                                  {gap.text}
+                                </span>
+                              </div>
+                              <div className="popup-stat">
+                                <span className="popup-label">Market Share:</span>
+                                <span className="popup-value">{loc.marketShare}%</span>
+                              </div>
+                              <div className="popup-stat">
+                                <span className="popup-label">Recent Trend:</span>
+                                <span className="popup-value">
+                                  {getTrendIcon(loc.recentTrend)}
+                                  {loc.recentTrend === 'up' ? 'Growing' :
+                                   loc.recentTrend === 'down' ? 'Declining' : 'Stable'}
+                                </span>
+                              </div>
 
-                          <div className="competitive-insights">
-                            <h4>💡 Opportunity</h4>
-                            {gap.status === 'winning' ? (
-                              <p className="insight-text success">
-                                You're dominating this area! Focus on maintaining your lead.
-                              </p>
-                            ) : gap.status === 'close' ? (
-                              <p className="insight-text warning">
-                                Close competition - small improvements could give you the edge.
-                              </p>
-                            ) : (
-                              <p className="insight-text danger">
-                                Significant gap to close. Consider targeted campaigns here.
-                              </p>
-                            )}
+                              <div className="competitive-insights">
+                                <h4>💡 Opportunity</h4>
+                                {gap.status === 'winning' ? (
+                                  <p className="insight-text success">
+                                    You're dominating this area! Focus on maintaining your lead.
+                                  </p>
+                                ) : gap.status === 'close' ? (
+                                  <p className="insight-text warning">
+                                    Close competition - small improvements could give you the edge.
+                                  </p>
+                                ) : (
+                                  <p className="insight-text danger">
+                                    Significant gap to close. Consider targeted campaigns here.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </Popup>
-                  </CircleMarker>
-                )
-              })
-            )}
+                        </Popup>
+                      </>
+                    )
+
+                    if (loc.score === 1 && leafletLib?.divIcon) {
+                      const icon = leafletLib.divIcon({
+                        className: 'comp-square-marker-icon',
+                        html: `<div style="width:${markerSize * 2}px;height:${markerSize * 2}px;background:${competitor.color};border:${competitorComparisonMode ? 3 : 2}px solid ${competitorComparisonMode ? gap.color : '#ffffff'};transform:translate(-50%,-50%);"></div>`,
+                        iconSize: [markerSize * 2, markerSize * 2],
+                      })
+                      return (
+                        <Marker key={`comp-${competitor.name}-${idx}`} position={pos} icon={icon} zIndexOffset={1000}>
+                          {popupContent}
+                        </Marker>
+                      )
+                    }
+
+                    return (
+                      <CircleMarker
+                        key={`comp-${competitor.name}-${idx}`}
+                        center={pos}
+                        radius={markerSize}
+                        fillColor={competitor.color}
+                        color={competitorComparisonMode ? gap.color : "white"}
+                        weight={competitorComparisonMode ? 3 : 2}
+                        opacity={0.8}
+                        fillOpacity={competitorComparisonMode ? 0.7 : 0.6}
+                      >
+                        {popupContent}
+                      </CircleMarker>
+                    )
+                  })}
+                </Fragment>
+              ))}
           </MapContainer>
         </div>
       </div>

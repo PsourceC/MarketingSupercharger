@@ -18,8 +18,8 @@ export default function DataRefreshSystem() {
     isRefreshing: false,
     lastRefresh: new Date(0), // Use epoch time to prevent hydration mismatch
     nextRefresh: new Date(0), // Use epoch time to prevent hydration mismatch
-    autoRefreshEnabled: false, // Disabled by default to prevent overwhelming
-    refreshInterval: 60 // Increased to 60 minutes
+    autoRefreshEnabled: true,
+    refreshInterval: 60
   })
 
   const [recentUpdates, setRecentUpdates] = useState<DataUpdate[]>([])
