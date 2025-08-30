@@ -242,6 +242,9 @@ export default function EnhancedGeoGrid() {
     setMapReady(true)
     void loadData()
     void refreshCompetitorSummary()
+    if (typeof window !== 'undefined') {
+      import('leaflet').then((mod: any) => setLeafletLib(mod))
+    }
     const interval = setInterval(() => { void refreshCompetitorSummary() }, 5 * 60 * 1000)
     return () => clearInterval(interval)
   }, [])
