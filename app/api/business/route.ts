@@ -61,6 +61,9 @@ export async function POST(request: NextRequest) {
     )`)
     await query(`ALTER TABLE solar_business_info ADD COLUMN IF NOT EXISTS website_url TEXT`)
     await query(`ALTER TABLE solar_business_info ADD COLUMN IF NOT EXISTS website TEXT`)
+    await query(`ALTER TABLE solar_business_info ADD COLUMN IF NOT EXISTS primary_location TEXT`)
+    await query(`ALTER TABLE solar_business_info ADD COLUMN IF NOT EXISTS service_areas TEXT[]`)
+    await query(`ALTER TABLE solar_business_info ADD COLUMN IF NOT EXISTS target_keywords TEXT[]`)
 
     await query(
       `INSERT INTO solar_business_info (business_name, website_url, website, primary_location, service_areas, target_keywords, created_at)
