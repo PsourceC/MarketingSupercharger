@@ -33,10 +33,12 @@ export async function POST() {
       }
     }
 
+    const base = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+
     // Refresh Citations (free workaround checks)
     if (shouldRefreshCitations) {
-      await call(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/citations`, { method: 'POST', body: JSON.stringify({ action: 'refresh' }) })
-      const cit = await call(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/citations`)
+      await call(`${base}/api/citations`, { method: 'POST', body: JSON.stringify({ action: 'refresh' }) })
+      const cit = await call(`${base}/api/citations`)
       results.citations = cit
       // Be polite between services
       await new Promise(r => setTimeout(r, 800))
@@ -46,8 +48,8 @@ export async function POST() {
 
     // Refresh Competitors (free SERP simulation)
     if (shouldRefreshCompetitors) {
-      await call(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/competitor-tracking`, { method: 'POST', body: JSON.stringify({ action: 'refresh' }) })
-      const comp = await call(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/competitor-tracking`)
+      await call(`${base}/api/competitor-tracking`, { method: 'POST', body: JSON.stringify({ action: 'refresh' }) })
+      const comp = await call(`${base}/api/competitor-tracking`)
       results.competitors = comp
     } else {
       results.competitors = { skipped: true, reason: 'recent-data', last: lastComp }
