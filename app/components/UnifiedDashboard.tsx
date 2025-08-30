@@ -7,6 +7,7 @@ import AutomationToolsGrid from './AutomationToolsGrid'
 import PriorityActionsPanel from './PriorityActionsPanel'
 import DataRefreshSystem from './DataRefreshSystem'
 import DevProfile from './DevProfile'
+import CompetitorKeywordProfile from './CompetitorKeywordProfile'
 
 export default function UnifiedDashboard() {
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
@@ -56,8 +57,7 @@ export default function UnifiedDashboard() {
 
           {/* Competitor & Keyword Profile */}
           <div className="profile-config-section">
-            {/* lazy import avoided; component is small */}
-            {require('./CompetitorKeywordProfile').default()}
+            <CompetitorKeywordProfile />
           </div>
 
           <div className="summary-insights-section">
