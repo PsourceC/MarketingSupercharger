@@ -106,10 +106,17 @@ export async function GET() {
     message: 'Google authentication not configured' 
   }
 
-  // Check Google My Business Status (simulate)
-  services['google-my-business'] = { 
-    status: 'not-setup', 
-    message: 'GMB API credentials not configured' 
+  // Check Google My Business Status
+  if (process.env.GMB_STORE_CODE || process.env.GMB_BUSINESS_PROFILE_ID) {
+    services['google-my-business'] = {
+      status: 'partial',
+      message: `IDs configured${process.env.GMB_STORE_CODE ? ' (Store Code set)' : ''}${process.env.GMB_BUSINESS_PROFILE_ID ? ' (Business Profile ID set)' : ''} - API credentials not configured`
+    }
+  } else {
+    services['google-my-business'] = {
+      status: 'not-setup',
+      message: 'GMB API credentials not configured'
+    }
   }
 
   // Check Google Analytics Status (simulate)
