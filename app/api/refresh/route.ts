@@ -56,9 +56,48 @@ export async function POST() {
       results.competitors = { skipped: true, reason: 'recent-data', last: lastComp }
     }
 
+    // Compute ranking performance deltas (24h vs prior 24h)
+    const metrics = await query(`
+      WITH last24 AS (
+        SELECT AVG(ranking_position) AS avg_pos
+        FROM solar_keyword_rankings
+        WHERE created_at > NOW() - INTERVAL '24 hours'
+      ), prev24 AS (
+        SELECT AVG(ranking_position) AS avg_pos
+        FROM solar_keyword_rankings
+        WHERE created_at > NOW() - INTERVAL '48 hours'
+          AND created_at <= NOW() - INTERVAL '24 hours'
+      )
+      SELECT (SELECT avg_pos FROM last24) AS last_avg,
+             (SELECT avg_pos FROM prev24) AS prev_avg,
+             (SELECT COUNT(*) FROM solar_keyword_rankings WHERE created_at > NOW() - INTERVAL '24 hours') AS last_count
+    `)
+
+    const lastAvg = Number(metrics.rows[0]?.last_avg || 0)
+    const prevAvg = Number(metrics.rows[0]?.prev_avg || 0)
+    const lastCount = Number(metrics.rows[0]?.last_count || 0)
+    const delta = prevAvg && lastAvg ? (lastAvg - prevAvg) : 0
+
+    // Send alert if meaningful change and email configured
+    let emailResult: any = { sent: false }
+    if (isEmailConfigured() && lastCount > 0 && Math.abs(delta) >= 1) {
+      const direction = delta < 0 ? 'improved' : 'dropped'
+      const subject = `Ranking ${direction}: Δ ${delta.toFixed(1)} (avg pos)`
+      const html = `
+        <h2>Ranking ${direction}</h2>
+        <p>Average Position (last 24h): <b>${lastAvg.toFixed(1)}</b><br/>
+        Previous 24h: <b>${prevAvg ? prevAvg.toFixed(1) : 'n/a'}</b><br/>
+        Change: <b>${delta > 0 ? '+' : ''}${delta.toFixed(1)}</b></p>
+        <p>Rankings analyzed: ${lastCount}</p>
+        <p>Policies: citations daily, competitors 6-hourly (free workarounds active).</p>
+      `
+      emailResult = await sendEmail(subject, html)
+    }
+
     return NextResponse.json({
       success: true,
       results,
+      alerts: { rankingDelta: delta, email: emailResult },
       policies: {
         citations: '24h cadence (free directory checks)',
         competitors: '6h cadence (free SERP simulation)'
