@@ -163,7 +163,7 @@ export interface CitationRecord {
   address: string
   website: string
   status: 'found' | 'not-found' | 'incorrect' | 'needs-update'
-  lastChecked: string | Date
+  lastChecked: Date
   consistency: number
   issues: string[]
 }
@@ -175,7 +175,7 @@ export interface CitationSummaryData {
   inconsistentCitations: number
   missingCitations: number
   consistencyScore: number
-  lastUpdated: string | Date
+  lastUpdated: Date
   topIssues: string[]
 }
 
