@@ -11,6 +11,7 @@ import './gmb-automation/gmb-styles.css'
 import './seo-tracking/seo-styles.css'
 import './review-management/review-styles.css'
 import './recommendations/recommendations-styles.css'
+import './error-handling.css'
 import ErrorBoundary from './components/ErrorBoundary'
 import DevModeHandler from './components/DevModeHandler'
 
