@@ -470,6 +470,22 @@
   margin-bottom: 0.75rem;
 }
 
+.impact-panel {
+  background: rgba(255,255,255,0.9);
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.impact-grid { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.impact-total { font-weight: 700; color: #111827; }
+.accuracy-badge { display: inline-block; padding: 0.2rem 0.5rem; background: #eef2ff; color: #3730a3; border-radius: 6px; font-size: 0.75rem; margin-top: 0.25rem; }
+.impact-breakdown { display: flex; gap: 0.75rem; }
+.impact-row { display: flex; gap: 0.4rem; align-items: center; color: #374151; }
+
+.impact-inline { color: #d1d5db; margin: 0.25rem 0 0.75rem; }
+
 .media-preview-modal {
   position: fixed;
   inset: 0;
