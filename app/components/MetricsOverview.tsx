@@ -151,7 +151,6 @@ export default function MetricsOverview() {
           <div
             key={metric.id}
             className={`metric-card priority-${metric.priority}`}
-            style={{ borderLeftColor: getPriorityColor(metric.priority) }}
           >
             <div className="metric-header">
               <span className="metric-icon">{metric.icon}</span>
