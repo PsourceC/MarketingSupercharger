@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Fragment } from 'react'
 import dynamic from 'next/dynamic'
-import L from 'leaflet'
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false })
