@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { query } from '../../lib/server-only'
 import { brightData } from '../../lib/brightdata'
+import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
