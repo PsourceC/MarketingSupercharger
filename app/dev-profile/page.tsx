@@ -496,7 +496,7 @@ export default function DevProfilePage() {
       {/* Quick Actions for Critical Setup */}
       {overallStatus !== 'connected' && (
         <div className="quick-actions-section">
-          <h3>���� Quick Setup Actions</h3>
+          <h3>⚡ Quick Setup Actions</h3>
           <div className="quick-actions-grid">
             {connections.filter(c => c.priority === 'critical' && c.status !== 'connected').length > 0 && (
               <div className="quick-action-card critical">
