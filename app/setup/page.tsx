@@ -77,6 +77,32 @@ export default function SetupPage() {
 
   const setupGuides: SetupGuide[] = [
     {
+      id: 'business-profile',
+      name: 'Business Profile',
+      description: 'Set your company name, website, and service areas to personalize competitor comparisons',
+      category: 'critical',
+      icon: '🏢',
+      timeEstimate: '2-4 minutes',
+      difficulty: 'Easy',
+      requirements: [
+        'Company name',
+        'Website domain (e.g., example.com)',
+        'Primary service area (e.g., Austin, TX)'
+      ],
+      steps: [
+        'Enter your business name and website',
+        'Specify your primary location (city, state)',
+        'Add one or more service areas (comma or newline separated)',
+        'Add 3-8 target keywords for tracking',
+        'Save profile to enable tailored competitor comparisons'
+      ],
+      tips: [
+        'Use your canonical domain (without http/https)',
+        'List the top cities you actively serve',
+        'Keywords should be realistic customer searches'
+      ]
+    },
+    {
       id: 'database',
       name: 'Database (Neon)',
       description: 'Set up PostgreSQL database for storing rankings, metrics, and business data',
