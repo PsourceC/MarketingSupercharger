@@ -55,7 +55,6 @@ const nextConfig = {
   // Configure allowed dev origins for better CORS handling
   ...(process.env.NODE_ENV === 'development' && {
     allowedDevOrigins: [
-      'da6999115c974d4388527cf50744332c-ac274784-e668-43de-930e-0ef765.fly.dev',
       'localhost:3000',
       '127.0.0.1:3000',
     ],
