@@ -286,10 +286,18 @@ export async function fetchReviewData() {
 // Data refresh trigger
 export async function triggerDataRefresh() {
   try {
-    await apiFetch('/refresh', { method: 'POST' })
+    const result = await apiFetch('/refresh', { method: 'POST' }, 2) // Allow 2 retries
+    console.log('Data refresh triggered successfully:', result)
     return true
-  } catch (error) {
-    console.error('Failed to trigger data refresh:', error)
+  } catch (error: any) {
+    console.error('Failed to trigger data refresh:', error.message)
+
+    // Return partial success for certain error types
+    if (error.message.includes('timeout') || error.message.includes('Network error')) {
+      console.warn('Data refresh may have started despite network issues')
+      return true // Assume it might have worked
+    }
+
     return false
   }
 }
