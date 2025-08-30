@@ -21,9 +21,21 @@ export async function GET(request: NextRequest) {
     }
 
     const config = configResult.rows[0]
-    const keywords = config.target_keywords ? (Array.isArray(config.target_keywords) ? config.target_keywords : ['solar installation', 'solar panels']) : ['solar installation', 'solar panels']
+    let keywords: string[] = ['solar installation', 'solar panels']
+    if (config.target_keywords) {
+      if (Array.isArray(config.target_keywords)) {
+        keywords = config.target_keywords
+      } else if (typeof config.target_keywords === 'object') {
+        const global = Array.isArray(config.target_keywords.global) ? config.target_keywords.global : []
+        const areas = config.target_keywords.areas && typeof config.target_keywords.areas === 'object'
+          ? Object.values(config.target_keywords.areas).flat().filter(Boolean)
+          : []
+        keywords = [...new Set([...(global as string[]), ...(areas as string[])])]
+        if (keywords.length === 0) keywords = ['solar installation', 'solar panels']
+      }
+    }
     const location = config.service_areas?.[0] || 'United States'
-    const yourDomain = config.website ? new URL(config.website).hostname.replace('www.', '') : 'your-domain.com'
+    const yourDomain = (config.website || config.website_url) ? new URL((config.website || config.website_url)).hostname.replace('www.', '') : 'your-domain.com'
 
     const competitorService = new CompetitorTrackingService(keywords, location, yourDomain)
 
