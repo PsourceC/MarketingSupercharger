@@ -532,23 +532,6 @@ export default function DevProfilePage() {
               </div>
             )}
 
-            <div className="quick-action-card">
-              <div className="action-icon">📊</div>
-              <div className="action-content">
-                <h4>Load Sample Data</h4>
-                <p>Explore the dashboard with sample data while setting up connections</p>
-                <TempDataButton />
-              </div>
-            </div>
-
-            <div className="quick-action-card">
-              <div className="action-icon">📁</div>
-              <div className="action-content">
-                <h4>Import Data</h4>
-                <p>Upload CSV files from Google Search Console for instant analysis</p>
-                <ManualDataImport />
-              </div>
-            </div>
           </div>
         </div>
       )}
