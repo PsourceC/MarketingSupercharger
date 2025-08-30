@@ -17,8 +17,8 @@ export function middleware(request: NextRequest) {
     response.headers.set('Cache-Control', 'no-store, max-age=0')
   }
 
-  // Add development-specific headers for better hot reloading
-  response.headers.set('X-Frame-Options', 'SAMEORIGIN')
+  // Add development-specific headers for better hot reloading and preview embedding
+  response.headers.set('Content-Security-Policy', 'frame-ancestors *')
   response.headers.set('X-Content-Type-Options', 'nosniff')
 
   // Handle preflight requests
