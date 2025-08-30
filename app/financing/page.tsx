@@ -556,31 +556,72 @@ export default function Financing() {
               <div className="form-section">
                 <h4>👤 Personal Information</h4>
                 <div className="form-row">
-                  <input type="text" placeholder="First Name" />
-                  <input type="text" placeholder="Last Name" />
+                  <input
+                    type="text"
+                    placeholder="First Name"
+                    value={formData.firstName}
+                    onChange={(e) => handleFormChange('firstName', e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Last Name"
+                    value={formData.lastName}
+                    onChange={(e) => handleFormChange('lastName', e.target.value)}
+                  />
                 </div>
                 <div className="form-row">
-                  <input type="email" placeholder="Email Address" />
-                  <input type="tel" placeholder="Phone Number" />
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    value={formData.email}
+                    onChange={(e) => handleFormChange('email', e.target.value)}
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Phone Number"
+                    value={formData.phone}
+                    onChange={(e) => handleFormChange('phone', e.target.value)}
+                  />
                 </div>
-                <input type="text" placeholder="Home Address" />
+                <input
+                  type="text"
+                  placeholder="Home Address"
+                  value={formData.address}
+                  onChange={(e) => handleFormChange('address', e.target.value)}
+                />
               </div>
 
               <div className="form-section">
                 <h4>💼 Financial Information</h4>
                 <div className="form-row">
-                  <input type="number" placeholder="Annual Income" />
-                  <input type="number" placeholder="Monthly Debt Payments" />
+                  <input
+                    type="number"
+                    placeholder="Annual Income"
+                    value={formData.annualIncome}
+                    onChange={(e) => handleFormChange('annualIncome', e.target.value)}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Monthly Debt Payments"
+                    value={formData.monthlyDebt}
+                    onChange={(e) => handleFormChange('monthlyDebt', e.target.value)}
+                  />
                 </div>
                 <div className="form-row">
-                  <select>
+                  <select
+                    value={formData.employmentStatus}
+                    onChange={(e) => handleFormChange('employmentStatus', e.target.value)}
+                  >
                     <option>Employment Status</option>
                     <option>Full-time Employee</option>
                     <option>Self-employed</option>
                     <option>Retired</option>
                     <option>Other</option>
                   </select>
-                  <select>
+                  <select
+                    value={formData.creditScore}
+                    onChange={(e) => handleFormChange('creditScore', e.target.value)}
+                  >
                     <option>Estimated Credit Score</option>
                     <option>Excellent (750+)</option>
                     <option>Good (700-749)</option>
@@ -593,8 +634,16 @@ export default function Financing() {
               <div className="form-section">
                 <h4>☀️ Solar Project</h4>
                 <div className="form-row">
-                  <input type="number" placeholder="Estimated System Cost" />
-                  <select>
+                  <input
+                    type="number"
+                    placeholder="Estimated System Cost"
+                    value={formData.systemCost}
+                    onChange={(e) => handleFormChange('systemCost', e.target.value)}
+                  />
+                  <select
+                    value={formData.loanTerm}
+                    onChange={(e) => handleFormChange('loanTerm', e.target.value)}
+                  >
                     <option>Preferred Loan Term</option>
                     <option>12 years</option>
                     <option>15 years</option>
