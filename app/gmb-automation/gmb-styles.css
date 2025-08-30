@@ -228,11 +228,11 @@
   font-size: 0.75rem;
 }
 
-.template-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
+.button-row { display: flex; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.75rem; }
+.primary-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.secondary-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.template-actions { display: none; }
 
 .action-btn {
   padding: 0.5rem 1rem;
