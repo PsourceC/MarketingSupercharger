@@ -144,7 +144,7 @@ export default function GMBAutomation() {
       },
       product: {
         title: 'Premium Solar Products & Equipment',
-        content: `🔋 High-quality solar equipment for maximum efficiency!\n\n⚡ REC solar panels - 25 year warranty\n🔋 Tesla Powerwall integration available\n📱 Enphase monitoring systems\n🌟 Tier 1 equipment only\n\nUpgrade your Austin home with the best solar technology. Quality products, expert installation, unbeatable performance.`,
+        content: `🔋 High-quality solar equipment for maximum efficiency!\n\n⚡ REC solar panels - 25 year warranty\n🔋 Tesla Powerwall integration available\n📱 Enphase monitoring systems\n���� Tier 1 equipment only\n\nUpgrade your Austin home with the best solar technology. Quality products, expert installation, unbeatable performance.`,
         keywords: ['solar panels', 'Tesla Powerwall', 'solar equipment'],
         cta: 'View Products'
       },
@@ -156,7 +156,7 @@ export default function GMBAutomation() {
       },
       offer: {
         title: 'Limited Time Solar Special Offer',
-        content: `🎉 SPECIAL OFFER: $1,000 OFF Solar Installation!\n\n💰 Additional savings on top of federal credits\n⚡ Free energy consultation included\n🔧 Professional installation by certified team\n���� Limited time - book by month end\n\nDon't wait! This exclusive offer won't last long. Join hundreds of Austin families saving with solar.`,
+        content: `🎉 SPECIAL OFFER: $1,000 OFF Solar Installation!\n\n💰 Additional savings on top of federal credits\n⚡ Free energy consultation included\n🔧 Professional installation by certified team\n📞 Limited time - book by month end\n\nDon't wait! This exclusive offer won't last long. Join hundreds of Austin families saving with solar.`,
         keywords: ['solar deal', 'Austin solar offer', 'solar discount'],
         cta: 'Claim Offer'
       }
@@ -231,6 +231,14 @@ export default function GMBAutomation() {
   }
 
   const handleAddSuggested = (postId: string, item: { type: 'image' | 'video'; url: string; name: string }) => {
+    const tmpl = combinedTemplates.find(t => t.id === postId)
+    if (tmpl) {
+      const rel = computeRelevance(tmpl, { id: 's', type: item.type, url: item.url, name: item.name })
+      if (rel.level !== 'High') {
+        alert('Suggested item is not highly relevant to this content. Try Generate Image/Video for a perfect match.')
+        return
+      }
+    }
     addMediaToPost(postId, [{ id: `${Date.now()}-suggested`, type: item.type, url: item.url, name: item.name }])
   }
 
