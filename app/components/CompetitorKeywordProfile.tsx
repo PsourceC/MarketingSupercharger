@@ -57,6 +57,8 @@ export default function CompetitorKeywordProfile() {
   const [areaInput, setAreaInput] = useState('')
   const [activeArea, setActiveArea] = useState<string>('Central Austin')
   const [target, setTarget] = useState<TargetKeywords>({ global: [], areas: {}, competitors: {} })
+  const [suggestions, setSuggestions] = useState<Record<string, { keyword: string; estimatedVolume: number; competitorCount: number; opportunity: number }[]>>({})
+  const [discovering, setDiscovering] = useState(false)
 
   useEffect(() => {
     (async () => {
@@ -85,7 +87,7 @@ export default function CompetitorKeywordProfile() {
   }, [])
 
   const areaKeywords = useMemo(() => target.areas[activeArea] || [], [target, activeArea])
-  const areaCompetitors = useMemo(() => target.competitors[activeArea] || [], [target, activeArea])
+  const areaSuggestions = useMemo(() => suggestions[activeArea] || [], [suggestions, activeArea])
 
   const addArea = () => {
     const v = areaInput.trim()
@@ -110,13 +112,23 @@ export default function CompetitorKeywordProfile() {
     setTarget(prev => ({ ...prev, areas: { ...prev.areas, [activeArea]: uniq(values) } }))
   }
 
-  const updateAreaCompetitors = (values: string[]) => {
-    setTarget(prev => ({ ...prev, competitors: { ...prev.competitors, [activeArea]: uniq(values) } }))
+  const discover = async () => {
+    try {
+      setDiscovering(true)
+      const r = await fetch('/api/keyword-discovery')
+      if (!r.ok) throw new Error('Discovery failed')
+      const data = await r.json()
+      setSuggestions(data.areas || {})
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setDiscovering(false)
+    }
   }
 
-  const handleSuggest = () => {
-    const next = suggestKeywords(activeArea, websiteUrl, areaKeywords)
-    updateAreaKeywords(next)
+  const applyAreaSuggestions = () => {
+    if (!areaSuggestions.length) return
+    updateAreaKeywords(areaSuggestions.map(s => s.keyword))
   }
 
   const save = async () => {
@@ -195,7 +207,8 @@ export default function CompetitorKeywordProfile() {
           <div className="area-header">
             <h4>Target Keywords — {activeArea || 'Select an area'}</h4>
             <div className="area-actions">
-              <button className="small-btn" onClick={handleSuggest}>✨ Suggest</button>
+              <button className="small-btn" onClick={discover} disabled={discovering}>{discovering ? '⏳ Discovering' : '🤖 Discover'}</button>
+              <button className="small-btn" onClick={applyAreaSuggestions} disabled={!areaSuggestions.length}>📥 Apply Suggestions</button>
             </div>
           </div>
           <textarea
@@ -204,16 +217,20 @@ export default function CompetitorKeywordProfile() {
             onChange={e => updateAreaKeywords(parseList(e.target.value))}
             placeholder="solar installation central austin, best solar company central austin"
           />
-          <div className="hint">Comma-separated. Suggestions use marketing best practices for the area.</div>
-          <div className="spacer"></div>
-          <h4>Competitors — {activeArea || 'Select an area'}</h4>
-          <textarea
-            rows={3}
-            value={areaCompetitors.join(', ')}
-            onChange={e => updateAreaCompetitors(parseList(e.target.value))}
-            placeholder="512solar.com, goatxsolar.com"
-          />
-          <div className="hint">Comma-separated domains or names. Used to seed competitor tracking.</div>
+          <div className="hint">Comma-separated. Auto-discovery finds high-impact, area-specific terms.</div>
+          {areaSuggestions.length > 0 && (
+            <div className="suggestion-list">
+              <h5>Suggested ({areaSuggestions.length})</h5>
+              <ul>
+                {areaSuggestions.map(s => (
+                  <li key={s.keyword}>
+                    <span className="kw">{s.keyword}</span>
+                    <span className="meta">Vol {s.estimatedVolume.toLocaleString()} • Opp {s.opportunity}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
