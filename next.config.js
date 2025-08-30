@@ -3,11 +3,10 @@ const nextConfig = {
   // Essential server-only package configuration
   experimental: {
     serverComponentsExternalPackages: ['pg', 'googleapis'],
-    // Improve hot reloading stability
-    serverActions: true,
+    // Note: serverActions is now enabled by default in Next.js 14+
     typedRoutes: false,
   },
-  
+
   // Basic webpack config for server/client separation
   webpack: (config, { isServer, dev }) => {
     if (!isServer) {
@@ -20,25 +19,17 @@ const nextConfig = {
       }
     }
 
-    // Development optimizations for better hot reloading
-    if (dev) {
-      config.devtool = 'eval-cheap-module-source-map'
-      config.optimization = {
-        ...config.optimization,
-        removeAvailableModules: false,
-        removeEmptyChunks: false,
-        splitChunks: false,
-      }
-    }
+    // Don't override devtool in development to avoid performance issues
+    // Next.js will use the optimal devtool setting
 
     return config
   },
-  
+
   // Image optimization for Netlify
   images: {
     unoptimized: true,
   },
-  
+
   // Build optimization
   swcMinify: true,
   poweredByHeader: false,
@@ -52,6 +43,15 @@ const nextConfig = {
     // number of pages that should be kept simultaneously without being disposed
     pagesBufferLength: 2,
   },
+
+  // Configure allowed dev origins for better CORS handling
+  ...(process.env.NODE_ENV === 'development' && {
+    allowedDevOrigins: [
+      'da6999115c974d4388527cf50744332c-ac274784-e668-43de-930e-0ef765.fly.dev',
+      'localhost:3000',
+      '127.0.0.1:3000',
+    ],
+  }),
 
   // Headers to improve fetch stability
   async headers() {
