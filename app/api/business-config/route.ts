@@ -66,6 +66,30 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (e: any) {
+    // Fallback: some databases have target_keywords as text[]; handle gracefully
+    const msg = String(e?.message || '')
+    if (/target_keywords\"? is of type text\[\]/i.test(msg) || /text\[\] but expression is of type jsonb/i.test(msg)) {
+      try {
+        const body = await req.json()
+        const businessName: string = body.businessName || ''
+        const websiteUrl: string = body.websiteUrl || ''
+        const serviceAreas: string[] = Array.isArray(body.serviceAreas) ? body.serviceAreas : []
+        const tk = normalizeKeywords(body.targetKeywords)
+        const flattened = Array.from(new Set([...(tk.global || []), ...Object.values(tk.areas || {}).flat()] ))
+
+        await query(
+          `INSERT INTO solar_business_info (business_name, website, service_areas, target_keywords)
+           VALUES ($1::text, $2::text, $3::text[], $4::text[])`,
+          [businessName, websiteUrl, serviceAreas, flattened]
+        )
+
+        return NextResponse.json({ ok: true, downgraded: true })
+      } catch (fallbackErr: any) {
+        console.error('POST /api/business-config fallback error:', fallbackErr)
+        return NextResponse.json({ error: 'Failed to save business config', details: fallbackErr.message }, { status: 500 })
+      }
+    }
+
     console.error('POST /api/business-config error:', e)
     return NextResponse.json({ error: 'Failed to save business config', details: e.message }, { status: 500 })
   }
