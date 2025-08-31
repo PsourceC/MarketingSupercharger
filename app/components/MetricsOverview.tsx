@@ -127,7 +127,18 @@ export default function MetricsOverview() {
   }
 
   return (
-    <div className="metrics-overview">
+    <div className="metrics-overview" style={{ position: 'relative' }}>
+      <CornerTooltip
+        title="Key Performance Metrics"
+        ariaLabel="Help: Key Performance Metrics"
+        aiContext={{ lastUpdated: lastUpdated?.toISOString() || null, metricsCount: metrics.length }}
+        content={() => (
+          <div>
+            <p>These metrics summarize ranking and visibility. Values update automatically as data refreshes.</p>
+            {lastUpdated && <p style={{ marginTop: 6 }}>Last updated: {lastUpdated.toLocaleString()}</p>}
+          </div>
+        )}
+      />
       <div className="metrics-header">
         <h3>📊 Key Performance Metrics</h3>
         <div className="header-controls">
@@ -268,7 +279,7 @@ export default function MetricsOverview() {
       {/* Dynamic Trend Summary */}
       {metrics.length > 0 && (
         <div className="trend-summary">
-          <h4>📈 Live Trend Analysis</h4>
+          <h4>��� Live Trend Analysis</h4>
           <div className="trend-items">
             {metrics.filter(m => m.changeType === 'positive').length > 0 && (
               <div className="trend-item positive">
