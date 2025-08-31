@@ -335,8 +335,7 @@ export default function EnhancedGeoGrid() {
       : currentLocations[0]?.name
     if (!areaName) return
     let cancelled = false
-    const controller = new AbortController()
-    fetch(`/api/insights/smart?area=${encodeURIComponent(areaName)}`, { signal: controller.signal })
+    fetch(`/api/insights/smart?area=${encodeURIComponent(areaName)}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (cancelled) return
@@ -345,9 +344,6 @@ export default function EnhancedGeoGrid() {
       .catch(() => {})
     return () => {
       cancelled = true
-      try {
-        if (!controller.signal.aborted) controller.abort()
-      } catch {}
     }
   }, [selectedLocation, currentLocations, selectedKeyword])
 
