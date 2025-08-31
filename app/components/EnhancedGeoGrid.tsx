@@ -638,18 +638,19 @@ export default function EnhancedGeoGrid() {
             <div className="competitor-legend">
               <h4>🥊 Competitors</h4>
               <div className="competitor-list">
-                {(dynamicCompetitors.length ? dynamicCompetitors : competitors).map(comp => (
-                  <div key={comp.name} className="competitor-item">
-                    <div
-                      className="competitor-marker"
-                      style={{ backgroundColor: comp.color }}
-                    ></div>
-                    <div className="competitor-info">
-                      <span className="competitor-name">{comp.name}</span>
-                      <span className="competitor-score">Avg: #{comp.score}</span>
+                {(() => {
+                  const areaName = selectedAreaName || currentLocations[0]?.name
+                  const list: any[] = areaName ? (getAreaCompetitors(areaName) as any[]) : []
+                  return list.map((comp: any) => (
+                    <div key={comp.name} className="competitor-item">
+                      <div className="competitor-marker" style={{ backgroundColor: comp.color }}></div>
+                      <div className="competitor-info">
+                        <span className="competitor-name">{comp.name}</span>
+                        <span className="competitor-score">#{comp.location.score} in {areaName}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                })()}
               </div>
             </div>
           )}
