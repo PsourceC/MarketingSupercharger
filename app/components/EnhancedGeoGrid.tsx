@@ -531,9 +531,9 @@ export default function EnhancedGeoGrid() {
 
           {selectedLocation && (
             <div className="area-top-keywords">
-              <h4>🏆 Top Keywords — {locations.find(l => l.id === selectedLocation)?.name}</h4>
+              <h4>🏆 Top Keywords — {currentLocations.find(l => l.id === selectedLocation)?.name}</h4>
               <div className="top-list">
-                {(topByArea[locations.find(l => l.id === selectedLocation)?.name || ''] || []).map(k => (
+                {(topByArea[currentLocations.find(l => l.id === selectedLocation)?.name || ''] || []).map(k => (
                   <div key={k.keyword} className="top-row">
                     <div className="kw">{k.keyword}</div>
                     <div className="pos">#{Math.round(k.avgPosition || 0)}</div>
@@ -546,7 +546,7 @@ export default function EnhancedGeoGrid() {
                 className="insight-btn"
                 onClick={async () => {
                   try {
-                    const areaName = locations.find(l => l.id === selectedLocation)?.name
+                    const areaName = currentLocations.find(l => l.id === selectedLocation)?.name
                     if (!areaName) return
                     const top = (topByArea[areaName] || []).slice(0, 5).map(k => k.keyword)
                     const cfg = await fetch('/api/business-config').then(r => r.json())
@@ -571,7 +571,7 @@ export default function EnhancedGeoGrid() {
 
         <div className="map-container-enhanced">
           <MapContainer
-            center={locations.length > 0 ? [locations[0].lat, locations[0].lng] : [30.4518, -97.7431]}
+            center={currentLocations.length > 0 ? [currentLocations[0].lat, currentLocations[0].lng] : [30.4518, -97.7431]}
             zoom={10}
             style={{ height: '500px', width: '100%' }}
             className="austin-map-leaflet"
@@ -582,7 +582,7 @@ export default function EnhancedGeoGrid() {
             />
             
             {/* Your business locations */}
-            {locations.map(location => {
+            {currentLocations.map(location => {
               const score = selectedKeyword === 'all' 
                 ? location.overallScore 
                 : getPositionRanking(location, selectedKeyword)
@@ -637,7 +637,7 @@ export default function EnhancedGeoGrid() {
 
                         {showCompetitors && (
                           <div className="competitor-analysis">
-                            <h4>��� Competitive Analysis</h4>
+                            <h4>🥊 Competitive Analysis</h4>
                             {getAreaCompetitors(location.name).map((comp: any) => {
                               const gap = getCompetitiveGap(score, comp.location.score)
                               return (
@@ -697,7 +697,7 @@ export default function EnhancedGeoGrid() {
               .filter(comp => selectedCompetitor === 'all' || comp.name === selectedCompetitor)
               .map(competitor =>
               competitor.locations.map((loc, idx) => {
-                const yourLocation = locations.find(l => l.name === loc.areaName)
+                const yourLocation = currentLocations.find(l => l.name === loc.areaName)
                 const yourScore = yourLocation ? getPositionRanking(yourLocation, selectedKeyword) : 20
                 const gap = getCompetitiveGap(yourScore, loc.score)
                 const markerSize = competitorComparisonMode ? (loc.marketShare / 5) : 8
