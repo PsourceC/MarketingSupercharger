@@ -244,6 +244,7 @@ export default function EnhancedGeoGrid() {
   ])
   const [currentLocations, setCurrentLocations] = useState<Location[]>(locations)
   const [dbLocations, setDbLocations] = useState<Array<{ name: string; lat: number; lng: number }>>([])
+  const [serviceAreas, setServiceAreas] = useState<string[]>([])
   const [dynamicCompetitors, setDynamicCompetitors] = useState<Competitor[]>([])
   const [competitorAnalysesRaw, setCompetitorAnalysesRaw] = useState<any[]>([])
   const [newArea, setNewArea] = useState<string>('')
@@ -332,6 +333,17 @@ export default function EnhancedGeoGrid() {
         if (comps.length) setDynamicCompetitors(comps)
       } catch {}
     }).catch(() => {})
+  }, [])
+
+  // Load service areas list for management UI
+  useEffect(() => {
+    apiFetch<any>('/business-config')
+      .then(cfg => {
+        const areas: string[] = Array.isArray(cfg?.serviceAreas) ? cfg.serviceAreas : []
+        setServiceAreas(areas)
+        if (!selectedAreaName && areas.length) setSelectedAreaName(areas[0])
+      })
+      .catch(() => {})
   }, [])
 
     // Load smart insights and ranking status scoped to selected area
@@ -648,6 +660,64 @@ export default function EnhancedGeoGrid() {
                 <option key={s} value={s} />
               ))}
             </datalist>
+          </div>
+        </div>
+
+        <div className="control-group full-row">
+          <div className="area-list-card">
+            <div className="area-list-header">Tracked Areas</div>
+            <ul className="area-list">
+              {serviceAreas.length === 0 && <li className="area-empty">No areas yet. Add one above.</li>}
+              {serviceAreas.map((area) => (
+                <li key={area} className={`area-item ${selectedAreaName === area ? 'active' : ''}`}>
+                  <button className="area-name" onClick={() => setSelectedAreaName(area)} title="Select area for insights">
+                    {area}
+                  </button>
+                  <button
+                    className="area-remove"
+                    title="Remove area"
+                    onClick={async () => {
+                      try {
+                        const cfg = await apiFetch<any>('/business-config')
+                        const areas: string[] = Array.isArray(cfg?.serviceAreas) ? cfg.serviceAreas : []
+                        const next = areas.filter((a: string) => a !== area)
+                        await apiFetch<any>('/business-config', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            businessName: cfg.businessName || '',
+                            websiteUrl: cfg.websiteUrl || '',
+                            serviceAreas: next,
+                            targetKeywords: cfg.targetKeywords || { global: [], areas: {}, competitors: {} }
+                          })
+                        })
+                        setServiceAreas(next)
+                        const locs: any[] = await apiFetch<any[]>('/locations')
+                        const mapped: Location[] = locs.map((l: any) => ({
+                          id: String(l.id || l.name),
+                          name: String(l.name),
+                          lat: Number(l.lat),
+                          lng: Number(l.lng),
+                          overallScore: Number(l.overallScore || 0),
+                          keywordScores: (l.keywordScores || {}),
+                          population: Number(l.population || 0),
+                          searchVolume: Number(l.searchVolume || 0),
+                          lastUpdated: String(l.lastUpdated || '—'),
+                          trends: Array.isArray(l.trends) ? l.trends : []
+                        }))
+                        setCurrentLocations(mapped)
+                        setDbLocations(locs.map(l => ({ name: l.name, lat: Number(l.lat), lng: Number(l.lng) })))
+                        if (selectedAreaName === area) {
+                          setSelectedAreaName(next[0] || mapped[0]?.name || null)
+                        }
+                      } catch {}
+                    }}
+                  >
+                    ✖
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>
