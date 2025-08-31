@@ -175,7 +175,7 @@ export default function CompetitorKeywordProfile() {
   const parseList = (text: string) => uniq(text.split(',').map(s => s.trim()).filter(Boolean))
 
   return (
-    <div className="profile-config">
+    <div id="competitor-profile" className="profile-config">
       <div className="section-header">
         <div className="header-content">
           <h2>🧭 Competitor & Keyword Profile</h2>
