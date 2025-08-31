@@ -26,5 +26,12 @@
     "description": "When volume is 0 or unknown, copy indicates low activity; otherwise shows estimated searches.",
     "category": "copy",
     "guidance": "If volume ≤ 0: 'Low current search activity.' Else: 'Estimated X monthly searches.'"
+  },
+  {
+    "id": "competitor-legend-alignment",
+    "title": "Competitors legend aligned to tracked details",
+    "description": "Competitors legend shows context (keyword/overall), uses selected area details, and ranks from tracked positions.",
+    "category": "ui-consistency",
+    "guidance": "Display context label (Based on: …), use getAreaCompetitors(areaName), apply selectedKeyword, and sort by rank."
   }
 ]
