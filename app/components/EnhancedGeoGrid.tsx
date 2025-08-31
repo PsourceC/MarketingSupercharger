@@ -678,7 +678,7 @@ export default function EnhancedGeoGrid() {
             })}
             
             {/* Competitor locations */}
-            {showCompetitors && competitors
+            {showCompetitors && (dynamicCompetitors.length ? dynamicCompetitors : competitors)
               .filter(comp => selectedCompetitor === 'all' || comp.name === selectedCompetitor)
               .map(competitor =>
               competitor.locations.map((loc, idx) => {
