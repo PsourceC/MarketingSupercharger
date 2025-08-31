@@ -346,7 +346,7 @@ export default function EnhancedGeoGrid() {
     return () => {
       cancelled = true
       try {
-        if (!controller.signal.aborted) controller.abort('cleanup')
+        if (!controller.signal.aborted) controller.abort()
       } catch {}
     }
   }, [selectedLocation, currentLocations, selectedKeyword])
