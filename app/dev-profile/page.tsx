@@ -772,6 +772,41 @@ export default function DevProfilePage() {
         })}
       </div>
 
+      {/* Dynamic Feature Goals Status */}
+      <div className="feature-goals-section">
+        <div className="clashes-header">
+          <h3>Feature Goals Status</h3>
+          {lastGoalScan && (
+            <span className="last-health-check">Last scan: {new Date(lastGoalScan).toLocaleTimeString()}</span>
+          )}
+        </div>
+        <div className="clash-grid">
+          {featureGoals.map((g) => (
+            <div key={g.id} className="clash-card">
+              <div className="clash-title">
+                {g.title}
+                <span className={"status-pill status-" + g.status}>{g.status === 'achieved' ? 'Achieved' : g.status === 'warning' ? 'Warning' : 'Not Achieved'}</span>
+              </div>
+              <div className="clash-body">
+                <div className="clash-row"><span className="clash-label">Goal</span><span className="clash-value">{g.description}</span></div>
+                <div className="clash-row"><span className="clash-label">Status</span><span className="clash-value">{g.clashDescription || '—'}</span></div>
+                <div className="clash-row"><span className="clash-label">Evidence</span><span className="clash-value">{(g.evidence || []).length} issue(s){(g.evidence || []).length > 0 ? ' found' : ''}</span></div>
+                {(g.evidence || []).length > 0 && (
+                  <details className="evidence-details">
+                    <summary>Show details</summary>
+                    <ul className="evidence-list">
+                      {g.evidence.slice(0, 8).map((e: any, idx: number) => (
+                        <li key={idx}><code>{e.file}:{e.line}</code> — {e.snippet}</li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Quick Tips */}
       <div className="tips-section">
         <h3>💡 Quick Setup Tips</h3>
