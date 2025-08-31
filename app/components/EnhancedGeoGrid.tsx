@@ -254,6 +254,48 @@ export default function EnhancedGeoGrid() {
         if (all.size > 0) setAvailableKeywords(Array.from(all))
       }
     }).catch(() => {})
+
+    // Load DB locations to map area names to coordinates
+    fetch('/api/locations').then(r => r.json()).then((locs: any[]) => {
+      if (Array.isArray(locs)) {
+        setDbLocations(locs.map(l => ({ name: l.name, lat: Number(l.lat), lng: Number(l.lng) })))
+      }
+    }).catch(() => {})
+
+    // Load dynamic competitors discovered/tracked by backend
+    fetch('/api/competitor-tracking').then(r => r.json()).then(data => {
+      try {
+        if (!data || !Array.isArray(data.competitors)) return
+        const palette = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#22c55e', '#eab308']
+        const byAreaCoords = (areaName: string) => {
+          const m = dbLocations.find(d => d.name === areaName)
+          if (m) return { lat: m.lat, lng: m.lng }
+          return { lat: 30.2672, lng: -97.7431 }
+        }
+        const comps: Competitor[] = (data.competitors as any[]).map((a: any, idx: number) => {
+          const color = palette[idx % palette.length]
+          const avg = Math.round(Number(a?.averagePosition || 0)) || 50
+          const groups: Record<string, { positions: number[]; traffic: number }> = {}
+          for (const r of (a?.rankings || [])) {
+            const loc = String(r.location || 'Unknown')
+            const pos = Number(r.position || 0)
+            if (!groups[loc]) groups[loc] = { positions: [], traffic: 0 }
+            if (pos > 0) groups[loc].positions.push(pos)
+            groups[loc].traffic += Number(r.estimatedTraffic || 0)
+          }
+          const locationsList = Object.keys(groups).map(areaName => {
+            const coords = byAreaCoords(areaName)
+            const positions = groups[areaName].positions
+            const score = positions.length ? Math.round(positions.reduce((s, p) => s + p, 0) / positions.length) : avg
+            const marketShare = Math.max(5, Math.min(40, Math.round(groups[areaName].traffic / 100)))
+            return { lat: coords.lat, lng: coords.lng, score, areaName, marketShare, recentTrend: 'stable' as const }
+          })
+          const compName = a?.competitor?.name || a?.competitor?.domain || 'Competitor'
+          return { name: compName, score: avg, color, locations: locationsList }
+        })
+        if (comps.length) setDynamicCompetitors(comps)
+      } catch {}
+    }).catch(() => {})
   }, [])
 
   const getScoreColor = (score: number) => {
