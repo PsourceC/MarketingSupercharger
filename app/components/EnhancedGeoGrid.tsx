@@ -247,6 +247,7 @@ export default function EnhancedGeoGrid() {
   const [competitorAnalysesRaw, setCompetitorAnalysesRaw] = useState<any[]>([])
   const [newArea, setNewArea] = useState<string>('')
   const [areaSuggestions, setAreaSuggestions] = useState<string[]>([])
+  const [rankStatus, setRankStatus] = useState<{ lastUpdated: string | null; mode: 'live' | 'simulation' } | null>(null)
   const [smartInsights, setSmartInsights] = useState<null | {
     area: string,
     generatedAt: string,
