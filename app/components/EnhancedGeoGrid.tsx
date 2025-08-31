@@ -490,6 +490,8 @@ export default function EnhancedGeoGrid() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
+      setServiceAreas(payload.serviceAreas)
+      if (!selectedAreaName) setSelectedAreaName(canonical)
       // Bootstrap initial rankings for this area so the map has real data
       await apiFetch<any>('/keywords/bootstrap', {
         method: 'POST',
