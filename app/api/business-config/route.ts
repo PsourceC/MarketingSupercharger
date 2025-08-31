@@ -60,8 +60,8 @@ export async function POST(req: NextRequest) {
     // Upsert a new record; keep history via created_at
     await query(
       `INSERT INTO solar_business_info (business_name, website, service_areas, target_keywords)
-       VALUES ($1, $2, $3, $4)`,
-      [businessName, websiteUrl, serviceAreas, targetKeywords]
+       VALUES ($1::text, $2::text, $3::text[], $4::jsonb)`,
+      [businessName, websiteUrl, serviceAreas, JSON.stringify(targetKeywords)]
     )
 
     return NextResponse.json({ ok: true })
