@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
 
     const config = configResult.rows[0]
     let keywords: string[] = ['solar installation', 'solar panels']
+    let manualCompetitors: string[] = []
     if (config.target_keywords) {
       if (Array.isArray(config.target_keywords)) {
         keywords = config.target_keywords
@@ -33,6 +34,11 @@ export async function GET(request: NextRequest) {
           : []
         keywords = [...new Set([...(global as string[]), ...(areas as string[])])]
         if (keywords.length === 0) keywords = ['solar installation', 'solar panels']
+        const comps = config.target_keywords.competitors && typeof config.target_keywords.competitors === 'object'
+          ? config.target_keywords.competitors
+          : {}
+        const areaKeys = Object.keys(comps)
+        manualCompetitors = areaKeys.length ? Array.from(new Set(areaKeys.flatMap((k: string) => comps[k] || []))) : []
       }
     }
     const location = config.service_areas?.[0] || 'United States'
@@ -62,15 +68,19 @@ export async function GET(request: NextRequest) {
     `)
 
     if (recentDataResult.rows.length > 0) {
-      // Return cached competitor data
-      const competitors = recentDataResult.rows.map(row => ({
-        id: row.id,
-        name: row.competitor_name,
-        domain: row.domain,
-        location: row.location,
-        businessType: row.business_type,
-        lastUpdated: new Date(row.last_updated)
-      }))
+      const cachedDomains = new Set(recentDataResult.rows.map((row: any) => row.domain))
+      const normalize = (d: string) => d.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]
+      const missingManual = (manualCompetitors || []).some((d: string) => !cachedDomains.has(normalize(String(d))))
+      if (!missingManual) {
+        // Return cached competitor data
+        const competitors = recentDataResult.rows.map(row => ({
+          id: row.id,
+          name: row.competitor_name,
+          domain: row.domain,
+          location: row.location,
+          businessType: row.business_type,
+          lastUpdated: new Date(row.last_updated)
+        }))
 
       const rankings = recentDataResult.rows.flatMap(row => 
         (row.rankings || []).map((ranking: any) => ({
@@ -85,22 +95,34 @@ export async function GET(request: NextRequest) {
         }))
       )
 
-      const analyses = await competitorService.analyzeCompetitors(competitors, rankings)
-      const summary = await competitorService.generateCompetitorSummary(analyses)
-      const insights = await competitorService.getCompetitorInsights(analyses)
+        const analyses = await competitorService.analyzeCompetitors(competitors, rankings)
+        const summary = await competitorService.generateCompetitorSummary(analyses)
+        const insights = await competitorService.getCompetitorInsights(analyses)
 
-      return NextResponse.json({
-        competitors: analyses,
-        summary,
-        insights,
-        fromCache: true
-      })
+        return NextResponse.json({
+          competitors: analyses,
+          summary,
+          insights,
+          fromCache: true
+        })
+      }
     }
 
     // Perform fresh competitor analysis
     console.log('Starting fresh competitor discovery...')
-    const competitors = await competitorService.discoverCompetitors()
-    
+    let competitors = await competitorService.discoverCompetitors()
+
+    // Merge in manually specified competitor domains
+    const normalizeDomain = (d: string) => d.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]
+    const have = new Set(competitors.map(c => c.domain))
+    for (const raw of manualCompetitors || []) {
+      const domain = normalizeDomain(String(raw))
+      if (!domain || have.has(domain) || domain === yourDomain) continue
+      const id = domain.replace(/[^a-z0-9]/g, '-')
+      competitors.push({ id, name: domain.replace(/\..*$/, '').replace(/-/g, ' ').replace(/^\w/, (c:any) => c.toUpperCase()), domain, location, businessType: 'solar_installer', lastUpdated: new Date() })
+      have.add(domain)
+    }
+
     if (competitors.length === 0) {
       return NextResponse.json({
         competitors: [],
