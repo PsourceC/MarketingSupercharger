@@ -256,10 +256,23 @@ export default function EnhancedGeoGrid() {
       }
     }).catch(() => {})
 
-    // Load DB locations to map area names to coordinates
+    // Load DB locations to map area names to coordinates and render bubbles
     fetch('/api/locations').then(r => r.json()).then((locs: any[]) => {
-      if (Array.isArray(locs)) {
+      if (Array.isArray(locs) && locs.length > 0) {
         setDbLocations(locs.map(l => ({ name: l.name, lat: Number(l.lat), lng: Number(l.lng) })))
+        const mapped: Location[] = locs.map((l: any) => ({
+          id: String(l.id || l.name),
+          name: String(l.name),
+          lat: Number(l.lat),
+          lng: Number(l.lng),
+          overallScore: Number(l.overallScore || 0),
+          keywordScores: (l.keywordScores || {}),
+          population: Number(l.population || 0),
+          searchVolume: Number(l.searchVolume || 0),
+          lastUpdated: String(l.lastUpdated || '—'),
+          trends: Array.isArray(l.trends) ? l.trends : []
+        }))
+        setCurrentLocations(mapped)
       }
     }).catch(() => {})
 
@@ -624,7 +637,7 @@ export default function EnhancedGeoGrid() {
 
                         {showCompetitors && (
                           <div className="competitor-analysis">
-                            <h4>🥊 Competitive Analysis</h4>
+                            <h4>��� Competitive Analysis</h4>
                             {getAreaCompetitors(location.name).map((comp: any) => {
                               const gap = getCompetitiveGap(score, comp.location.score)
                               return (
