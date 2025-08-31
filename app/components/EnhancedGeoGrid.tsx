@@ -758,7 +758,11 @@ export default function EnhancedGeoGrid() {
                   opacity={1}
                   fillOpacity={0.8}
                   eventHandlers={{
-                    click: () => setSelectedLocation(location.id === selectedLocation ? null : location.id)
+                    click: () => {
+                      const next = location.id === selectedLocation ? null : location.id
+                      setSelectedLocation(next)
+                      setSelectedAreaName(location.name)
+                    }
                   }}
                 >
                   <Tooltip permanent={false} direction="top">
