@@ -373,8 +373,11 @@ export default function EnhancedGeoGrid() {
 
   const getPositionRanking = (location: Location, keyword: string) => {
     if (keyword === 'all') {
-      const v = Number(location.overallScore || 0)
-      return v > 0 ? v : 20
+      const direct = Number(location.overallScore || 0)
+      if (direct > 0) return direct
+      const ranks = Object.values(location.keywordScores || {}).map(v => Number(v) || 0).filter(v => v > 0)
+      const avg = ranks.length ? Math.round(ranks.reduce((a, b) => a + b, 0) / ranks.length) : 20
+      return avg
     }
     const direct = Number(location.keywordScores[keyword] || 0)
     if (direct > 0) return direct
@@ -396,7 +399,7 @@ export default function EnhancedGeoGrid() {
 
   const getPerformanceLabel = (score: number) => {
     if (score <= 3) return 'Excellent! 🏆'
-    if (score <= 5) return 'Very Good 🎯'
+    if (score <= 5) return 'Very Good ����'
     if (score <= 10) return 'Good ✅'
     if (score <= 15) return 'Fair ⚠️'
     return 'Needs Work 🚨'
@@ -518,7 +521,7 @@ export default function EnhancedGeoGrid() {
   const viewLocations: Location[] = selectedLocation ? (currentLocations.filter(l => l.id === selectedLocation)) : currentLocations
 
   return (
-    <div className="enhanced-geo-grid" style={{ position: 'relative' }}>
+    <div className="enhanced-geo-grid relative-block">
       <div className="section-help-anchor">
         <CornerTooltip
           title="Map & Competitor View"
@@ -651,7 +654,7 @@ export default function EnhancedGeoGrid() {
 
       <div className="map-section">
         <div className="map-sidebar">
-          <div className="performance-legend" style={{ position: 'relative' }}>
+          <div className="performance-legend relative-block">
             <CornerTooltip
               title="Performance Guide"
               ariaLabel="Help: Performance Guide"
@@ -666,27 +669,27 @@ export default function EnhancedGeoGrid() {
             <h4>📘 Performance Guide</h4>
             <div className="legend-grid">
               <div className="legend-item excellent">
-                <div className="legend-circle" style={{ backgroundColor: '#10b981' }}></div>
+                <div className="legend-circle rank-excellent"></div>
                 <span>Top 5 Positions</span>
                 <span className="legend-desc">Excellent! 🏆</span>
               </div>
               <div className="legend-item very-good">
-                <div className="legend-circle" style={{ backgroundColor: '#3b82f6' }}></div>
+                <div className="legend-circle rank-very-good"></div>
                 <span>Positions 6-10</span>
                 <span className="legend-desc">Very Good 🎯</span>
               </div>
               <div className="legend-item good">
-                <div className="legend-circle" style={{ backgroundColor: '#f59e0b' }}></div>
+                <div className="legend-circle rank-good"></div>
                 <span>Positions 11-15</span>
                 <span className="legend-desc">Good ✅</span>
               </div>
               <div className="legend-item fair">
-                <div className="legend-circle" style={{ backgroundColor: '#f97316' }}></div>
+                <div className="legend-circle rank-fair"></div>
                 <span>Positions 16-25</span>
                 <span className="legend-desc">Fair ⚠️</span>
               </div>
               <div className="legend-item poor">
-                <div className="legend-circle" style={{ backgroundColor: '#ef4444' }}></div>
+                <div className="legend-circle rank-poor"></div>
                 <span>Position 25+</span>
                 <span className="legend-desc">Needs Work 🚨</span>
               </div>
@@ -694,7 +697,7 @@ export default function EnhancedGeoGrid() {
           </div>
 
           {showCompetitors && (
-            <div className="competitor-legend" style={{ position: 'relative' }}>
+            <div className="competitor-legend relative-block">
               <CornerTooltip
                 title="Competitors"
                 ariaLabel="Help: Competitors"
@@ -708,11 +711,12 @@ export default function EnhancedGeoGrid() {
                 )}
               />
               <h4>🥊 Competitors</h4>
+              <div className="legend-context">Based on: {selectedKeyword === 'all' ? 'overall' : selectedKeyword}</div>
               <div className="competitor-list">
                 {(() => {
                   const areaName = selectedAreaName || currentLocations[0]?.name
                   const list: any[] = areaName ? (getAreaCompetitors(areaName) as any[]) : []
-                  return list.map((comp: any) => (
+                  return list.sort((a: any, b: any) => a.location.score - b.location.score).map((comp: any) => (
                     <div key={comp.name} className="competitor-item">
                       <div className="competitor-marker" style={{ backgroundColor: comp.color }}></div>
                       <div className="competitor-info">
@@ -726,7 +730,7 @@ export default function EnhancedGeoGrid() {
             </div>
           )}
 
-          <div className="map-stats" style={{ position: 'relative' }}>
+          <div className="map-stats relative-block">
             <CornerTooltip
               title="Quick Stats"
               ariaLabel="Help: Quick Stats"
@@ -807,7 +811,7 @@ export default function EnhancedGeoGrid() {
           )}
         </div>
 
-        <div className="map-container-enhanced" style={{ position: 'relative' }}>
+        <div className="map-container-enhanced relative-block">
           <CornerTooltip
             title="Map Details"
             ariaLabel="Help: Map Details"
@@ -822,8 +826,7 @@ export default function EnhancedGeoGrid() {
           <MapContainer
             center={currentLocations.length > 0 ? [currentLocations[0].lat, currentLocations[0].lng] : [30.4518, -97.7431]}
             zoom={10}
-            style={{ height: '500px', width: '100%' }}
-            className="austin-map-leaflet"
+            className="austin-map-leaflet leaflet-fixed-size"
 >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -1046,7 +1049,7 @@ export default function EnhancedGeoGrid() {
         </div>
       </div>
 
-      <div className="insights-enhanced" style={{ position: 'relative' }}>
+      <div className="insights-enhanced relative-block">
         <CornerTooltip
           title="Smart Insights"
           ariaLabel="Help: Smart Insights"
