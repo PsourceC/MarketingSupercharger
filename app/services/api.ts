@@ -64,20 +64,21 @@ async function apiFetch<T>(endpoint: string, options?: RequestInit, retries = 1)
   let lastError: Error
 
   for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
+
     try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      // Avoid external signals overriding our timeout controller
+      const { signal: _ignoredSignal, headers: userHeaders, ...rest } = options || {}
 
       const response = await fetch(url, {
+        ...rest,
         headers: {
           'Content-Type': 'application/json',
-          ...options?.headers,
+          ...(userHeaders || {}),
         },
         signal: controller.signal,
-        ...options,
       })
-
-      clearTimeout(timeoutId)
 
       if (!response.ok) {
         // Don't retry for client errors (4xx)
@@ -100,27 +101,28 @@ async function apiFetch<T>(endpoint: string, options?: RequestInit, retries = 1)
     } catch (error: any) {
       lastError = error
 
-      // Handle specific error types
       if (error.name === 'AbortError') {
-        console.warn(`API call timeout (attempt ${attempt + 1})`)
+        console.warn(`API call timeout or aborted (attempt ${attempt + 1})`)
         if (attempt < retries) {
           await new Promise(resolve => setTimeout(resolve, 2000))
           continue
         }
-        throw new Error(`Request timeout after ${retries + 1} attempts`)
+        throw new Error(`Request timed out`)
       }
 
-      if (error.message.includes('Failed to fetch')) {
+      if (typeof error.message === 'string' && error.message.includes('Failed to fetch')) {
         console.warn(`Network error (attempt ${attempt + 1}):`, error.message)
         if (attempt < retries) {
           await new Promise(resolve => setTimeout(resolve, 2000))
           continue
         }
-        throw new Error(`Network error after ${retries + 1} attempts: ${error.message}`)
+        throw new Error(`Network error: ${error.message}`)
       }
 
       // For other errors, don't retry
       throw error
+    } finally {
+      clearTimeout(timeoutId)
     }
   }
 
