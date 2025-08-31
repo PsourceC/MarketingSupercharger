@@ -58,7 +58,7 @@ export interface DataUpdate {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api'
 
 // Generic API fetch function with improved error handling
-async function apiFetch<T>(endpoint: string, options?: RequestInit, retries = 1): Promise<T> {
+export async function apiFetch<T>(endpoint: string, options?: RequestInit, retries = 1): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
 
   let lastError: Error
