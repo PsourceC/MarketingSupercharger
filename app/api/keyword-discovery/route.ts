@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { query } from '../../lib/server-only'
 
 export const dynamic = 'force-dynamic'
@@ -116,8 +117,8 @@ export async function POST(req: NextRequest) {
 
     await query(
       `INSERT INTO solar_business_info (target_keywords)
-       VALUES ($1)`,
-      [tk]
+       VALUES ($1::jsonb)`,
+      [JSON.stringify(tk)]
     )
 
     return NextResponse.json({ ok: true })
