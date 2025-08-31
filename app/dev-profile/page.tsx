@@ -548,7 +548,7 @@ export default function DevProfilePage() {
             <div className="clash-title">🔡 Encoding/Emoji Corruption</div>
             <div className="clash-body">
               <div className="clash-row"><span className="clash-label">Goal</span><span className="clash-value">Readable labels with proper emoji/icons</span></div>
-              <div className="clash-row"><span className="clash-label">Current</span><span className="clash-value">Corrupted text appears: “Fair ��️”, “���� Run Area Update”, “��� Performance Guide”</span></div>
+              <div className="clash-row"><span className="clash-label">Current</span><span className="clash-value">Previously showed corrupted glyphs for emoji/icons; ensure “Fair ⚠️”, ��▶️ Run Area Update”, “📘 Performance Guide” render correctly</span></div>
               <div className="clash-row"><span className="clash-label">Impact</span><span className="clash-value">Reduces clarity and professional polish</span></div>
               <div className="clash-row"><span className="clash-label">Guidance</span><span className="clash-value">Replace with “Fair ⚠️”, “▶️ Run Area Update”, “📘 Performance Guide”</span></div>
             </div>
