@@ -50,6 +50,8 @@ function suggestKeywords(area: string, websiteUrl: string, existing: string[]): 
   return uniq([...existing, ...base, ...productHooks, ...serviceHooks, ...domainHints])
 }
 
+import CornerTooltip from './CornerTooltip'
+
 export default function CompetitorKeywordProfile() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -175,7 +177,22 @@ export default function CompetitorKeywordProfile() {
   const parseList = (text: string) => uniq(text.split(',').map(s => s.trim()).filter(Boolean))
 
   return (
-    <div id="competitor-profile" className="profile-config">
+    <div id="competitor-profile" className="profile-config" style={{ position: 'relative' }}>
+      <CornerTooltip
+        title="Competitor & Keyword Profile"
+        ariaLabel="Help: Competitor & Keyword Profile"
+        aiContext={{ activeArea, areaKeywordsCount: (target.areas[activeArea] || []).length, competitorsCount: (target.competitors[activeArea] || []).length }}
+        content={() => (
+          <div>
+            <p>Set your service areas, target keywords, and competitor domains. This guides discovery and ranking checks.</p>
+            <ul style={{ margin: '6px 0 0 1em' }}>
+              <li>Active area: <strong>{activeArea || '—'}</strong></li>
+              <li>Keywords in area: <strong>{(target.areas[activeArea] || []).length}</strong></li>
+              <li>Competitors in area: <strong>{(target.competitors[activeArea] || []).length}</strong></li>
+            </ul>
+          </div>
+        )}
+      />
       <div className="section-header">
         <div className="header-content">
           <h2>🧭 Competitor & Keyword Profile</h2>
