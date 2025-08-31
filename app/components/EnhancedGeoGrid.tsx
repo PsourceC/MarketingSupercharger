@@ -414,7 +414,7 @@ export default function EnhancedGeoGrid() {
               className="enhanced-select competitor-select"
             >
               <option value="all">All Competitors</option>
-              {competitors.map(comp => (
+              {(dynamicCompetitors.length ? dynamicCompetitors : competitors).map(comp => (
                 <option key={comp.name} value={comp.name}>{comp.name}</option>
               ))}
             </select>
