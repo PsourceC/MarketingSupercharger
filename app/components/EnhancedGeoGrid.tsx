@@ -517,7 +517,25 @@ export default function EnhancedGeoGrid() {
   const viewLocations: Location[] = selectedLocation ? (currentLocations.filter(l => l.id === selectedLocation)) : currentLocations
 
   return (
-    <div className="enhanced-geo-grid">
+    <div className="enhanced-geo-grid" style={{ position: 'relative' }}>
+      <div className="section-help-anchor">
+        <CornerTooltip
+          title="Map & Competitor View"
+          position="top-right"
+          ariaLabel="Help: Map & Competitors"
+          aiContext={{ selectedKeyword, selectedAreaName, showCompetitors, competitorComparisonMode, rankStatus }}
+          content={() => (
+            <div>
+              <p>Use the controls to choose a keyword and area. Circles show your rank: green=best, red=needs work. Toggle competitors to compare ranks and market share.</p>
+              <ul style={{ margin: '6px 0 0 1em' }}>
+                <li>Current keyword: <strong>{selectedKeyword}</strong></li>
+                <li>Insights area: <strong>{selectedAreaName || currentLocations[0]?.name || '—'}</strong></li>
+                <li>Mode: <strong>{rankStatus?.mode === 'live' ? 'Live' : 'Simulation'}</strong></li>
+              </ul>
+            </div>
+          )}
+        />
+      </div>
       <div className="geo-controls-enhanced">
         <div className="control-group">
           <label className="control-label">🔍 Target Keyword:</label>
