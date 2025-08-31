@@ -276,6 +276,9 @@ export default function EnhancedGeoGrid() {
     fetch('/api/locations').then(r => r.json()).then((locs: any[]) => {
       if (Array.isArray(locs) && locs.length > 0) {
         setDbLocations(locs.map(l => ({ name: l.name, lat: Number(l.lat), lng: Number(l.lng) })))
+        if (!selectedAreaName && locs.length) {
+          setSelectedAreaName(String(locs[0].name))
+        }
         const mapped: Location[] = locs.map((l: any) => ({
           id: String(l.id || l.name),
           name: String(l.name),
