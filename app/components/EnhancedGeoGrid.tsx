@@ -371,19 +371,22 @@ export default function EnhancedGeoGrid() {
   const refreshData = async () => {
     setLastRefresh(new Date())
     try {
-      const [compRes, refreshRes] = await Promise.allSettled([
-        fetch('/api/competitor-tracking/schedule', { method: 'POST' }),
-        fetch('/api/refresh', { method: 'POST' })
-      ])
-      const ok = compRes.status === 'fulfilled' || refreshRes.status === 'fulfilled'
-      if (ok) {
-        window.dispatchEvent(new CustomEvent('dataRefresh'))
-        console.log('Data refresh tasks complete', { competitorSchedule: compRes.status, refresh: refreshRes.status })
-      } else {
-        console.error('Failed to refresh data')
+      // Fire-and-forget competitor schedule to avoid blocking UI/network instrumentation
+      fetch('/api/competitor-tracking/schedule', { method: 'POST' }).catch(() => null)
+
+      // Short, resilient refresh request with timeout
+      const controller = new AbortController()
+      const t = setTimeout(() => controller.abort(), 10000)
+      try {
+        await fetch('/api/refresh', { method: 'POST', signal: controller.signal })
+      } finally {
+        clearTimeout(t)
       }
+
+      window.dispatchEvent(new CustomEvent('dataRefresh'))
+      console.log('Data refresh triggered')
     } catch (error) {
-      console.error('Error refreshing data:', error)
+      console.warn('Non-blocking refresh error:', (error as any)?.message || error)
     }
   }
 
