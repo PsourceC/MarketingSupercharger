@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 
 // This would trigger refresh across all your connected data sources
 
-import { NextResponse } from 'next/server'
 
 export async function POST() {
   try {
