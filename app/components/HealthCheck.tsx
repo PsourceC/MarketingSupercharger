@@ -2,6 +2,7 @@
 
 
 import { useEffect, useState } from 'react'
+import { apiFetch } from '../services/api'
 
 interface HealthStatus {
   status: 'healthy' | 'warning' | 'error'
@@ -34,27 +35,18 @@ export default function HealthCheck() {
       let apiStatus = false
 
       try {
-        // Check database connection
-        const dbResponse = await fetch('/api/test-connection')
-        if (dbResponse.ok) {
-          const dbData = await dbResponse.json()
-          dbStatus = dbData.status === 'connected'
-        } else {
-          errors.push('Database connection failed')
-        }
+        const dbData = await apiFetch<any>('/test-connection')
+        dbStatus = dbData.status === 'connected'
       } catch (error) {
-        errors.push('Database API unreachable')
+        errors.push('Database connection failed')
       }
 
       try {
-        // Check API endpoints
-        const apiResponse = await fetch('/api/metrics')
-        apiStatus = apiResponse.ok
-        if (!apiStatus) {
-          errors.push('Metrics API failed')
-        }
+        await apiFetch<any>('/metrics')
+        apiStatus = true
       } catch (error) {
-        errors.push('Metrics API unreachable')
+        apiStatus = false
+        errors.push('Metrics API failed')
       }
 
       // Check hot reload (assume it's working if we can run this code)
