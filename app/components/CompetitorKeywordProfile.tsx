@@ -61,6 +61,8 @@ export default function CompetitorKeywordProfile() {
   const [target, setTarget] = useState<TargetKeywords>({ global: [], areas: {}, competitors: {} })
   const [suggestions, setSuggestions] = useState<Record<string, { keyword: string; estimatedVolume: number; competitorCount: number; opportunity: number }[]>>({})
   const [discovering, setDiscovering] = useState(false)
+  const [applyingLive, setApplyingLive] = useState(false)
+  const [liveStatus, setLiveStatus] = useState('')
 
   useEffect(() => {
     (async () => {
