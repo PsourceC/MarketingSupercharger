@@ -333,8 +333,8 @@ export default function EnhancedGeoGrid() {
   }
 
   const getPositionRanking = (location: Location, keyword: string) => {
-    if (keyword === 'all') return location.overallScore
-    return location.keywordScores[keyword] || 20
+    const raw = keyword === 'all' ? Number(location.overallScore || 0) : Number(location.keywordScores[keyword] || 0)
+    return raw > 0 ? raw : 20
   }
 
   const getPerformanceLabel = (score: number) => {
@@ -884,9 +884,12 @@ export default function EnhancedGeoGrid() {
             </div>
             {(() => {
               const withScores = currentLocations.filter(l => Number(l.overallScore) > 0)
-              const best = withScores.length ? withScores.reduce((a, b) => (a.overallScore <= b.overallScore ? a : b)) : currentLocations[0]
-              const bestLabel = best ? `` + best.name + `` : 'Top Area'
-              const bestRank = best ? `#${Math.round(best.overallScore || 0)}` : '#—'
+              if (withScores.length === 0) {
+                return <p>Add or select a service area with data to see opportunities.</p>
+              }
+              const best = withScores.reduce((a, b) => (a.overallScore <= b.overallScore ? a : b))
+              const bestLabel = best.name
+              const bestRank = `#${Math.round(best.overallScore || 0)}`
               return (
                 <>
                   <p><strong>{bestLabel}</strong> is your strongest area at position {bestRank}. Push for #1 to dominate this market!</p>
@@ -909,12 +912,14 @@ export default function EnhancedGeoGrid() {
               <h4>Needs Attention</h4>
             </div>
             {(() => {
-              const list = currentLocations
-              const worst = list.length ? list.reduce((a, b) => (a.overallScore >= b.overallScore ? a : b)) : undefined
-              const focus = worst || list[0]
-              const label = focus ? focus.name : 'Priority Area'
-              const rank = focus ? `#${Math.round(focus.overallScore || 0)}` : '#—'
-              const volume = focus ? (focus.searchVolume || 0).toLocaleString() : '—'
+              const withScores = currentLocations.filter(l => Number(l.overallScore) > 0)
+              if (withScores.length === 0) {
+                return <p>No underperforming areas yet. Add areas or wait for data.</p>
+              }
+              const worst = withScores.reduce((a, b) => (a.overallScore >= b.overallScore ? a : b))
+              const label = worst.name
+              const rank = `#${Math.round(worst.overallScore || 0)}`
+              const volume = (worst.searchVolume || 0).toLocaleString()
               return (
                 <>
                   <p><strong>{label}</strong> at position {rank} needs work. This could be a major market with {volume} monthly searches.</p>
@@ -937,8 +942,8 @@ export default function EnhancedGeoGrid() {
               <h4>Success Story</h4>
             </div>
             {(() => {
-              let bestTrendLoc = currentLocations[0]
-              let bestChange = -Infinity
+              let bestTrendLoc: Location | null = null
+              let bestChange = 0
               for (const l of currentLocations) {
                 const topPositive = Math.max(0, ...l.trends.map(t => Number(t.change) || 0))
                 if (topPositive > bestChange) {
@@ -946,8 +951,11 @@ export default function EnhancedGeoGrid() {
                   bestTrendLoc = l
                 }
               }
-              const area = bestTrendLoc ? bestTrendLoc.name : 'Key Area'
-              const changeText = bestChange > 0 ? `jumped +${bestChange} positions recently` : 'showed stable performance'
+              if (!bestTrendLoc || bestChange <= 0) {
+                return <p>As rankings improve, success highlights will appear here.</p>
+              }
+              const area = bestTrendLoc.name
+              const changeText = `jumped +${bestChange} positions recently`
               return (
                 <>
                   <p><strong>{area}</strong> {changeText}! Whatever you are doing there, replicate it elsewhere.</p>
