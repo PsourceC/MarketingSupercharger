@@ -139,7 +139,8 @@ export async function getLocationPerformance() {
     return locationRes.rows.map(row => {
       const avg = Number(row.avg_ranking || 0)
       const score = Number(row.overall_score || 0)
-      const effective = score > 0 ? score : (avg > 0 ? Math.round(avg) : 0)
+      // Prefer calculated average ranking when available; fall back to stored score
+      const effective = avg > 0 ? Math.round(avg) : (score > 0 ? score : 0)
       const lid = String(row.id)
       return {
         id: row.id.toString(),
