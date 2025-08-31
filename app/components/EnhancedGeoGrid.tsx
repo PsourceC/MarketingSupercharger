@@ -415,6 +415,13 @@ export default function EnhancedGeoGrid() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
+      // Bootstrap initial rankings for this area so the map has real data
+      await fetch('/api/keywords/bootstrap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ area: canonical, limit: 12 })
+      }).catch(() => null)
+
       await fetch('/api/competitor-tracking/schedule', { method: 'POST' })
       const locs: any[] = await fetch('/api/locations').then(r => r.json())
       const mapped: Location[] = locs.map((l: any) => ({
