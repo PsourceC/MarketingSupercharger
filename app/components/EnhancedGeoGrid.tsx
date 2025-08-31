@@ -245,6 +245,15 @@ export default function EnhancedGeoGrid() {
   const [dynamicCompetitors, setDynamicCompetitors] = useState<Competitor[]>([])
   const [newArea, setNewArea] = useState<string>('')
   const [areaSuggestions, setAreaSuggestions] = useState<string[]>([])
+  const [smartInsights, setSmartInsights] = useState<null | {
+    area: string,
+    generatedAt: string,
+    keywordsAnalyzed: number,
+    opportunities: Array<{ keyword: string; volume: number; ourPosition: number; leader: string | null; leaderPosition: number; gap: number; potentialClicks: number }>,
+    quickWins: Array<{ keyword: string; volume: number; ourPosition: number; leader: string | null; leaderPosition: number; gap: number; potentialClicks: number }>,
+    threats: Array<{ keyword: string; volume: number; ourPosition: number; leader: string | null; leaderPosition: number; gap: number; potentialClicks: number }>,
+    recommendations: Array<{ area: string; keyword: string; suggestions: any[] }>
+  }>(null)
 
   useEffect(() => {
     setMapReady(true)
