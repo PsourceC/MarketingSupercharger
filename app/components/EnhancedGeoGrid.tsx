@@ -411,7 +411,7 @@ export default function EnhancedGeoGrid() {
 
   const getPerformanceLabel = (score: number) => {
     if (score <= 3) return 'Excellent! 🏆'
-    if (score <= 5) return 'Very Good ����'
+    if (score <= 5) return 'Very Good 🎯'
     if (score <= 10) return 'Good ✅'
     if (score <= 15) return 'Fair ⚠️'
     return 'Needs Work 🚨'
@@ -614,8 +614,8 @@ export default function EnhancedGeoGrid() {
             onChange={(e) => setSelectedAreaName(e.target.value || null)}
             className="enhanced-select"
           >
-            {currentLocations.map(l => (
-              <option key={l.id} value={l.name}>{l.name}</option>
+            {(serviceAreas.length ? serviceAreas : currentLocations.map(l => l.name)).map((nameOr) => (
+              <option key={String(nameOr)} value={String(nameOr)}>{String(nameOr)}</option>
             ))}
           </select>
         </div>
