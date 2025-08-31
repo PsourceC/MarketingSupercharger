@@ -44,9 +44,12 @@ export default function DevProfilePage() {
     const healthCheckInterval = setInterval(() => {
       if (autoRefreshEnabled && !isChecking && document.visibilityState === 'visible') {
         console.log('Running automatic health check...')
-        checkAllConnections(true).catch(() => {}) // Pass true for silent/background check
+        checkAllConnections(true).catch(() => {})
       }
-    }, isDevelopment ? 10 * 60 * 1000 : 5 * 60 * 1000) // 10 minutes in dev, 5 minutes in production
+      if (autoRefreshEnabled && !goalScanLoading && document.visibilityState === 'visible') {
+        scanFeatureGoals(true).catch(() => {})
+      }
+    }, isDevelopment ? 10 * 60 * 1000 : 5 * 60 * 1000)
 
     return () => {
       clearInterval(healthCheckInterval)
