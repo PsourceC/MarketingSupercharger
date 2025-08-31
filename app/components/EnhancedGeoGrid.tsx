@@ -1146,10 +1146,11 @@ export default function EnhancedGeoGrid() {
               const worst = withScores.reduce((a, b) => (a.overallScore >= b.overallScore ? a : b))
               const label = worst.name
               const rank = `#${Math.round(worst.overallScore || 0)}`
-              const volume = (worst.searchVolume || 0).toLocaleString()
+              const volumeNum = Number(worst.searchVolume || 0)
+              const volumeText = volumeNum.toLocaleString()
               return (
                 <>
-                  <p><strong>{label}</strong> at position {rank} needs work. This could be a major market with {volume} monthly searches.</p>
+                  <p><strong>{label}</strong> at position {rank} needs work. {volumeNum > 0 ? <>Estimated {volumeText} monthly searches.</> : <>Low current search activity.</>}</p>
                   <div className="insight-action">
                     <button
                       className="insight-btn"
