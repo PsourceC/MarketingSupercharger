@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { fetchBusinessMetrics, type Metric, apiFetch } from '../services/api'
+import CornerTooltip from './CornerTooltip'
 
 export default function MetricsOverview() {
   const [selectedPeriod, setSelectedPeriod] = useState('30d')
@@ -279,7 +280,7 @@ export default function MetricsOverview() {
       {/* Dynamic Trend Summary */}
       {metrics.length > 0 && (
         <div className="trend-summary">
-          <h4>��� Live Trend Analysis</h4>
+          <h4>📈 Live Trend Analysis</h4>
           <div className="trend-items">
             {metrics.filter(m => m.changeType === 'positive').length > 0 && (
               <div className="trend-item positive">
