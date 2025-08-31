@@ -2,6 +2,7 @@
 
 
 import { useState } from 'react'
+import { apiFetch } from '../services/api'
 
 export default function ManualDataImport() {
   const [importStatus, setImportStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
@@ -16,7 +17,7 @@ export default function ManualDataImport() {
     setImportStatus('uploading')
     
     try {
-      const response = await fetch('/api/import-csv', {
+      const response = await apiFetch('/import-csv', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ csvData })
