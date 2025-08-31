@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { query } from '../../lib/server-only'
 
 export const dynamic = 'force-dynamic'
@@ -50,14 +51,13 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const body = await req.json()
   try {
-    const body = await req.json()
     const businessName: string = body.businessName || ''
     const websiteUrl: string = body.websiteUrl || ''
     const serviceAreas: string[] = Array.isArray(body.serviceAreas) ? body.serviceAreas : []
     const targetKeywords = normalizeKeywords(body.targetKeywords)
 
-    // Upsert a new record; keep history via created_at
     await query(
       `INSERT INTO solar_business_info (business_name, website, service_areas, target_keywords)
        VALUES ($1::text, $2::text, $3::text[], $4::jsonb)`,
@@ -66,11 +66,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (e: any) {
-    // Fallback: some databases have target_keywords as text[]; handle gracefully
     const msg = String(e?.message || '')
     if (/target_keywords\"? is of type text\[\]/i.test(msg) || /text\[\] but expression is of type jsonb/i.test(msg)) {
       try {
-        const body = await req.json()
         const businessName: string = body.businessName || ''
         const websiteUrl: string = body.websiteUrl || ''
         const serviceAreas: string[] = Array.isArray(body.serviceAreas) ? body.serviceAreas : []
