@@ -238,6 +238,7 @@ export default function EnhancedGeoGrid() {
     'top-rated-installers',
     'affordable-solar'
   ])
+  const [currentLocations, setCurrentLocations] = useState<Location[]>(locations)
   const [dbLocations, setDbLocations] = useState<Array<{ name: string; lat: number; lng: number }>>([])
   const [dynamicCompetitors, setDynamicCompetitors] = useState<Competitor[]>([])
 
