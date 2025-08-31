@@ -126,7 +126,17 @@ export default function GoogleAuthButton() {
   }
 
   return (
-    <div id="google-auth" className="google-auth-container">
+    <div id="google-auth" className="google-auth-container" style={{ position: 'relative' }}>
+      <CornerTooltip
+        title="Google Search Console"
+        ariaLabel="Help: Google Search Console"
+        content={() => (
+          <div>
+            <p>Connect to show LIVE search data. If blocked by OAuth, you can use sample data or paste CSV in Import.</p>
+            <p style={{ marginTop: 6 }}>After connecting, the dashboard auto-refreshes.</p>
+          </div>
+        )}
+      />
       <button
         onClick={handleAuthenticate}
         disabled={isLoading || authStatus === 'connected'}
