@@ -325,6 +325,24 @@ export default function EnhancedGeoGrid() {
     }).catch(() => {})
   }, [])
 
+  // Load smart insights scoped to selected area (or overall first area)
+  useEffect(() => {
+    const areaName = selectedLocation
+      ? currentLocations.find(l => l.id === selectedLocation)?.name
+      : currentLocations[0]?.name
+    if (!areaName) return
+    let cancelled = false
+    const controller = new AbortController()
+    fetch(`/api/insights/smart?area=${encodeURIComponent(areaName)}`, { signal: controller.signal })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (cancelled) return
+        if (data && data.area) setSmartInsights(data)
+      })
+      .catch(() => {})
+    return () => { cancelled = true; controller.abort() }
+  }, [selectedLocation, currentLocations])
+
   const getScoreColor = (score: number) => {
     if (score <= 5) return '#10b981' // Green - excellent (top 5)
     if (score <= 10) return '#3b82f6' // Blue - very good (6-10)
