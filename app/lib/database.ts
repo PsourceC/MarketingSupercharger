@@ -96,7 +96,7 @@ export async function getCurrentMetrics() {
 export async function getLocationPerformance() {
   try {
     const locationQuery = `
-      SELECT 
+      SELECT
         l.id,
         l.location_name as name,
         l.latitude as lat,
@@ -113,21 +113,41 @@ export async function getLocationPerformance() {
       GROUP BY l.id, l.location_name, l.latitude, l.longitude, l.overall_score, l.population, l.search_volume, l.last_updated
       ORDER BY l.overall_score DESC
     `
-    
-    const result = await query(locationQuery)
-    
+
+    const perKeywordQuery = `
+      SELECT location_id, keyword, AVG(ranking_position) AS avg_pos
+      FROM solar_keyword_rankings
+      WHERE created_at >= NOW() - INTERVAL '60 days'
+      GROUP BY location_id, keyword
+    `
+
+    const [locationRes, perKeywordRes] = await Promise.all([
+      query(locationQuery),
+      query(perKeywordQuery)
+    ])
+
+    const keywordByLocation: Record<string, Record<string, number>> = {}
+    for (const r of perKeywordRes.rows) {
+      const lid = String(r.location_id)
+      if (!keywordByLocation[lid]) keywordByLocation[lid] = {}
+      const k = String(r.keyword)
+      const v = r.avg_pos ? Math.round(Number(r.avg_pos)) : 0
+      if (v > 0) keywordByLocation[lid][k] = v
+    }
+
     // Transform data to match expected format
-    return result.rows.map(row => {
+    return locationRes.rows.map(row => {
       const avg = Number(row.avg_ranking || 0)
       const score = Number(row.overall_score || 0)
       const effective = score > 0 ? score : (avg > 0 ? Math.round(avg) : 0)
+      const lid = String(row.id)
       return {
         id: row.id.toString(),
         name: row.name,
         lat: parseFloat(row.lat),
         lng: parseFloat(row.lng),
         overallScore: effective,
-        keywordScores: {},
+        keywordScores: keywordByLocation[lid] || {},
         population: parseInt(row.population || '0'),
         searchVolume: parseInt(row.search_volume || '0'),
         lastUpdated: row.last_updated?.toISOString() || new Date().toISOString(),
