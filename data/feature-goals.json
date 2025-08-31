@@ -40,5 +40,12 @@
     "description": "Insights Area defaults to a tracked area, and the dropdown shows only Tracked Areas (serviceAreas) — no untracked areas allowed — with fallback to map areas if none tracked.",
     "category": "ui-consistency",
     "guidance": "Default selectedAreaName to first tracked area (or currentLocations[0].name as fallback); build options from serviceAreas when available, otherwise currentLocations; bind to selectedAreaName; and use getAreaCompetitors(areaName)."
+  },
+  {
+    "id": "us-coverage-and-no-data-indicator",
+    "title": "US coverage and no-data indicator",
+    "description": "All US cities/states can be added for tracking. If a city has no live data, the map shows a clear ��No live data yet” indicator at its location.",
+    "category": "data-accuracy",
+    "guidance": "Support adding any \"City, ST\" and render a gray placeholder bubble with “No live data yet” when ranks are unavailable."
   }
 ]
