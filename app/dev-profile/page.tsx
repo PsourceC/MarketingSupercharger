@@ -57,14 +57,36 @@ export default function DevProfilePage() {
   }, [autoRefreshEnabled, isChecking, goalScanLoading])
 
   const scanFeatureGoals = async (silent = false) => {
+    // Skip during webpack HMR cycles to avoid transient fetch errors
+    if (isDevelopment && (window as any).__webpack_require__?.hmrM) {
+      console.log('Skipping goals scan - webpack HMR in progress')
+      return
+    }
+
+    const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 8000) => {
+      return await new Promise<Response>((resolve) => {
+        const timeoutId = setTimeout(() => {
+          resolve(new Response(JSON.stringify({ error: 'timeout' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+        }, timeoutMs)
+        fetch(input, init)
+          .then((res) => { clearTimeout(timeoutId); resolve(res) })
+          .catch((err: any) => {
+            clearTimeout(timeoutId)
+            resolve(new Response(JSON.stringify({ error: err?.message || 'fetch failed' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+          })
+      })
+    }
+
     if (!silent) setGoalScanLoading(true)
     try {
-      const res = await fetch('/api/feature-goals/scan', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } })
+      const res = await fetchWithTimeout('/api/feature-goals/scan', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }, 8000)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       setFeatureGoals(data.goals || [])
       setLastGoalScan(new Date().toISOString())
     } catch (e) {
-      // swallow
+      // swallow to avoid HMR noise
+      console.warn('Goal scan skipped/failed', (e as any)?.message || e)
     } finally {
       if (!silent) setGoalScanLoading(false)
     }
@@ -399,7 +421,7 @@ export default function DevProfilePage() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'core': return '��️'
+      case 'core': return '🏗️'
       case 'optimization': return '🚀'
       case 'analytics': return '📊'
       case 'notifications': return '🔔'
