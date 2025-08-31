@@ -663,7 +663,7 @@ export default function EnhancedGeoGrid() {
                 </div>
               )}
             />
-            <h4>��� Performance Guide</h4>
+            <h4>📘 Performance Guide</h4>
             <div className="legend-grid">
               <div className="legend-item excellent">
                 <div className="legend-circle" style={{ backgroundColor: '#10b981' }}></div>
