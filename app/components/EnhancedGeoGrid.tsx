@@ -892,7 +892,7 @@ export default function EnhancedGeoGrid() {
               <h4>Best Opportunity</h4>
             </div>
             {(() => {
-              const withScores = currentLocations.filter(l => Number(l.overallScore) > 0)
+              const withScores = viewLocations.filter(l => Number(l.overallScore) > 0)
               if (withScores.length === 0) {
                 return <p>Add or select a service area with data to see opportunities.</p>
               }
