@@ -150,7 +150,7 @@ export default function PriorityActionsPanel() {
       case 'SEO': return '🔍'
       case 'Reviews': return '⭐'
       case 'Content': return '📝'
-      case 'Technical': return '���️'
+      case 'Technical': return '🛠️'
       default: return '📊'
     }
   }
