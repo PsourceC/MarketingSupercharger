@@ -480,10 +480,10 @@ export default function EnhancedGeoGrid() {
             <div className="competitor-legend">
               <h4>🥊 Competitors</h4>
               <div className="competitor-list">
-                {competitors.map(comp => (
+                {(dynamicCompetitors.length ? dynamicCompetitors : competitors).map(comp => (
                   <div key={comp.name} className="competitor-item">
-                    <div 
-                      className="competitor-marker" 
+                    <div
+                      className="competitor-marker"
                       style={{ backgroundColor: comp.color }}
                     ></div>
                     <div className="competitor-info">
