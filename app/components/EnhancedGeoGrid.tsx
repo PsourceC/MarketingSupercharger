@@ -343,7 +343,12 @@ export default function EnhancedGeoGrid() {
         if (data && data.area) setSmartInsights(data)
       })
       .catch(() => {})
-    return () => { cancelled = true; controller.abort() }
+    return () => {
+      cancelled = true
+      try {
+        if (!controller.signal.aborted) controller.abort('cleanup')
+      } catch {}
+    }
   }, [selectedLocation, currentLocations, selectedKeyword])
 
   const getScoreColor = (score: number) => {
