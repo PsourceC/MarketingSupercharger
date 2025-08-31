@@ -16,7 +16,7 @@
 
 ### **Before: Vertical Sidebar Layout**
 ```
-┌─────────────────┐  ┌─────────────────��┐  ┌─────────────────┐
+┌─────────────────┐  ┌──────────────────┐  ┌─────────────────┐
 │   MetricsPanel  │  │                  │  │   DataRefresh   │
 │                 │  │                  │  │                 │
 │ PriorityActions │  │    Main Content  │  │   LiveUpdates   │
