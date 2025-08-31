@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { suggestCities } from '../lib/city-suggestions'
 import { getCityCoords } from '../lib/geo'
-import { triggerDataRefresh } from '../services/api'
+import { triggerDataRefresh, apiFetch } from '../services/api'
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false })
@@ -262,7 +262,7 @@ export default function EnhancedGeoGrid() {
   useEffect(() => {
     setMapReady(true)
     // preload top keywords by area
-    fetch('/api/rankings/by-area').then(r => r.json()).then(data => {
+    apiFetch<any>('/rankings/by-area').then(data => {
       if (data?.areas) {
         setTopByArea(data.areas)
         const all = new Set<string>()
@@ -274,7 +274,7 @@ export default function EnhancedGeoGrid() {
     }).catch(() => {})
 
     // Load DB locations to map area names to coordinates and render bubbles
-    fetch('/api/locations').then(r => r.json()).then((locs: any[]) => {
+    apiFetch<any[]>('/locations').then((locs: any[]) => {
       if (Array.isArray(locs) && locs.length > 0) {
         setDbLocations(locs.map(l => ({ name: l.name, lat: Number(l.lat), lng: Number(l.lng) })))
         if (!selectedAreaName && locs.length) {
@@ -297,7 +297,7 @@ export default function EnhancedGeoGrid() {
     }).catch(() => {})
 
     // Load dynamic competitors discovered/tracked by backend
-    fetch('/api/competitor-tracking').then(r => r.json()).then(data => {
+    apiFetch<any>('/competitor-tracking').then(data => {
       try {
         if (!data || !Array.isArray(data.competitors)) return
         setCompetitorAnalysesRaw(data.competitors)
@@ -339,11 +339,11 @@ export default function EnhancedGeoGrid() {
       if (!areaName) return
       let cancelled = false
 
-      apiFetch<any>(`/api/insights/smart?area=${encodeURIComponent(areaName)}`)
+      apiFetch<any>(`/insights/smart?area=${encodeURIComponent(areaName)}`)
         .then(data => { if (!cancelled && data && data.area) setSmartInsights(data) })
         .catch(() => {})
 
-      apiFetch<any>(`/api/rankings/status?area=${encodeURIComponent(areaName)}`)
+      apiFetch<any>(`/rankings/status?area=${encodeURIComponent(areaName)}`)
         .then(data => {
           if (cancelled || !data?.status?.length) return
           const s = data.status[0]
@@ -460,7 +460,7 @@ export default function EnhancedGeoGrid() {
       return
     }
     try {
-      const cfg = await fetch('/api/business-config').then(r => r.json())
+      const cfg = await apiFetch<any>('/business-config')
       const serviceAreas: string[] = Array.isArray(cfg.serviceAreas) ? cfg.serviceAreas : []
       if (serviceAreas.includes(canonical)) return
       const payload = {
@@ -469,20 +469,20 @@ export default function EnhancedGeoGrid() {
         serviceAreas: [...serviceAreas, canonical],
         targetKeywords: cfg.targetKeywords || { global: [], areas: {}, competitors: {} }
       }
-      await fetch('/api/business-config', {
+      await apiFetch<any>('/business-config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
       // Bootstrap initial rankings for this area so the map has real data
-      await fetch('/api/keywords/bootstrap', {
+      await apiFetch<any>('/keywords/bootstrap', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ area: canonical, limit: 12 })
       }).catch(() => null)
 
-      fetch('/api/competitor-tracking/schedule', { method: 'POST' }).catch(() => null)
-      const locs: any[] = await fetch('/api/locations').then(r => r.json())
+      apiFetch<any>('/competitor-tracking/schedule', { method: 'POST' }).catch(() => null)
+      const locs: any[] = await apiFetch<any[]>('/locations')
       const mapped: Location[] = locs.map((l: any) => ({
         id: String(l.id || l.name),
         name: String(l.name),
@@ -734,9 +734,9 @@ export default function EnhancedGeoGrid() {
                     const areaName = currentLocations.find(l => l.id === selectedLocation)?.name
                     if (!areaName) return
                     const top = (topByArea[areaName] || []).slice(0, 5).map(k => k.keyword)
-                    const cfg = await fetch('/api/business-config').then(r => r.json())
+                    const cfg = await apiFetch<any>('/business-config')
                     const domain = new URL(cfg.websiteUrl || 'https://example.com').hostname.replace('www.','')
-                    await fetch('/api/auto-ranking', {
+                    await apiFetch<any>('/auto-ranking', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ keywords: top, locations: [areaName], domain })
@@ -1005,8 +1005,8 @@ export default function EnhancedGeoGrid() {
                         className="insight-btn"
                         onClick={async () => {
                           try {
-                            await fetch('/api/gmb-posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'service', business: areaName }) })
-                            await fetch('/api/gmb-posts/schedule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: `Why we're the best for ${cand.keyword} in ${areaName}`, content: `Looking for ${cand.keyword} in ${areaName}? We deliver top results. Book your free quote today.`, scheduleDate: new Date(Date.now() + 48*3600*1000).toISOString() }) })
+                            await apiFetch<any>('/gmb-posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'service', business: areaName }) })
+                            await apiFetch<any>('/gmb-posts/schedule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: `Why we're the best for ${cand.keyword} in ${areaName}`, content: `Looking for ${cand.keyword} in ${areaName}? We deliver top results. Book your free quote today.`, scheduleDate: new Date(Date.now() + 48*3600*1000).toISOString() }) })
                             alert('Action queued: GMB content generated and scheduled')
                           } catch {
                             alert('Failed to queue post')
