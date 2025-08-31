@@ -1,0 +1,30 @@
+[
+  {
+    "id": "legend-consistency",
+    "title": "Performance Legend ranges are unified",
+    "description": "Legend, labels, and colors use the same ranges: 1–5 Excellent, 6–10 Very Good, 11–15 Good, 16–25 Fair, 25+ Needs Work.",
+    "category": "ui-consistency",
+    "guidance": "Ensure all map legends and labels reflect the canonical ranges and wording across components."
+  },
+  {
+    "id": "encoding-clean",
+    "title": "No encoding/emoji corruption",
+    "description": "No replacement characters appear in UI (�). Emoji/icons render correctly.",
+    "category": "quality",
+    "guidance": "Replace corrupted characters and ensure files are UTF-8 encoded."
+  },
+  {
+    "id": "quick-stats-timestamp",
+    "title": "Quick Stats shows data timestamp",
+    "description": "Quick Stats 'Last Update' uses ranking status timestamp, not local refresh time.",
+    "category": "data-accuracy",
+    "guidance": "Use rankStatus.lastUpdated when rendering the timestamp."
+  },
+  {
+    "id": "smart-insights-fallback",
+    "title": "Smart Insights fallback copy is accurate",
+    "description": "When volume is 0 or unknown, copy indicates low activity; otherwise shows estimated searches.",
+    "category": "copy",
+    "guidance": "If volume ≤ 0: 'Low current search activity.' Else: 'Estimated X monthly searches.'"
+  }
+]
