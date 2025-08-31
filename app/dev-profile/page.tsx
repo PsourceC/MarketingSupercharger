@@ -38,6 +38,7 @@ export default function DevProfilePage() {
   useEffect(() => {
     setMounted(true)
     void checkAllConnections().catch(() => {})
+    void scanFeatureGoals(true).catch(() => {})
 
     // Set up automatic health checks - longer interval in development to avoid HMR conflicts
     const healthCheckInterval = setInterval(() => {
@@ -359,7 +360,7 @@ export default function DevProfilePage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'connected': return '✅'
-      case 'error': return '���'
+      case 'error': return '❌'
       case 'pending': return '⏳'
       default: return '⚪'
     }
