@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '../../lib/server-only'
+import * as Sentry from '@sentry/nextjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,6 +46,7 @@ export async function GET() {
     })
   } catch (e: any) {
     console.error('GET /api/business-config error:', e)
+    try { Sentry.captureException(e, { tags: { route: 'business-config', method: 'GET' } }) } catch {}
     return NextResponse.json({ error: 'Failed to load business config', details: e.message }, { status: 500 })
   }
 }
@@ -66,6 +68,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   } catch (e: any) {
     const msg = String(e?.message || '')
+    try { Sentry.captureException(e, { tags: { route: 'business-config', method: 'POST' } }) } catch {}
     if (/target_keywords\"? is of type text\[\]/i.test(msg) || /text\[\] but expression is of type jsonb/i.test(msg)) {
       try {
         const businessName: string = body.businessName || ''
@@ -83,11 +86,13 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true, downgraded: true })
       } catch (fallbackErr: any) {
         console.error('POST /api/business-config fallback error:', fallbackErr)
+        try { Sentry.captureException(fallbackErr, { tags: { route: 'business-config', method: 'POST', stage: 'fallback' } }) } catch {}
         return NextResponse.json({ error: 'Failed to save business config', details: fallbackErr.message }, { status: 500 })
       }
     }
 
     console.error('POST /api/business-config error:', e)
+    try { Sentry.captureException(e, { tags: { route: 'business-config', method: 'POST' } }) } catch {}
     return NextResponse.json({ error: 'Failed to save business config', details: e.message }, { status: 500 })
   }
 }
