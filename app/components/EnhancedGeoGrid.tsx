@@ -364,8 +364,26 @@ export default function EnhancedGeoGrid() {
   }
 
   const getPositionRanking = (location: Location, keyword: string) => {
-    const raw = keyword === 'all' ? Number(location.overallScore || 0) : Number(location.keywordScores[keyword] || 0)
-    return raw > 0 ? raw : 20
+    if (keyword === 'all') {
+      const v = Number(location.overallScore || 0)
+      return v > 0 ? v : 20
+    }
+    const direct = Number(location.keywordScores[keyword] || 0)
+    if (direct > 0) return direct
+    const norm = (s: string) => s.toLowerCase().replace(/[,\-]/g, ' ').replace(/\s+/g, ' ').trim()
+    const base = norm(keyword).replace(/\s+[a-z]{2}$/i, '').replace(/\s+[a-z]+,?\s*[a-z]{2}$/i, '')
+    // try prefix match and includes match
+    const entries = Object.entries(location.keywordScores)
+    for (const [k, v] of entries) {
+      const nk = norm(k)
+      if (nk.startsWith(base) || nk.includes(base)) {
+        const n = Number(v || 0)
+        if (n > 0) return n
+      }
+    }
+    // fallback to overall
+    const fallback = Number(location.overallScore || 0)
+    return fallback > 0 ? fallback : 20
   }
 
   const getPerformanceLabel = (score: number) => {
