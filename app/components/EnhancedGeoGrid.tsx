@@ -230,9 +230,14 @@ export default function EnhancedGeoGrid() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [competitorComparisonMode, setCompetitorComparisonMode] = useState(false)
   const [selectedCompetitor, setSelectedCompetitor] = useState<string>('all')
+  const [topByArea, setTopByArea] = useState<Record<string, { keyword: string; avgPosition: number; clicks: number; impressions: number; ctr: number }[]>>({})
 
   useEffect(() => {
     setMapReady(true)
+    // preload top keywords by area
+    fetch('/api/rankings/by-area').then(r => r.json()).then(data => {
+      if (data?.areas) setTopByArea(data.areas)
+    }).catch(() => {})
   }, [])
 
   const getScoreColor = (score: number) => {
@@ -452,6 +457,45 @@ export default function EnhancedGeoGrid() {
               </div>
             </div>
           </div>
+
+          {selectedLocation && (
+            <div className="area-top-keywords">
+              <h4>🏆 Top Keywords — {locations.find(l => l.id === selectedLocation)?.name}</h4>
+              <div className="top-list">
+                {(topByArea[locations.find(l => l.id === selectedLocation)?.name || ''] || []).map(k => (
+                  <div key={k.keyword} className="top-row">
+                    <div className="kw">{k.keyword}</div>
+                    <div className="pos">#{Math.round(k.avgPosition || 0)}</div>
+                    <div className="clicks">👆 {k.clicks}</div>
+                    <div className="ctr">📊 {k.ctr}%</div>
+                  </div>
+                ))}
+              </div>
+              <button
+                className="insight-btn"
+                onClick={async () => {
+                  try {
+                    const areaName = locations.find(l => l.id === selectedLocation)?.name
+                    if (!areaName) return
+                    const top = (topByArea[areaName] || []).slice(0, 5).map(k => k.keyword)
+                    const cfg = await fetch('/api/business-config').then(r => r.json())
+                    const domain = new URL(cfg.websiteUrl || 'https://example.com').hostname.replace('www.','')
+                    await fetch('/api/auto-ranking', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ keywords: top, locations: [areaName], domain })
+                    })
+                    alert('Area update started for top keywords')
+                  } catch (e) {
+                    alert('Failed to run area update')
+                  }
+                }}
+              >
+                🚀 Run Area Update
+              </button>
+              <p className="hint">Uses Bright Data (or simulation) to scrape and update rankings for these keywords.</p>
+            </div>
+          )}
         </div>
 
         <div className="map-container-enhanced">
