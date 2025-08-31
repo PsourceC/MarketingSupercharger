@@ -199,6 +199,24 @@ export default function MetricsOverview() {
         ))}
       </div>
 
+      {topKeywords.length > 0 && (
+        <div className="top-keywords-panel">
+          <h4>🏆 Top Performing Keywords</h4>
+          <p className="text-sm text-gray-500">Based on clicks over the last 60 days</p>
+          <div className="top-keywords-list">
+            {topKeywords.map((k) => (
+              <div key={k.keyword} className="top-keyword-row">
+                <div className="kw-col">{k.keyword}</div>
+                <div className="pos-col">#{Math.round(k.avgPosition || 0)}</div>
+                <div className="clicks-col">👆 {k.clicks}</div>
+                <div className="impr-col">👁️ {k.impressions}</div>
+                <div className="ctr-col">📊 {k.ctr}%</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Dynamic Competitor Comparison - only show if we have metric data */}
       {metrics.length > 0 && (
         <div className="competitor-comparison">
