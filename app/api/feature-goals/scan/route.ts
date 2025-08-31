@@ -141,6 +141,8 @@ async function scannerInsightsAreaTrackedOnly(): Promise<{ status: string; evide
     const hasOptionsFromLocations = /\{currentLocations\.map\(l\s*=>\s*\(/.test(content)
     const hasValueBinding = /setSelectedAreaName\(e\.target\.value/.test(content)
     const usesAreaForCompetitors = /getAreaCompetitors\(areaName\)/.test(content)
+    const hasDefaultSetter = /if \(!selectedAreaName && locs\.length\)\s*\{[\s\S]*setSelectedAreaName\(/.test(content)
+    const hasFallbackDefault = /const\s+areaName\s*=\s*selectedAreaName\s*\|\|\s*currentLocations\[0\]\?\.name/.test(content)
 
     if (!hasInsightsLabel) {
       const line = content.split(/\r?\n/).findIndex(l => l.includes('Insights Area')) + 1
@@ -154,6 +156,9 @@ async function scannerInsightsAreaTrackedOnly(): Promise<{ status: string; evide
     }
     if (!usesAreaForCompetitors) {
       evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Competitor list not derived via getAreaCompetitors(areaName)' })
+    }
+    if (!hasDefaultSetter && !hasFallbackDefault) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'No default Insights Area selection on load' })
     }
 
     const status = evidence.length === 0 ? 'achieved' : (evidence.length <= 2 ? 'warning' : 'not_achieved')
