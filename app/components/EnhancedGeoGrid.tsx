@@ -731,7 +731,7 @@ export default function EnhancedGeoGrid() {
 
                         {showCompetitors && (
                           <div className="competitor-analysis">
-                            <h4>🥊 Competitive Analysis</h4>
+                            <h4>�� Competitive Analysis</h4>
                             {getAreaCompetitors(location.name).map((comp: any) => {
                               const gap = getCompetitiveGap(score, comp.location.score)
                               return (
@@ -953,7 +953,7 @@ export default function EnhancedGeoGrid() {
             {(() => {
               let bestTrendLoc: Location | null = null
               let bestChange = 0
-              for (const l of currentLocations) {
+              for (const l of viewLocations) {
                 const topPositive = Math.max(0, ...l.trends.map(t => Number(t.change) || 0))
                 if (topPositive > bestChange) {
                   bestChange = topPositive
