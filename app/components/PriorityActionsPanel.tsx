@@ -228,7 +228,18 @@ export default function PriorityActionsPanel() {
   const mediumActions = priorityActions.filter(a => a.priority === 'medium')
 
   return (
-    <div className="priority-actions-panel">
+    <div className="priority-actions-panel" style={{ position: 'relative' }}>
+      <CornerTooltip
+        title="Priority Actions"
+        ariaLabel="Help: Priority Actions"
+        aiContext={{ actions: priorityActions.length }}
+        content={() => (
+          <div>
+            <p>These are recommended tasks ordered by impact. Start red (critical), then orange (high).</p>
+            <p style={{ marginTop: 6 }}>Click an action to begin; automation toggles may run tasks on a schedule.</p>
+          </div>
+        )}
+      />
       <div className="panel-header">
         <h3>🎯 Priority Action Queue</h3>
         <div className="header-info">
