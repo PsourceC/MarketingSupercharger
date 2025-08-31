@@ -367,12 +367,14 @@ export default function EnhancedGeoGrid() {
   const refreshData = async () => {
     setLastRefresh(new Date())
     try {
-      // Trigger actual data refresh
-      const response = await fetch('/api/refresh', { method: 'POST' })
-      if (response.ok) {
-        // Trigger a global data refresh event
+      const [compRes, refreshRes] = await Promise.allSettled([
+        fetch('/api/competitor-tracking/schedule', { method: 'POST' }),
+        fetch('/api/refresh', { method: 'POST' })
+      ])
+      const ok = compRes.status === 'fulfilled' || refreshRes.status === 'fulfilled'
+      if (ok) {
         window.dispatchEvent(new CustomEvent('dataRefresh'))
-        console.log('Map data refreshed successfully')
+        console.log('Data refresh tasks complete', { competitorSchedule: compRes.status, refresh: refreshRes.status })
       } else {
         console.error('Failed to refresh data')
       }
@@ -797,15 +799,25 @@ export default function EnhancedGeoGrid() {
               <span className="insight-icon">🎯</span>
               <h4>Best Opportunity</h4>
             </div>
-            <p><strong>Pflugerville</strong> is your strongest area at position #3. Push for #1 to dominate this market!</p>
-            <div className="insight-action">
-              <button
-                className="insight-btn"
-                onClick={() => router.push('/gmb-automation')}
-              >
-                📱 Boost Pflugerville GMB
-              </button>
-            </div>
+            {(() => {
+              const withScores = currentLocations.filter(l => Number(l.overallScore) > 0)
+              const best = withScores.length ? withScores.reduce((a, b) => (a.overallScore <= b.overallScore ? a : b)) : currentLocations[0]
+              const bestLabel = best ? `` + best.name + `` : 'Top Area'
+              const bestRank = best ? `#${Math.round(best.overallScore || 0)}` : '#—'
+              return (
+                <>
+                  <p><strong>{bestLabel}</strong> is your strongest area at position {bestRank}. Push for #1 to dominate this market!</p>
+                  <div className="insight-action">
+                    <button
+                      className="insight-btn"
+                      onClick={() => router.push('/gmb-automation')}
+                    >
+                      📱 Boost {bestLabel} GMB
+                    </button>
+                  </div>
+                </>
+              )
+            })()}
           </div>
 
           <div className="insight-card warning">
@@ -813,15 +825,27 @@ export default function EnhancedGeoGrid() {
               <span className="insight-icon">⚠️</span>
               <h4>Needs Attention</h4>
             </div>
-            <p><strong>Central Austin</strong> at position #12 needs work. This is your biggest potential market with 12,400 monthly searches.</p>
-            <div className="insight-action">
-              <button
-                className="insight-btn"
-                onClick={() => router.push('/seo-tracking')}
-              >
-                🚀 Launch Austin Campaign
-              </button>
-            </div>
+            {(() => {
+              const list = currentLocations
+              const worst = list.length ? list.reduce((a, b) => (a.overallScore >= b.overallScore ? a : b)) : undefined
+              const focus = worst || list[0]
+              const label = focus ? focus.name : 'Priority Area'
+              const rank = focus ? `#${Math.round(focus.overallScore || 0)}` : '#—'
+              const volume = focus ? (focus.searchVolume || 0).toLocaleString() : '—'
+              return (
+                <>
+                  <p><strong>{label}</strong> at position {rank} needs work. This could be a major market with {volume} monthly searches.</p>
+                  <div className="insight-action">
+                    <button
+                      className="insight-btn"
+                      onClick={() => router.push('/seo-tracking')}
+                    >
+                      🚀 Launch {label} Campaign
+                    </button>
+                  </div>
+                </>
+              )
+            })()}
           </div>
 
           <div className="insight-card success">
@@ -829,15 +853,32 @@ export default function EnhancedGeoGrid() {
               <span className="insight-icon">✅</span>
               <h4>Success Story</h4>
             </div>
-            <p><strong>Cedar Park</strong> jumped +3 positions this month! Whatever you're doing there, replicate it elsewhere.</p>
-            <div className="insight-action">
-              <button
-                className="insight-btn"
-                onClick={() => router.push('/analytics')}
-              >
-                📊 Analyze Cedar Park
-              </button>
-            </div>
+            {(() => {
+              let bestTrendLoc = currentLocations[0]
+              let bestChange = -Infinity
+              for (const l of currentLocations) {
+                const topPositive = Math.max(0, ...l.trends.map(t => Number(t.change) || 0))
+                if (topPositive > bestChange) {
+                  bestChange = topPositive
+                  bestTrendLoc = l
+                }
+              }
+              const area = bestTrendLoc ? bestTrendLoc.name : 'Key Area'
+              const changeText = bestChange > 0 ? `jumped +${bestChange} positions recently` : 'showed stable performance'
+              return (
+                <>
+                  <p><strong>{area}</strong> {changeText}! Whatever you are doing there, replicate it elsewhere.</p>
+                  <div className="insight-action">
+                    <button
+                      className="insight-btn"
+                      onClick={() => router.push('/analytics')}
+                    >
+                      📊 Analyze {area}
+                    </button>
+                  </div>
+                </>
+              )
+            })()}
           </div>
         </div>
       </div>
