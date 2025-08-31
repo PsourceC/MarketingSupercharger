@@ -71,7 +71,7 @@ function simulateCompetitorCount(keyword: string) {
 export async function GET() {
   try {
     const cfg = await query(`
-      SELECT website_url, service_areas, target_keywords
+      SELECT website, service_areas, target_keywords
       FROM solar_business_info
       ORDER BY created_at DESC
       LIMIT 1
