@@ -5,6 +5,11 @@
   gap: 2rem;
 }
 
+/* Utility */
+.relative-block {
+  position: relative;
+}
+
 /* Loading State */
 .map-loading {
   display: flex;
@@ -163,6 +168,12 @@
   padding: 0.5rem 0.75rem;
 }
 
+/* Fixed size for Leaflet container */
+.leaflet-fixed-size {
+  height: 500px;
+  width: 100%;
+}
+
 /* Performance Legend */
 .performance-legend {
   background: white;
@@ -207,6 +218,13 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Rank color classes for legend */
+.legend-circle.rank-excellent { background: #10b981; }
+.legend-circle.rank-very-good { background: #3b82f6; }
+.legend-circle.rank-good { background: #f59e0b; }
+.legend-circle.rank-fair { background: #f97316; }
+.legend-circle.rank-poor { background: #ef4444; }
+
 .legend-item span:nth-child(2) {
   font-size: 0.85rem;
   color: #374151;
@@ -233,6 +251,12 @@
   margin-bottom: 1rem;
   color: #333;
   font-size: 1rem;
+}
+
+.legend-context {
+  margin: 0.25rem 0 0.5rem;
+  color: #6b7280;
+  font-size: 0.8rem;
 }
 
 .competitor-list {
