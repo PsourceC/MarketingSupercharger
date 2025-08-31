@@ -286,16 +286,21 @@ export async function fetchReviewData() {
 // Data refresh trigger
 export async function triggerDataRefresh() {
   try {
-    const result = await apiFetch('/refresh', { method: 'POST' }, 2) // Allow 2 retries
-    console.log('Data refresh triggered successfully:', result)
+    const [compRes, refreshRes] = await Promise.allSettled([
+      apiFetch('/competitor-tracking/schedule', { method: 'POST' }),
+      apiFetch('/refresh', { method: 'POST' }, 2)
+    ])
+
+    const ok = (compRes.status === 'fulfilled') || (refreshRes.status === 'fulfilled')
+    if (!ok) throw new Error('All refresh tasks failed')
+    console.log('Data refresh tasks complete', { competitorSchedule: compRes.status, refresh: refreshRes.status })
     return true
   } catch (error: any) {
     console.error('Failed to trigger data refresh:', error.message)
 
-    // Return partial success for certain error types
     if (error.message.includes('timeout') || error.message.includes('Network error')) {
       console.warn('Data refresh may have started despite network issues')
-      return true // Assume it might have worked
+      return true
     }
 
     return false
