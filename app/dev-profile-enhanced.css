@@ -192,3 +192,15 @@
 .clash-row { display:grid; grid-template-columns:90px 1fr; gap:.75rem; align-items:start; }
 .clash-label { font-size:.8rem; font-weight:800; color:#6b7280; text-transform:uppercase; }
 .clash-value { color:#374151; }
+
+/* Feature Goals Status */
+.feature-goals-section .status-pill { margin-left:.5rem; padding:.2rem .5rem; border-radius:8px; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; border:1px solid rgba(0,0,0,.05); }
+.feature-goals-section .status-achieved { background:linear-gradient(135deg,#dcfce7 0%,#bbf7d0 100%); color:#166534; border-color:#86efac; }
+.feature-goals-section .status-warning { background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%); color:#92400e; border-color:#fcd34d; }
+.feature-goals-section .status-not_achieved { background:linear-gradient(135deg,#fee2e2 0%,#fecaca 100%); color:#991b1b; border-color:#fca5a5; }
+.evidence-details { margin-top:.5rem; }
+.evidence-list { margin:.5rem 0 0 0; padding-left:1.25rem; display:grid; gap:.25rem; }
+.evidence-list code { background:#111827; color:#f9fafb; padding:.1rem .3rem; border-radius:4px; }
+
+/* Header Buttons Group */
+.header-buttons { display:flex; gap:.5rem; align-items:center; }
