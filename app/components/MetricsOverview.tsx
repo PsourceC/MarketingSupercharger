@@ -10,6 +10,7 @@ export default function MetricsOverview() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [compLoading, setCompLoading] = useState(false)
 
   // Fetch real metrics data
   useEffect(() => {
@@ -200,11 +201,47 @@ export default function MetricsOverview() {
         <div className="competitor-comparison">
           <h4>🥊 Competitive Analysis</h4>
           <div className="comparison-note">
-            <p>📊 Real-time competitive data from connected APIs</p>
+            <p>��� Real-time competitive data from connected APIs</p>
             <div className="comparison-actions">
-              <button className="comp-refresh-btn">🔄 Update Competitors</button>
-              <button className="comp-setup-btn">⚙️ Configure Tracking</button>
+              <button
+                className="comp-refresh-btn"
+                disabled={compLoading}
+                onClick={async () => {
+                  try {
+                    setCompLoading(true)
+                    await fetch('/api/competitor-tracking', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'refresh' }) })
+                    const res = await fetch('/api/competitor-tracking')
+                    const data = await res.json()
+                    if (data?.error) throw new Error(data.error)
+                    window.location.href = '/competitor-analysis'
+                  } catch (e: any) {
+                    alert('Failed to update competitors: ' + (e?.message || 'Unknown error'))
+                  } finally {
+                    setCompLoading(false)
+                  }
+                }}
+              >
+                {compLoading ? '⏳ Updating…' : '🔄 Update Competitors'}
+              </button>
+              <button
+                className="comp-setup-btn"
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    if (!location.hash || location.hash !== '#competitor-profile') {
+                      location.hash = '#competitor-profile'
+                    }
+                    // small nudge to ensure scroll
+                    setTimeout(() => {
+                      const el = document.getElementById('competitor-profile')
+                      el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }, 50)
+                  }
+                }}
+              >
+                ⚙️ Configure Tracking
+              </button>
             </div>
+            <p className="mini-help">Configure: set your service areas and keywords. Update: runs discovery and analysis, then opens the Competitive Analysis page.</p>
           </div>
         </div>
       )}
