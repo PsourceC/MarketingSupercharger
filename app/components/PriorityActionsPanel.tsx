@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { fetchPriorityActions, type PriorityAction, apiFetch } from '../services/api'
+import CornerTooltip from './CornerTooltip'
 
 
 export default function PriorityActionsPanel() {
