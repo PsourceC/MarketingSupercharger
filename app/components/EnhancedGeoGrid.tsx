@@ -760,7 +760,7 @@ export default function EnhancedGeoGrid() {
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">Last Update:</span>
-                    <span className="stat-value">{lastRefresh ? lastRefresh.toLocaleTimeString() : '—'}</span>
+                    <span className="stat-value">{rankStatus?.lastUpdated ? new Date(rankStatus.lastUpdated).toLocaleString() : '—'}</span>
                   </div>
                 </div>
               )
