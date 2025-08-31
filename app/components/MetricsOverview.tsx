@@ -2,7 +2,7 @@
 
 
 import { useState, useEffect } from 'react'
-import { fetchBusinessMetrics, type Metric } from '../services/api'
+import { fetchBusinessMetrics, type Metric, apiFetch } from '../services/api'
 
 export default function MetricsOverview() {
   const [selectedPeriod, setSelectedPeriod] = useState('30d')
