@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic'
 import { suggestCities } from '../lib/city-suggestions'
 import { getCityCoords } from '../lib/geo'
 import { triggerDataRefresh, apiFetch } from '../services/api'
+import CornerTooltip from './CornerTooltip'
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false })
@@ -765,7 +766,7 @@ export default function EnhancedGeoGrid() {
                   }
                 }}
               >
-                🚀 Run Area Update
+                ���� Run Area Update
               </button>
               <p className="hint">Uses Bright Data (or simulation) to scrape and update rankings for these keywords.</p>
             </div>
