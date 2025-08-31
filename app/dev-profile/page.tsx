@@ -52,6 +52,20 @@ export default function DevProfilePage() {
     }
   }, [autoRefreshEnabled, isChecking])
 
+  const scanFeatureGoals = async (silent = false) => {
+    if (!silent) setGoalScanLoading(true)
+    try {
+      const res = await fetch('/api/feature-goals/scan', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } })
+      const data = await res.json()
+      setFeatureGoals(data.goals || [])
+      setLastGoalScan(new Date().toISOString())
+    } catch (e) {
+      // swallow
+    } finally {
+      if (!silent) setGoalScanLoading(false)
+    }
+  }
+
   const checkAllConnections = async (silent = false) => {
     // Skip checks if webpack is hot reloading (in development)
     if (isDevelopment && (window as any).__webpack_require__?.hmrM) {
@@ -345,7 +359,7 @@ export default function DevProfilePage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'connected': return '✅'
-      case 'error': return '❌'
+      case 'error': return '���'
       case 'pending': return '⏳'
       default: return '⚪'
     }
