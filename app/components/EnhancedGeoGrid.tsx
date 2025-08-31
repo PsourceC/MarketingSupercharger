@@ -398,7 +398,7 @@ export default function EnhancedGeoGrid() {
     if (score <= 3) return 'Excellent! 🏆'
     if (score <= 5) return 'Very Good 🎯'
     if (score <= 10) return 'Good ✅'
-    if (score <= 15) return 'Fair ��️'
+    if (score <= 15) return 'Fair ⚠️'
     return 'Needs Work 🚨'
   }
 
