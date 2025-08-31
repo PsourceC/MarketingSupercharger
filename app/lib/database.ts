@@ -64,6 +64,9 @@ export async function query(text: string, params?: any[], retries = 2) {
     }
   }
 
+  try {
+    Sentry.captureException(lastError, { tags: { scope: 'db.query' }, extra: { text: text.substring(0, 200), params } })
+  } catch {}
   throw lastError
 }
 
