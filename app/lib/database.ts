@@ -117,24 +117,29 @@ export async function getLocationPerformance() {
     const result = await query(locationQuery)
     
     // Transform data to match expected format
-    return result.rows.map(row => ({
-      id: row.id.toString(),
-      name: row.name,
-      lat: parseFloat(row.lat),
-      lng: parseFloat(row.lng),
-      overallScore: parseFloat(row.overall_score || '0'),
-      keywordScores: {}, // Will be filled by keyword data
-      population: parseInt(row.population || '0'),
-      searchVolume: parseInt(row.search_volume || '0'),
-      lastUpdated: row.last_updated?.toISOString() || new Date().toISOString(),
-      trends: [
-        {
-          keyword: 'solar installation',
-          change: Math.round((Math.random() - 0.5) * 10), // Random for demo
-          changeText: `${row.avg_ranking > 0 ? 'Position ' + Math.round(row.avg_ranking) : 'No data'}`
-        }
-      ]
-    }))
+    return result.rows.map(row => {
+      const avg = Number(row.avg_ranking || 0)
+      const score = Number(row.overall_score || 0)
+      const effective = score > 0 ? score : (avg > 0 ? Math.round(avg) : 0)
+      return {
+        id: row.id.toString(),
+        name: row.name,
+        lat: parseFloat(row.lat),
+        lng: parseFloat(row.lng),
+        overallScore: effective,
+        keywordScores: {},
+        population: parseInt(row.population || '0'),
+        searchVolume: parseInt(row.search_volume || '0'),
+        lastUpdated: row.last_updated?.toISOString() || new Date().toISOString(),
+        trends: [
+          {
+            keyword: 'solar installation',
+            change: Math.round((Math.random() - 0.5) * 10),
+            changeText: `${avg > 0 ? 'Position ' + Math.round(avg) : 'No data'}`
+          }
+        ]
+      }
+    })
   } catch (error) {
     console.error('Error fetching location performance:', error)
     return []
