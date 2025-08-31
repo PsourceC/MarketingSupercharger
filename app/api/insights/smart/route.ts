@@ -76,14 +76,22 @@ export async function GET(request: NextRequest) {
 
     // Competitor best positions for the same area/keywords
     const compRows = await query(
-      `SELECT cr.keyword,
-              MIN(COALESCE(cr.position, 0)) AS best_pos,
-              FIRST_VALUE(c.competitor_name) OVER (PARTITION BY cr.keyword ORDER BY cr.position ASC NULLS LAST) AS leader_name,
-              FIRST_VALUE(c.domain) OVER (PARTITION BY cr.keyword ORDER BY cr.position ASC NULLS LAST) AS leader_domain
-       FROM solar_competitor_rankings cr
-       JOIN solar_competitors c ON c.id = cr.competitor_id
-       WHERE cr.location = $1 AND cr.last_checked >= NOW() - INTERVAL '72 hours'
-       GROUP BY cr.keyword`,
+      `WITH ranked AS (
+         SELECT cr.keyword,
+                cr.position,
+                c.competitor_name,
+                c.domain,
+                ROW_NUMBER() OVER (PARTITION BY cr.keyword ORDER BY cr.position ASC NULLS LAST) AS rn
+         FROM solar_competitor_rankings cr
+         JOIN solar_competitors c ON c.id = cr.competitor_id
+         WHERE cr.location = $1 AND cr.last_checked >= NOW() - INTERVAL '72 hours'
+       )
+       SELECT keyword,
+              competitor_name AS leader_name,
+              domain AS leader_domain,
+              position AS best_pos
+       FROM ranked
+       WHERE rn = 1`,
       [targetArea]
     )
 
