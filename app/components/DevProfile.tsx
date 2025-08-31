@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { apiFetch } from '../services/api'
 
 export default function DevProfile() {
   const [mounted, setMounted] = useState(false)
@@ -18,43 +19,26 @@ export default function DevProfile() {
   }, [])
 
   const checkQuickStatus = async () => {
-    const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 6000) => {
-      return await new Promise<Response>((resolve) => {
-        const timeoutId = setTimeout(() => {
-          resolve(new Response(JSON.stringify({ error: 'timeout' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
-        }, timeoutMs)
-        fetch(input, init)
-          .then((res) => { clearTimeout(timeoutId); resolve(res) })
-          .catch((err: any) => {
-            clearTimeout(timeoutId)
-            resolve(new Response(JSON.stringify({ error: err?.message || 'fetch failed' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
-          })
-      })
-    }
     try {
-      const res = await fetchWithTimeout('/api/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }, 6000)
-      if (res.ok) {
-        const data = await res.json()
-        const services = data.services || {}
-        const totalCount = Object.keys(services).length || 0
-        const connectedCount = Object.values(services).filter((s: any) => s.status === 'working').length
+      const data = await apiFetch<any>('/service-status', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }, 1)
+      const services = data.services || {}
+      const totalCount = Object.keys(services).length || 0
+      const connectedCount = Object.values(services).filter((s: any) => s.status === 'working').length
 
-        const percentage = totalCount ? connectedCount / totalCount : 0
-        let overallStatus = 'disconnected'
-        if (percentage >= 0.8) overallStatus = 'connected'
-        else if (percentage >= 0.5 || connectedCount > 0) overallStatus = 'partial'
+      const percentage = totalCount ? connectedCount / totalCount : 0
+      let overallStatus = 'disconnected'
+      if (percentage >= 0.8) overallStatus = 'connected'
+      else if (percentage >= 0.5 || connectedCount > 0) overallStatus = 'partial'
 
-        setConnectionStatus({ connected: connectedCount, total: totalCount || 0, overallStatus })
-        return
-      }
+      setConnectionStatus({ connected: connectedCount, total: totalCount || 0, overallStatus })
+      return
     } catch (error) {
       // swallow; will fallback to auth-only
     }
 
     // Fallback to auth-only check
     try {
-      const authResponse = await fetch('/api/auth/status', { cache: 'no-cache' })
-      const authData = await authResponse.json()
+      const authData = await apiFetch<any>('/auth/status', { cache: 'no-cache' })
       const connectedCount = authData.connected ? 1 : 0
       const totalCount = 1
       const overallStatus = connectedCount > 0 ? 'partial' : 'disconnected'
