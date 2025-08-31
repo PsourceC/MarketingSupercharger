@@ -610,7 +610,7 @@ export default function GMBAutomation() {
             disabled={isGenerating}
             className="generate-btn offer"
           >
-            {isGenerating ? '�� Generating...' : '💰 Generate Special Offer'}
+            {isGenerating ? '⏳ Generating...' : '💰 Generate Special Offer'}
           </button>
         </div>
       </div>
