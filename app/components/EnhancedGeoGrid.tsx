@@ -562,6 +562,19 @@ export default function EnhancedGeoGrid() {
         </div>
 
         <div className="control-group">
+          <label className="control-label">📍 Insights Area:</label>
+          <select
+            value={selectedAreaName || ''}
+            onChange={(e) => setSelectedAreaName(e.target.value || null)}
+            className="enhanced-select"
+          >
+            {currentLocations.map(l => (
+              <option key={l.id} value={l.name}>{l.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="control-group">
           <button
             onClick={refreshData}
             className="refresh-button"
