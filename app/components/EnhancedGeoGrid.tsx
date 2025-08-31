@@ -333,28 +333,26 @@ export default function EnhancedGeoGrid() {
     }).catch(() => {})
   }, [])
 
-  // Load smart insights and ranking status scoped to selected area
-  useEffect(() => {
-    const areaName = selectedAreaName || currentLocations[0]?.name
-    if (!areaName) return
-    let cancelled = false
+    // Load smart insights and ranking status scoped to selected area
+    useEffect(() => {
+      const areaName = selectedAreaName || currentLocations[0]?.name
+      if (!areaName) return
+      let cancelled = false
 
-    fetch(`/api/insights/smart?area=${encodeURIComponent(areaName)}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (!cancelled && data && data.area) setSmartInsights(data) })
-      .catch(() => {})
+      apiFetch<any>(`/api/insights/smart?area=${encodeURIComponent(areaName)}`)
+        .then(data => { if (!cancelled && data && data.area) setSmartInsights(data) })
+        .catch(() => {})
 
-    fetch(`/api/rankings/status?area=${encodeURIComponent(areaName)}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (cancelled || !data?.status?.length) return
-        const s = data.status[0]
-        setRankStatus({ lastUpdated: s.lastUpdated || null, mode: s.mode === 'live' ? 'live' : 'simulation' })
-      })
-      .catch(() => {})
+      apiFetch<any>(`/api/rankings/status?area=${encodeURIComponent(areaName)}`)
+        .then(data => {
+          if (cancelled || !data?.status?.length) return
+          const s = data.status[0]
+          setRankStatus({ lastUpdated: s.lastUpdated || null, mode: s.mode === 'live' ? 'live' : 'simulation' })
+        })
+        .catch(() => {})
 
-    return () => { cancelled = true }
-  }, [selectedAreaName, currentLocations])
+      return () => { cancelled = true }
+    }, [selectedAreaName, currentLocations])
 
   const getScoreColor = (score: number) => {
     if (score <= 5) return '#10b981' // Green - excellent (top 5)
@@ -655,7 +653,7 @@ export default function EnhancedGeoGrid() {
               <div className="legend-item fair">
                 <div className="legend-circle" style={{ backgroundColor: '#f97316' }}></div>
                 <span>Positions 16-25</span>
-                <span className="legend-desc">Fair ⚠️</span>
+                <span className="legend-desc">Fair ��️</span>
               </div>
               <div className="legend-item poor">
                 <div className="legend-circle" style={{ backgroundColor: '#ef4444' }}></div>
