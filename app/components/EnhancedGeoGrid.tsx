@@ -455,6 +455,8 @@ export default function EnhancedGeoGrid() {
     )
   }
 
+  const viewLocations: Location[] = selectedLocation ? (currentLocations.filter(l => l.id === selectedLocation)) : currentLocations
+
   return (
     <div className="enhanced-geo-grid">
       <div className="geo-controls-enhanced">
