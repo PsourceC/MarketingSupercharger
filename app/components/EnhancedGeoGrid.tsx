@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import { useMapEvents } from 'react-leaflet'
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false })
@@ -241,6 +242,7 @@ export default function EnhancedGeoGrid() {
   const [currentLocations, setCurrentLocations] = useState<Location[]>(locations)
   const [dbLocations, setDbLocations] = useState<Array<{ name: string; lat: number; lng: number }>>([])
   const [dynamicCompetitors, setDynamicCompetitors] = useState<Competitor[]>([])
+  const [addingArea, setAddingArea] = useState<boolean>(false)
 
   useEffect(() => {
     setMapReady(true)
@@ -383,6 +385,73 @@ export default function EnhancedGeoGrid() {
     }
   }
 
+  const addServiceArea = async (areaName: string) => {
+    try {
+      const cfg = await fetch('/api/business-config').then(r => r.json())
+      const serviceAreas: string[] = Array.isArray(cfg.serviceAreas) ? cfg.serviceAreas : []
+      if (serviceAreas.includes(areaName)) return
+      const payload = {
+        businessName: cfg.businessName || '',
+        websiteUrl: cfg.websiteUrl || '',
+        serviceAreas: [...serviceAreas, areaName],
+        targetKeywords: cfg.targetKeywords || { global: [], areas: {}, competitors: {} }
+      }
+      await fetch('/api/business-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      await fetch('/api/competitor-tracking/schedule', { method: 'POST' })
+      const locs: any[] = await fetch('/api/locations').then(r => r.json())
+      const mapped: Location[] = locs.map((l: any) => ({
+        id: String(l.id || l.name),
+        name: String(l.name),
+        lat: Number(l.lat),
+        lng: Number(l.lng),
+        overallScore: Number(l.overallScore || 0),
+        keywordScores: (l.keywordScores || {}),
+        population: Number(l.population || 0),
+        searchVolume: Number(l.searchVolume || 0),
+        lastUpdated: String(l.lastUpdated || '—'),
+        trends: Array.isArray(l.trends) ? l.trends : []
+      }))
+      setCurrentLocations(mapped)
+    } catch (e) {
+      console.error('Failed to add service area')
+    }
+  }
+
+  const MapClickHandler = () => {
+    useMapEvents({
+      click: async (e) => {
+        if (!addingArea) return
+        const { lat, lng } = e.latlng
+        const candidates = [
+          ...dbLocations,
+          { name: 'Lakeway, TX', lat: 30.3632, lng: -97.9961 },
+          { name: 'Hutto, TX', lat: 30.5427, lng: -97.5464 },
+          { name: 'Cedar Park, TX', lat: 30.5052, lng: -97.8203 },
+          { name: 'Round Rock, TX', lat: 30.5084, lng: -97.6789 },
+          { name: 'Pflugerville, TX', lat: 30.4394, lng: -97.6200 },
+          { name: 'Georgetown, TX', lat: 30.6332, lng: -97.6779 },
+          { name: 'Leander, TX', lat: 30.5788, lng: -97.8531 },
+          { name: 'Austin, TX', lat: 30.2672, lng: -97.7431 }
+        ]
+        let best = candidates[0]
+        let bestD = Infinity
+        for (const c of candidates) {
+          const d = Math.hypot((c.lat - lat), (c.lng - lng))
+          if (d < bestD) { best = c; bestD = d }
+        }
+        if (best && confirm(`Add "${best.name}" as a service area?`)) {
+          await addServiceArea(best.name)
+          setAddingArea(false)
+        }
+      }
+    })
+    return null
+  }
+
   if (!mapReady) {
     return (
       <div className="map-loading">
@@ -450,13 +519,24 @@ export default function EnhancedGeoGrid() {
         </div>
 
         <div className="control-group">
-          <button 
+          <button
             onClick={refreshData}
             className="refresh-button"
             title="Get latest ranking data"
           >
             🔄 Refresh Data
           </button>
+        </div>
+
+        <div className="control-group">
+          <label className="toggle-control">
+            <input
+              type="checkbox"
+              checked={addingArea}
+              onChange={(e) => setAddingArea(e.target.checked)}
+            />
+            <span className="toggle-text">➕ Click map to add area</span>
+          </label>
         </div>
       </div>
 
@@ -578,6 +658,7 @@ export default function EnhancedGeoGrid() {
             style={{ height: '500px', width: '100%' }}
             className="austin-map-leaflet"
           >
+            <MapClickHandler />
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
