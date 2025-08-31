@@ -1,12 +1,5 @@
 import { NextResponse } from 'next/server'
 
-import { NextResponse } from 'next/server'
-
-// This would connect to your real-time monitoring services:
-// - Webhook endpoints from various APIs
-// - Database queries for recent changes
-// - Real-time analytics streams
-
 export async function GET() {
   try {
     const updates = [
