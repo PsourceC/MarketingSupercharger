@@ -17,20 +17,16 @@ export default function ManualDataImport() {
     setImportStatus('uploading')
     
     try {
-      const response = await apiFetch('/import-csv', {
+      await apiFetch('/import-csv', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ csvData })
       })
-      
-      if (response.ok) {
-        setImportStatus('success')
-        setTimeout(() => {
-          window.location.reload()
-        }, 2000)
-      } else {
-        setImportStatus('error')
-      }
+
+      setImportStatus('success')
+      setTimeout(() => {
+        window.location.reload()
+      }, 2000)
     } catch (error) {
       console.error('Import error:', error)
       setImportStatus('error')
