@@ -2,6 +2,7 @@
 
 
 import { useState } from 'react'
+import { apiFetch } from '../services/api'
 
 export default function TempDataButton() {
   const [isLoading, setIsLoading] = useState(false)
@@ -12,7 +13,7 @@ export default function TempDataButton() {
     
     try {
       // Simulate loading real-looking data for Astrawatt.com
-      await fetch('/api/temp-data', { method: 'POST' })
+      await apiFetch('/temp-data', { method: 'POST' })
       setHasLoadedData(true)
       
       // Trigger a refresh of the metrics
