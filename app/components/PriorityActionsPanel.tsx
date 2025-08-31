@@ -1,5 +1,7 @@
 'use client'
 
+'use client'
+
 import { useState, useEffect } from 'react'
 import { fetchPriorityActions, type PriorityAction } from '../services/api'
 

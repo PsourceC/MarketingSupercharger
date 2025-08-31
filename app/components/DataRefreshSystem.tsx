@@ -1,5 +1,7 @@
 'use client'
 
+'use client'
+
 import { useState, useEffect, useCallback } from 'react'
 import { fetchRecentUpdates, triggerDataRefresh, dataSubscription, type DataUpdate } from '../services/api'
 

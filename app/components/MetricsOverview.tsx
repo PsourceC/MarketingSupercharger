@@ -1,5 +1,7 @@
 'use client'
 
+'use client'
+
 import { useState, useEffect } from 'react'
 import { fetchBusinessMetrics, type Metric } from '../services/api'
 
@@ -201,7 +203,7 @@ export default function MetricsOverview() {
         <div className="competitor-comparison">
           <h4>🥊 Competitive Analysis</h4>
           <div className="comparison-note">
-            <p>��� Real-time competitive data from connected APIs</p>
+            <p>📊 Real-time competitive data from connected APIs</p>
             <div className="comparison-actions">
               <button
                 className="comp-refresh-btn"
