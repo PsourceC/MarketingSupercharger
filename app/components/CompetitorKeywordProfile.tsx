@@ -251,12 +251,17 @@ export default function CompetitorKeywordProfile() {
               <button className="small-btn" onClick={applyAreaSuggestions} disabled={!areaSuggestions.length}>📥 Apply Suggestions</button>
               <button className="small-btn" onClick={async () => {
                 try {
-                  const data = await fetch('/api/rankings/by-area').then(r => r.json()).catch(() => ({}))
-                  const list = data?.areas?.[activeArea] || []
-                  if (list.length === 0) { alert('No live data yet for this area'); return }
+                  let data = await fetch('/api/rankings/by-area').then(r => r.json()).catch(() => ({}))
+                  let list = data?.areas?.[activeArea] || []
+                  if (list.length === 0) {
+                    // Bootstrap this area to collect data, then retry
+                    await fetch('/api/keywords/bootstrap', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ area: activeArea, limit: 12 }) })
+                    data = await fetch('/api/rankings/by-area').then(r => r.json()).catch(() => ({}))
+                    list = data?.areas?.[activeArea] || []
+                    if (list.length === 0) { alert('Still gathering data. Please try again in a moment.'); return }
+                  }
                   const kws = list.map((x:any) => x.keyword)
                   updateAreaKeywords(kws)
-                  // auto-persist
                   const nextTarget = { ...target, areas: { ...target.areas, [activeArea]: kws } }
                   const payload = { businessName, websiteUrl, serviceAreas, targetKeywords: nextTarget }
                   await fetch('/api/business-config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
