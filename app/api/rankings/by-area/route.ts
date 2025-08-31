@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { query } from '../../../lib/server-only'
 
 export const dynamic = 'force-dynamic'
