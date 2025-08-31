@@ -255,7 +255,7 @@ export default function CompetitorKeywordProfile() {
                   if (list.length === 0) {
                     // Bootstrap this area to collect data, then retry
                     await apiFetch('/keywords/bootstrap', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ area: activeArea, limit: 12 }) })
-                    data = await fetch('/api/rankings/by-area').then(r => r.json()).catch(() => ({}))
+                    data = await apiFetch<any>('/rankings/by-area').catch(() => ({} as any))
                     list = data?.areas?.[activeArea] || []
                     if (list.length === 0) { alert('Still gathering data. Please try again in a moment.'); return }
                   }
