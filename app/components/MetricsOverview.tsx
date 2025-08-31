@@ -229,9 +229,8 @@ export default function MetricsOverview() {
                 onClick={async () => {
                   try {
                     setCompLoading(true)
-                    await fetch('/api/competitor-tracking', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'refresh' }) })
-                    const res = await fetch('/api/competitor-tracking')
-                    const data = await res.json()
+                    await apiFetch('/competitor-tracking', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'refresh' }) })
+                    const data = await apiFetch<any>('/competitor-tracking')
                     if (data?.error) throw new Error(data.error)
                     window.location.href = '/competitor-analysis'
                   } catch (e: any) {
