@@ -430,13 +430,22 @@ export default function DevProfilePage() {
               Auto-refresh (5min)
             </label>
           </div>
-          <button
-            onClick={() => checkAllConnections()}
-            disabled={isChecking}
-            className="refresh-btn"
-          >
-            {isChecking ? '⏳' : '🔄'} {isChecking ? 'Checking...' : 'Refresh All'}
-          </button>
+          <div className="header-buttons">
+            <button
+              onClick={() => checkAllConnections()}
+              disabled={isChecking}
+              className="refresh-btn"
+            >
+              {isChecking ? '⏳' : '🔄'} {isChecking ? 'Checking...' : 'Refresh All'}
+            </button>
+            <button
+              onClick={() => scanFeatureGoals()}
+              disabled={goalScanLoading}
+              className="refresh-btn"
+            >
+              {goalScanLoading ? '⏳' : '🧭'} {goalScanLoading ? 'Scanning...' : 'Scan Goals'}
+            </button>
+          </div>
         </div>
       </div>
 
