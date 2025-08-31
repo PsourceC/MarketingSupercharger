@@ -1,6 +1,5 @@
 'use client'
 
-'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -684,20 +683,32 @@ export default function EnhancedGeoGrid() {
 
           <div className="map-stats">
             <h4>📊 Quick Stats</h4>
-            <div className="stats-list">
-              <div className="stat-item">
-                <span className="stat-label">Best Area:</span>
-                <span className="stat-value">Pflugerville (#3)</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Needs Focus:</span>
-                <span className="stat-value">Central Austin (#12)</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Last Update:</span>
-                <span className="stat-value">{lastRefresh ? lastRefresh.toLocaleTimeString() : '—'}</span>
-              </div>
-            </div>
+            {(() => {
+              const scored = currentLocations.map(l => ({
+                loc: l,
+                score: selectedKeyword === 'all' ? Number(l.overallScore || 0) : getPositionRanking(l, selectedKeyword)
+              })).filter(x => x.score > 0)
+              const best = scored.length ? scored.reduce((a, b) => (a.score <= b.score ? a : b)) : null
+              const worst = scored.length ? scored.reduce((a, b) => (a.score >= b.score ? a : b)) : null
+              const bestLabel = best ? `${best.loc.name} (#${Math.round(best.score)})` : '—'
+              const worstLabel = worst ? `${worst.loc.name} (#${Math.round(worst.score)})` : '—'
+              return (
+                <div className="stats-list">
+                  <div className="stat-item">
+                    <span className="stat-label">Best Area:</span>
+                    <span className="stat-value">{bestLabel}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Needs Focus:</span>
+                    <span className="stat-value">{worstLabel}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Last Update:</span>
+                    <span className="stat-value">{lastRefresh ? lastRefresh.toLocaleTimeString() : '—'}</span>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
 
           {selectedLocation && (
@@ -812,7 +823,7 @@ export default function EnhancedGeoGrid() {
 
                         {showCompetitors && (
                           <div className="competitor-analysis">
-                            <h4>�� Competitive Analysis</h4>
+                            <h4>🥊 Competitive Analysis</h4>
                             {getAreaCompetitors(location.name).map((comp: any) => {
                               const gap = getCompetitiveGap(score, comp.location.score)
                               return (
