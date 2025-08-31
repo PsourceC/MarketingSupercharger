@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server'
-
-import { NextResponse } from 'next/server'
 import { query } from '../../lib/server-only'
 import { getCityCoords } from '../../lib/geo'
 
-// This would trigger refresh across all your connected data sources
-
+// This triggers refresh across connected data sources
 export async function POST() {
   try {
     // Load configured service areas
