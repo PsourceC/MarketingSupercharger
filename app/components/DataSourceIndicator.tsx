@@ -2,6 +2,7 @@
 
 
 import { useState, useEffect } from 'react'
+import CornerTooltip from './CornerTooltip'
 
 interface DataSourceStatus {
   connected: boolean
