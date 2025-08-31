@@ -1249,7 +1249,7 @@
 }
 
 .next-steps li:before {
-  content: '�� ';
+  content: '→ ';
   color: #3b82f6;
   margin-right: 0.5rem;
 }
