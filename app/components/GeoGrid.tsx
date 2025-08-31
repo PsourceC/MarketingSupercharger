@@ -205,8 +205,12 @@ export default function GeoGrid() {
               <span>Excellent (Top 5)</span>
             </div>
             <div className="legend-item">
+              <div className="legend-dot very-good"></div>
+              <span>Very Good (6-10)</span>
+            </div>
+            <div className="legend-item">
               <div className="legend-dot good"></div>
-              <span>Good (6-15)</span>
+              <span>Good (11-15)</span>
             </div>
             <div className="legend-item">
               <div className="legend-dot fair"></div>
@@ -214,7 +218,7 @@ export default function GeoGrid() {
             </div>
             <div className="legend-item">
               <div className="legend-dot poor"></div>
-              <span>Poor (25+)</span>
+              <span>Needs Work (25+)</span>
             </div>
           </div>
           
