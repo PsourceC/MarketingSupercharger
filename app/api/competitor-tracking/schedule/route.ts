@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { query } from '../../../lib/server-only'
 import CompetitorTrackingService from '../../../lib/competitor-tracker'
+import * as Sentry from '@sentry/nextjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -157,6 +158,7 @@ export async function POST() {
     })
   } catch (error: any) {
     console.error('Competitor schedule error:', error)
+    try { Sentry.captureException(error, { tags: { route: 'competitor-tracking/schedule', method: 'POST' } }) } catch {}
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
