@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { suggestCities } from '../lib/city-suggestions'
 import { getCityCoords } from '../lib/geo'
+import { triggerDataRefresh } from '../services/api'
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false })
