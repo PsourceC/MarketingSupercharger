@@ -270,6 +270,7 @@ export default function CompetitorKeywordProfile() {
               }}>🧠 Use Top Keywords (Live)</button>
             </div>
           </div>
+          {liveStatus && (<div className="hint">{liveStatus}</div>)}
           <textarea
             rows={4}
             value={areaKeywords.join(', ')}
