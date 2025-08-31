@@ -333,18 +333,26 @@ export default function EnhancedGeoGrid() {
     }).catch(() => {})
   }, [])
 
-  // Load smart insights scoped to selected area
+  // Load smart insights and ranking status scoped to selected area
   useEffect(() => {
     const areaName = selectedAreaName || currentLocations[0]?.name
     if (!areaName) return
     let cancelled = false
+
     fetch(`/api/insights/smart?area=${encodeURIComponent(areaName)}`)
       .then(r => r.ok ? r.json() : null)
+      .then(data => { if (!cancelled && data && data.area) setSmartInsights(data) })
+      .catch(() => {})
+
+    fetch(`/api/rankings/status?area=${encodeURIComponent(areaName)}`)
+      .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (cancelled) return
-        if (data && data.area) setSmartInsights(data)
+        if (cancelled || !data?.status?.length) return
+        const s = data.status[0]
+        setRankStatus({ lastUpdated: s.lastUpdated || null, mode: s.mode === 'live' ? 'live' : 'simulation' })
       })
       .catch(() => {})
+
     return () => { cancelled = true }
   }, [selectedAreaName, currentLocations])
 
