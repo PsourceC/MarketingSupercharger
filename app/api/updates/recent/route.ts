@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 
+import { NextResponse } from 'next/server'
+
 // This would connect to your real-time monitoring services:
 // - Webhook endpoints from various APIs
 // - Database queries for recent changes
@@ -7,10 +9,6 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    // TODO: Replace with real API calls to your monitoring services
-    // Example: const recentChanges = await fetchRecentChanges()
-    // Example: const webhookData = await fetchWebhookUpdates()
-    
     const updates = [
       {
         id: `setup-${Date.now()}`,
