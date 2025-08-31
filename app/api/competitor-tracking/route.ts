@@ -56,7 +56,8 @@ export async function GET(request: NextRequest) {
             'url', cr.ranking_url,
             'title', cr.page_title,
             'estimatedTraffic', cr.estimated_traffic,
-            'lastChecked', cr.last_checked
+            'lastChecked', cr.last_checked,
+            'location', cr.location
           )
         ) as rankings
       FROM solar_competitors c
