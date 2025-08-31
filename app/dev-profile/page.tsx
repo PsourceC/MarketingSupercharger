@@ -24,6 +24,9 @@ interface ConnectionStatus {
 }
 
 export default function DevProfilePage() {
+  const [goalScanLoading, setGoalScanLoading] = useState(false)
+  const [featureGoals, setFeatureGoals] = useState<any[]>([])
+  const [lastGoalScan, setLastGoalScan] = useState<string>('')
   const [mounted, setMounted] = useState(false)
   const [connections, setConnections] = useState<ConnectionStatus[]>([])
   const [isChecking, setIsChecking] = useState(false)
