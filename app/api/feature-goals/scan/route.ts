@@ -132,14 +132,44 @@ async function scannerSmartInsightsFallback(): Promise<{ status: string; evidenc
   }
 }
 
+async function scannerCompetitorLegendAlignment(): Promise<{ status: string; evidence: Evidence[]; notes?: string }>{
+  const enhancedPath = path.join(APP_DIR, 'components', 'EnhancedGeoGrid.tsx')
+  try {
+    const content = await fs.readFile(enhancedPath, 'utf-8')
+    const evidence: Evidence[] = []
+    // Check that competitor legend shows context of selectedKeyword
+    if (!/Based on:\s*\{selectedKeyword === 'all' \? 'overall' : selectedKeyword\}/.test(content) && !/legend-context/.test(content)) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Competitor legend lacks context label (Based on: …)' })
+    }
+    // Check that competitor list is derived from tracked details for selected area
+    if (!/getAreaCompetitors\(/.test(content)) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Competitor legend not using getAreaCompetitors(areaName)' })
+    }
+    // Check that selectedKeyword influences competitor scoring
+    if (!/selectedKeyword/.test(content)) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'selectedKeyword not referenced in competitor computations' })
+    }
+    // Check that competitors are sorted by best rank when shown
+    if (!/sort\(\(a: any, b: any\) => a\.location\.score - b\.location\.score\)/.test(content)) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Competitors not sorted by rank in legend' })
+    }
+
+    const status = evidence.length === 0 ? 'achieved' : (evidence.length <= 2 ? 'warning' : 'not_achieved')
+    return { status, evidence }
+  } catch (e) {
+    return { status: 'not_achieved', evidence: [{ file: path.relative(ROOT, enhancedPath), line: 0, snippet: 'EnhancedGeoGrid.tsx not found' }] }
+  }
+}
+
 export async function GET() {
   try {
-    const [goals, enc, legend, quick, insights] = await Promise.all([
+    const [goals, enc, legend, quick, insights, compAlign] = await Promise.all([
       readGoals(),
       scannerEncoding(),
       scannerLegendConsistency(),
       scannerQuickStatsTimestamp(),
-      scannerSmartInsightsFallback()
+      scannerSmartInsightsFallback(),
+      scannerCompetitorLegendAlignment()
     ])
 
     const now = new Date().toISOString()
@@ -181,6 +211,15 @@ export async function GET() {
         status: insights.status,
         evidence: insights.evidence,
         clashDescription: insights.status === 'achieved' ? 'Fallback copy matches rules' : 'Fallback copy rules need attention'
+      },
+      'competitor-legend-alignment': {
+        title: 'Competitors legend aligned to tracked details',
+        description: 'Competitors legend shows context (keyword/overall), uses selected area details, and ranks from tracked positions.',
+        category: 'ui-consistency',
+        guidance: 'Display a context label (Based on: …), use getAreaCompetitors(areaName), apply selectedKeyword, and sort by rank.',
+        status: compAlign.status,
+        evidence: compAlign.evidence,
+        clashDescription: compAlign.evidence.length ? 'Competitor legend missing context or alignment to tracked data' : 'Competitor legend reflects tracked keyword and area details'
       }
     }
 
