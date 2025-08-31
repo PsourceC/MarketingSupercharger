@@ -90,6 +90,7 @@ export default function CompetitorKeywordProfile() {
 
   const areaKeywords = useMemo(() => target.areas[activeArea] || [], [target, activeArea])
   const areaSuggestions = useMemo(() => suggestions[activeArea] || [], [suggestions, activeArea])
+  const areaCompetitors = useMemo(() => target.competitors[activeArea] || [], [target, activeArea])
 
   const persistConfig = async (areas: string[], newTarget: TargetKeywords) => {
     try {
@@ -254,7 +255,7 @@ export default function CompetitorKeywordProfile() {
             rows={4}
             value={areaKeywords.join(', ')}
             onChange={e => updateAreaKeywords(parseList(e.target.value))}
-            placeholder="solar installation central austin, best solar company central austin"
+            placeholder="solar installation Austin, TX, best solar company Austin, TX"
           />
           <div className="hint">Comma-separated. Auto-discovery finds high-impact, area-specific terms.</div>
           {areaSuggestions.length > 0 && (
@@ -270,6 +271,19 @@ export default function CompetitorKeywordProfile() {
               </ul>
             </div>
           )}
+        </div>
+
+        <div className="config-card wide">
+          <div className="area-header">
+            <h4>Competitors — {activeArea || 'Select an area'}</h4>
+          </div>
+          <textarea
+            rows={3}
+            value={areaCompetitors.join(', ')}
+            onChange={e => setTarget(prev => ({ ...prev, competitors: { ...prev.competitors, [activeArea]: parseList(e.target.value) } }))}
+            placeholder="competitor1.com, competitor2.com, competitor3.com"
+          />
+          <div className="hint">Comma-separated domains. These will always be included in analysis.</div>
         </div>
       </div>
 
