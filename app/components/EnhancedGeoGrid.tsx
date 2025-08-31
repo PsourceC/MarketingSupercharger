@@ -594,6 +594,12 @@ export default function EnhancedGeoGrid() {
           >
             🔄 Refresh Data
           </button>
+          {rankStatus && (
+            <div className="freshness-note">
+              <span>{rankStatus.mode === 'live' ? '🔴 Live' : '📊 Simulated'}</span>
+              <span> • Updated {rankStatus.lastUpdated ? new Date(rankStatus.lastUpdated).toLocaleString() : '—'}</span>
+            </div>
+          )}
         </div>
 
         <div className="control-group">
