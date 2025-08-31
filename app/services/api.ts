@@ -292,7 +292,7 @@ export async function triggerDataRefresh() {
       apiFetch('/live-rankings/schedule', { method: 'POST' })
     ])
 
-    const ok = (compRes.status === 'fulfilled') || (refreshRes.status === 'fulfilled')
+    const ok = (compRes.status === 'fulfilled') || (refreshRes.status === 'fulfilled') || (liveRes.status === 'fulfilled')
     if (!ok) throw new Error('All refresh tasks failed')
     console.log('Data refresh tasks complete', { competitorSchedule: compRes.status, refresh: refreshRes.status })
     return true
