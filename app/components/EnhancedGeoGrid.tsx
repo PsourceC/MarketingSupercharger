@@ -252,6 +252,7 @@ export default function EnhancedGeoGrid() {
     opportunities: Array<{ keyword: string; volume: number; ourPosition: number; leader: string | null; leaderPosition: number; gap: number; potentialClicks: number }>,
     quickWins: Array<{ keyword: string; volume: number; ourPosition: number; leader: string | null; leaderPosition: number; gap: number; potentialClicks: number }>,
     threats: Array<{ keyword: string; volume: number; ourPosition: number; leader: string | null; leaderPosition: number; gap: number; potentialClicks: number }>,
+    recommendedKeywords: Array<{ keyword: string; estimatedVolume: number; competitorCount: number; opportunity: number }>,
     recommendations: Array<{ area: string; keyword: string; suggestions: any[] }>
   }>(null)
 
