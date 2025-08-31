@@ -37,8 +37,8 @@
   {
     "id": "insights-area-tracked-only",
     "title": "Insights Area limited to tracked areas",
-    "description": "Insights Area defaults to a tracked area and the dropdown only lists areas present on the map (currentLocations) and used for competitor comparisons.",
+    "description": "Insights Area defaults to a tracked area, and the dropdown shows only Tracked Areas (serviceAreas) — no untracked areas allowed — with fallback to map areas if none tracked.",
     "category": "ui-consistency",
-    "guidance": "On load set selectedAreaName to the first tracked area or fallback to currentLocations[0].name; populate options from currentLocations.map(...); bind to selectedAreaName; and drive getAreaCompetitors(areaName)."
+    "guidance": "Default selectedAreaName to first tracked area (or currentLocations[0].name as fallback); build options from serviceAreas when available, otherwise currentLocations; bind to selectedAreaName; and use getAreaCompetitors(areaName)."
   }
 ]
