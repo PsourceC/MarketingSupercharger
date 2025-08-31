@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { suggestCities } from '../lib/city-suggestions'
+import { apiFetch } from '../services/api'
 
 type TargetKeywords = {
   global: string[]
@@ -68,9 +69,7 @@ export default function CompetitorKeywordProfile() {
     (async () => {
       try {
         setLoading(true)
-        const r = await fetch('/api/business-config')
-        if (!r.ok) throw new Error('Failed to load config')
-        const data: ConfigResponse = await r.json()
+        const data: ConfigResponse = await apiFetch<ConfigResponse>('/business-config')
         setBusinessName(data.businessName || '')
         setWebsiteUrl(data.websiteUrl || '')
         const areas = (data.serviceAreas && data.serviceAreas.length ? data.serviceAreas : DEFAULT_AREAS)
@@ -97,7 +96,7 @@ export default function CompetitorKeywordProfile() {
   const persistConfig = async (areas: string[], newTarget: TargetKeywords) => {
     try {
       const payload = { businessName, websiteUrl, serviceAreas: areas, targetKeywords: newTarget }
-      await fetch('/api/business-config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      await apiFetch('/business-config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
     } catch {}
   }
 
@@ -137,9 +136,7 @@ export default function CompetitorKeywordProfile() {
   const discover = async () => {
     try {
       setDiscovering(true)
-      const r = await fetch('/api/keyword-discovery')
-      if (!r.ok) throw new Error('Discovery failed')
-      const data = await r.json()
+      const data = await apiFetch<any>('/keyword-discovery')
       setSuggestions(data.areas || {})
     } catch (e: any) {
       setError(e.message)
@@ -163,7 +160,7 @@ export default function CompetitorKeywordProfile() {
         serviceAreas: serviceAreas,
         targetKeywords: target,
       }
-      const r = await fetch('/api/business-config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      const r = await apiFetch('/business-config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       if (!r.ok) throw new Error('Failed to save')
       // Nudge data-driven features
       window.dispatchEvent(new CustomEvent('dataRefresh'))
@@ -253,11 +250,11 @@ export default function CompetitorKeywordProfile() {
               <button className="small-btn" onClick={applyAreaSuggestions} disabled={!areaSuggestions.length}>📥 Apply Suggestions</button>
               <button className="small-btn" onClick={async () => {
                 try {
-                  let data = await fetch('/api/rankings/by-area').then(r => r.json()).catch(() => ({}))
+                  let data = await apiFetch<any>('/rankings/by-area').catch(() => ({} as any))
                   let list = data?.areas?.[activeArea] || []
                   if (list.length === 0) {
                     // Bootstrap this area to collect data, then retry
-                    await fetch('/api/keywords/bootstrap', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ area: activeArea, limit: 12 }) })
+                    await apiFetch('/keywords/bootstrap', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ area: activeArea, limit: 12 }) })
                     data = await fetch('/api/rankings/by-area').then(r => r.json()).catch(() => ({}))
                     list = data?.areas?.[activeArea] || []
                     if (list.length === 0) { alert('Still gathering data. Please try again in a moment.'); return }
@@ -266,7 +263,7 @@ export default function CompetitorKeywordProfile() {
                   updateAreaKeywords(kws)
                   const nextTarget = { ...target, areas: { ...target.areas, [activeArea]: kws } }
                   const payload = { businessName, websiteUrl, serviceAreas, targetKeywords: nextTarget }
-                  await fetch('/api/business-config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+                  await apiFetch('/business-config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
                   alert('✅ Applied top live keywords to this area')
                 } catch { alert('Failed to load live keywords') }
               }}>🧠 Use Top Keywords (Live)</button>
