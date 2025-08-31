@@ -249,6 +249,20 @@ export default function CompetitorKeywordProfile() {
             <div className="area-actions">
               <button className="small-btn" onClick={discover} disabled={discovering}>{discovering ? '⏳ Discovering' : '🤖 Discover'}</button>
               <button className="small-btn" onClick={applyAreaSuggestions} disabled={!areaSuggestions.length}>📥 Apply Suggestions</button>
+              <button className="small-btn" onClick={async () => {
+                try {
+                  const data = await fetch('/api/rankings/by-area').then(r => r.json()).catch(() => ({}))
+                  const list = data?.areas?.[activeArea] || []
+                  if (list.length === 0) { alert('No live data yet for this area'); return }
+                  const kws = list.map((x:any) => x.keyword)
+                  updateAreaKeywords(kws)
+                  // auto-persist
+                  const nextTarget = { ...target, areas: { ...target.areas, [activeArea]: kws } }
+                  const payload = { businessName, websiteUrl, serviceAreas, targetKeywords: nextTarget }
+                  await fetch('/api/business-config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+                  alert('✅ Applied top live keywords to this area')
+                } catch { alert('Failed to load live keywords') }
+              }}>🧠 Use Top Keywords (Live)</button>
             </div>
           </div>
           <textarea
