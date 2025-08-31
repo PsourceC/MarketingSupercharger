@@ -9,40 +9,7 @@ export default function DevModeHandler() {
     // Only run in development mode
     if (process.env.NODE_ENV !== 'development') return
 
-    const originalFetch = window.fetch
-
-    // Only intercept FullStory calls; leave everything else untouched
-    window.fetch = async function(input: RequestInfo | URL, init?: RequestInit) {
-      try {
-        const urlStr = typeof input === 'string' ? input : (input instanceof URL ? input.href : (input as Request).url)
-        if (typeof urlStr === 'string') {
-          const host = (() => { try { return new URL(urlStr, window.location.href).hostname } catch { return '' } })()
-          if (host.includes('fullstory') || host.includes('edge.fullstory.com')) {
-            return new Response('', { status: 204 })
-          }
-        }
-        // Do not wrap same-origin or other requests; defer to original fetch
-        return originalFetch(input, init)
-      } catch (error: any) {
-        // Gracefully fall back to original fetch
-        try { return originalFetch(input, init) } catch {}
-
-        if (typeof input === 'string' && (input.includes('fullstory') || input.includes('edge.fullstory.com'))) {
-          return new Response('', { status: 204 })
-        }
-
-        if (error.message.includes('Failed to fetch')) {
-          console.warn('Fetch failed in development, likely hot reload issue:', input)
-          // Don't throw for development hot reload issues
-          return new Response(JSON.stringify({ error: 'Development fetch issue' }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          })
-        }
-
-        throw error
-      }
-    }
+    // Do not override window.fetch; suppress only noisy third‑party errors below
 
     // Handle hot reloading errors
     const handleError = (event: ErrorEvent) => {
