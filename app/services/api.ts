@@ -286,9 +286,10 @@ export async function fetchReviewData() {
 // Data refresh trigger
 export async function triggerDataRefresh() {
   try {
-    const [compRes, refreshRes] = await Promise.allSettled([
+    const [compRes, refreshRes, liveRes] = await Promise.allSettled([
       apiFetch('/competitor-tracking/schedule', { method: 'POST' }),
-      apiFetch('/refresh', { method: 'POST' }, 2)
+      apiFetch('/refresh', { method: 'POST' }, 2),
+      apiFetch('/live-rankings/schedule', { method: 'POST' })
     ])
 
     const ok = (compRes.status === 'fulfilled') || (refreshRes.status === 'fulfilled')
