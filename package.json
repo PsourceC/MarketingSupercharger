@@ -12,6 +12,7 @@
     "logs": "fly logs"
   },
   "dependencies": {
+    "@sentry/nextjs": "^7.120.4",
     "@types/leaflet": "^1.9.20",
     "@types/pg": "^8.15.5",
     "google-auth-library": "^10.3.0",
