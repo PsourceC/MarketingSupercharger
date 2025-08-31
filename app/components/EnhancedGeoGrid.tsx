@@ -231,12 +231,26 @@ export default function EnhancedGeoGrid() {
   const [competitorComparisonMode, setCompetitorComparisonMode] = useState(false)
   const [selectedCompetitor, setSelectedCompetitor] = useState<string>('all')
   const [topByArea, setTopByArea] = useState<Record<string, { keyword: string; avgPosition: number; clicks: number; impressions: number; ctr: number }[]>>({})
+  const [availableKeywords, setAvailableKeywords] = useState<string[]>([
+    'solar-panels-near-austin',
+    'best-solar-company',
+    'cheap-solar-near-me',
+    'top-rated-installers',
+    'affordable-solar'
+  ])
 
   useEffect(() => {
     setMapReady(true)
     // preload top keywords by area
     fetch('/api/rankings/by-area').then(r => r.json()).then(data => {
-      if (data?.areas) setTopByArea(data.areas)
+      if (data?.areas) {
+        setTopByArea(data.areas)
+        const all = new Set<string>()
+        Object.values(data.areas as Record<string, any[]>).forEach(list => {
+          (list as any[]).forEach(k => all.add(k.keyword))
+        })
+        if (all.size > 0) setAvailableKeywords(Array.from(all))
+      }
     }).catch(() => {})
   }, [])
 
@@ -324,17 +338,15 @@ export default function EnhancedGeoGrid() {
       <div className="geo-controls-enhanced">
         <div className="control-group">
           <label className="control-label">🔍 Target Keyword:</label>
-          <select 
+          <select
             value={selectedKeyword}
             onChange={(e) => setSelectedKeyword(e.target.value)}
             className="enhanced-select"
           >
             <option value="all">📊 Overall Performance</option>
-            <option value="solar-panels-near-austin">☀️ Solar panels near Austin</option>
-            <option value="best-solar-company">🏆 Best solar company near me</option>
-            <option value="cheap-solar-near-me">💰 Cheap solar near me</option>
-            <option value="top-rated-installers">⭐ Top rated solar installers</option>
-            <option value="affordable-solar">💵 Affordable solar near me</option>
+            {availableKeywords.map(k => (
+              <option key={k} value={k}>{k}</option>
+            ))}
           </select>
         </div>
         
