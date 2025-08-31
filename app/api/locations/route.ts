@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getLocationPerformance, query } from '../../lib/database'
 import { getCityCoords } from '../../lib/geo'
 
