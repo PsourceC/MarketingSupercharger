@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { NextResponse } from 'next/server'
 import { query } from '../../../lib/server-only'
 import CompetitorTrackingService from '../../../lib/competitor-tracker'
 
