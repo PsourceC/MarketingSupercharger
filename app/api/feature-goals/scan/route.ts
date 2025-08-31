@@ -143,21 +143,67 @@ export async function GET() {
     ])
 
     const now = new Date().toISOString()
-    const result = goals.map(g => {
-      if (g.id === 'encoding-clean') {
-        return { ...g, status: enc.status, evidence: enc.evidence, lastChecked: now, clashDescription: enc.evidence.length ? 'Replacement characters found in source files' : 'No corrupted characters detected' }
+
+    // Build defaults for all known scanners so new goals appear automatically
+    const scannerDefaults: Record<string, { title: string; description: string; category: string; guidance: string; status: string; evidence: Evidence[]; notes?: string; clashDescription?: string }> = {
+      'encoding-clean': {
+        title: 'No encoding/emoji corruption',
+        description: 'No replacement characters appear in UI (�). Emoji/icons render correctly.',
+        category: 'quality',
+        guidance: 'Replace corrupted characters and ensure files are UTF-8 encoded.',
+        status: enc.status,
+        evidence: enc.evidence,
+        clashDescription: enc.evidence.length ? 'Replacement characters found in source files' : 'No corrupted characters detected'
+      },
+      'legend-consistency': {
+        title: 'Performance Legend ranges are unified',
+        description: 'Legend, labels, and colors use the same ranges: 1–5 Excellent, 6–10 Very Good, 11–15 Good, 16–25 Fair, 25+ Needs Work.',
+        category: 'ui-consistency',
+        guidance: 'Ensure all map legends and labels reflect the canonical ranges and wording across components.',
+        status: legend.status,
+        evidence: legend.evidence,
+        clashDescription: legend.evidence.length ? 'Inconsistent legend ranges found' : 'All legend ranges appear consistent'
+      },
+      'quick-stats-timestamp': {
+        title: 'Quick Stats shows data timestamp',
+        description: "Quick Stats 'Last Update' uses ranking status timestamp, not local refresh time.",
+        category: 'data-accuracy',
+        guidance: 'Use rankStatus.lastUpdated when rendering the timestamp.',
+        status: quick.status,
+        evidence: quick.evidence,
+        clashDescription: quick.notes || (quick.status === 'achieved' ? 'Quick Stats uses ranking timestamp' : 'Some Last Update labels are not tied to ranking timestamp')
+      },
+      'smart-insights-fallback': {
+        title: 'Smart Insights fallback copy is accurate',
+        description: 'When volume is 0 or unknown, copy indicates low activity; otherwise shows estimated searches.',
+        category: 'copy',
+        guidance: "If volume ≤ 0: 'Low current search activity.' Else: 'Estimated X monthly searches.'",
+        status: insights.status,
+        evidence: insights.evidence,
+        clashDescription: insights.status === 'achieved' ? 'Fallback copy matches rules' : 'Fallback copy rules need attention'
       }
-      if (g.id === 'legend-consistency') {
-        return { ...g, status: legend.status, evidence: legend.evidence, lastChecked: now, clashDescription: legend.evidence.length ? 'Inconsistent legend ranges found' : 'All legend ranges appear consistent' }
+    }
+
+    const goalMap = new Map<string, any>()
+    for (const g of goals) goalMap.set(g.id, g)
+
+    // Start with JSON-defined goals, attach statuses if a scanner exists
+    const result: any[] = []
+    for (const g of goals) {
+      const def = scannerDefaults[g.id]
+      if (def) {
+        result.push({ ...g, status: def.status, evidence: def.evidence, lastChecked: now, clashDescription: def.clashDescription })
+      } else {
+        result.push({ ...g, status: 'warning', evidence: [], lastChecked: now, clashDescription: 'No scanner implemented for this goal yet' })
       }
-      if (g.id === 'quick-stats-timestamp') {
-        return { ...g, status: quick.status, evidence: quick.evidence, lastChecked: now, clashDescription: quick.notes || (quick.status === 'achieved' ? 'Quick Stats uses ranking timestamp' : 'Some Last Update labels are not tied to ranking timestamp') }
+    }
+
+    // Append any scanner-backed goals missing from JSON so new features always appear
+    for (const [id, def] of Object.entries(scannerDefaults)) {
+      if (!goalMap.has(id)) {
+        result.push({ id, title: def.title, description: def.description, category: def.category, guidance: def.guidance, status: def.status, evidence: def.evidence, lastChecked: now, clashDescription: def.clashDescription })
       }
-      if (g.id === 'smart-insights-fallback') {
-        return { ...g, status: insights.status, evidence: insights.evidence, lastChecked: now, clashDescription: insights.status === 'achieved' ? 'Fallback copy matches rules' : 'Fallback copy rules need attention' }
-      }
-      return { ...g, status: 'warning', evidence: [], lastChecked: now, clashDescription: 'No scanner implemented for this goal yet' }
-    })
+    }
 
     return NextResponse.json({ goals: result })
   } catch (e: any) {
