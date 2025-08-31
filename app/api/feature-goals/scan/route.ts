@@ -148,7 +148,7 @@ export async function GET() {
     const scannerDefaults: Record<string, { title: string; description: string; category: string; guidance: string; status: string; evidence: Evidence[]; notes?: string; clashDescription?: string }> = {
       'encoding-clean': {
         title: 'No encoding/emoji corruption',
-        description: 'No replacement characters appear in UI (�). Emoji/icons render correctly.',
+        description: 'No replacement characters appear in UI. Emoji/icons render correctly.',
         category: 'quality',
         guidance: 'Replace corrupted characters and ensure files are UTF-8 encoded.',
         status: enc.status,
