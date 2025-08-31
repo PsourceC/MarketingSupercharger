@@ -9,10 +9,9 @@ export default function DevModeHandler() {
     // Only run in development mode
     if (process.env.NODE_ENV !== 'development') return
 
-    // Handle fetch conflicts and third-party script issues
     const originalFetch = window.fetch
 
-    // Create a more stable fetch wrapper
+    // Only intercept FullStory calls; leave everything else untouched
     window.fetch = async function(input: RequestInfo | URL, init?: RequestInit) {
       try {
         const urlStr = typeof input === 'string' ? input : (input instanceof URL ? input.href : (input as Request).url)
@@ -22,24 +21,11 @@ export default function DevModeHandler() {
             return new Response('', { status: 204 })
           }
         }
-        // Add timeout and retry logic for development
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
-
-        const response = await originalFetch(input, {
-          ...init,
-          signal: controller.signal,
-        })
-
-        clearTimeout(timeoutId)
-        return response
+        // Do not wrap same-origin or other requests; defer to original fetch
+        return originalFetch(input, init)
       } catch (error: any) {
-        // Handle specific development errors gracefully
-        if (error.name === 'AbortError') {
-          console.warn('Fetch timeout, retrying...', input)
-          // Retry without timeout for hot reloading
-          return originalFetch(input, init)
-        }
+        // Gracefully fall back to original fetch
+        try { return originalFetch(input, init) } catch {}
 
         if (typeof input === 'string' && (input.includes('fullstory') || input.includes('edge.fullstory.com'))) {
           return new Response('', { status: 204 })
