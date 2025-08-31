@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { apiFetch } from '../services/api'
+import CornerTooltip from './CornerTooltip'
 
 export default function ManualDataImport() {
   const [importStatus, setImportStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
@@ -51,7 +52,17 @@ export default function ManualDataImport() {
   }
 
   return (
-    <div className="manual-import-container">
+    <div className="manual-import-container" style={{ position: 'relative' }}>
+      <CornerTooltip
+        title="Manual Import"
+        ariaLabel="Help: Manual Import"
+        content={() => (
+          <div>
+            <p>Paste CSV from Google Search Console to load rankings without OAuth. Use the template for correct columns.</p>
+            <p style={{ marginTop: 6 }}>After import, the dashboard reloads with your data.</p>
+          </div>
+        )}
+      />
       <div className="import-header">
         <h3>📊 Import Search Console Data Manually</h3>
         <p>While OAuth is being set up, import your Google Search Console data directly</p>
