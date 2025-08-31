@@ -16,7 +16,7 @@ export default function PriorityActionsPanel() {
   const handleStartAction = async (action: PriorityAction) => {
     try {
       // Mark action as in progress
-      const response = await fetch('/api/actions', {
+      const response = await apiFetch('/actions', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
