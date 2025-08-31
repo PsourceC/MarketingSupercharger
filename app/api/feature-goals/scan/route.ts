@@ -57,9 +57,9 @@ async function scannerEncoding(): Promise<{ status: string; evidence: Evidence[]
 async function scannerLegendConsistency(): Promise<{ status: string; evidence: Evidence[]; notes?: string }>{
   const files = await walk(path.join(APP_DIR, 'components'))
   const badPatterns = [
-    /Good\s*\(6\s*[-–]\s*15\)/i,
-    /Good\s*\(6\s*[-–]\s*10\)/i,
-    /Top\s*10\)/i
+    /(?<!Very\s)Good\s*\(6\s*[-–]\s*15\)/i,
+    /(?<!Very\s)Good\s*\(6\s*[-–]\s*10\)/i,
+    /\bTop\s*10\)/i
   ]
   const evidence: Evidence[] = []
   for (const f of files) {
