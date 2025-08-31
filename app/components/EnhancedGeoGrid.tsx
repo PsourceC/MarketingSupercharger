@@ -851,7 +851,7 @@ export default function EnhancedGeoGrid() {
             
             {/* Competitor locations */}
             {showCompetitors && (
-              (selectedLocation ? [currentLocations.find(l => l.id === selectedLocation)?.name || ''] : currentLocations.map(l => l.name))
+              (selectedAreaName ? [selectedAreaName] : currentLocations.map(l => l.name))
                 .flatMap(areaName => getAreaCompetitors(areaName))
                 .filter(Boolean)
                 .filter((c: any) => selectedCompetitor === 'all' || c.name === selectedCompetitor)
