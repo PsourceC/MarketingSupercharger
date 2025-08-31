@@ -683,7 +683,7 @@ export default function EnhancedGeoGrid() {
               <div className="legend-item fair">
                 <div className="legend-circle" style={{ backgroundColor: '#f97316' }}></div>
                 <span>Positions 16-25</span>
-                <span className="legend-desc">Fair ��️</span>
+                <span className="legend-desc">Fair ⚠️</span>
               </div>
               <div className="legend-item poor">
                 <div className="legend-circle" style={{ backgroundColor: '#ef4444' }}></div>
