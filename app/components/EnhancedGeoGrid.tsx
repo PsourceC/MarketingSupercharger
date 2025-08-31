@@ -1069,6 +1069,21 @@ export default function EnhancedGeoGrid() {
           </div>
         </div>
       </div>
+
+      {smartInsights?.recommendedKeywords?.length ? (
+        <div className="insights-recommendations">
+          <h4>🔎 Recommended Keywords for {smartInsights.area}</h4>
+          <div className="top-list">
+            {smartInsights.recommendedKeywords.slice(0, 8).map((k: any) => (
+              <div key={k.keyword} className="top-row">
+                <div className="kw">{k.keyword}</div>
+                <div className="clicks">Vol ~{k.estimatedVolume}</div>
+                <div className="ctr">Opp {k.opportunity}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
