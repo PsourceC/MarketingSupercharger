@@ -365,7 +365,7 @@ export default function EnhancedGeoGrid() {
   }
 
   const getPerformanceLabel = (score: number) => {
-    if (score <= 3) return 'Excellent! 🏆'
+    if (score <= 3) return 'Excellent! ����'
     if (score <= 5) return 'Very Good 🎯'
     if (score <= 10) return 'Good ✅'
     if (score <= 15) return 'Fair ⚠️'
@@ -919,6 +919,34 @@ export default function EnhancedGeoGrid() {
               <h4>Best Opportunity</h4>
             </div>
             {(() => {
+              // Prefer smart insights when available for the selected area
+              const areaName = selectedLocation ? currentLocations.find(l => l.id === selectedLocation)?.name : currentLocations[0]?.name
+              const cand = smartInsights?.opportunities?.[0]
+              if (smartInsights && cand && areaName) {
+                return (
+                  <>
+                    <p>
+                      In <strong>{areaName}</strong>, "{cand.keyword}" is a high-impact opportunity: leader at #{cand.leaderPosition} vs you at #{cand.ourPosition}. Estimated +{cand.potentialClicks} clicks if you close the gap.
+                    </p>
+                    <div className="insight-action">
+                      <button
+                        className="insight-btn"
+                        onClick={async () => {
+                          try {
+                            await fetch('/api/gmb-posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'service', business: areaName }) })
+                            await fetch('/api/gmb-posts/schedule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: `Why we're the best for ${cand.keyword} in ${areaName}`, content: `Looking for ${cand.keyword} in ${areaName}? We deliver top results. Book your free quote today.`, scheduleDate: new Date(Date.now() + 48*3600*1000).toISOString() }) })
+                            alert('Action queued: GMB content generated and scheduled')
+                          } catch {
+                            alert('Failed to queue post')
+                          }
+                        }}
+                      >
+                        ✍️ Create & Schedule GMB Post
+                      </button>
+                    </div>
+                  </>
+                )
+              }
               const withScores = viewLocations.filter(l => Number(l.overallScore) > 0)
               if (withScores.length === 0) {
                 return <p>Add or select a service area with data to see opportunities.</p>
