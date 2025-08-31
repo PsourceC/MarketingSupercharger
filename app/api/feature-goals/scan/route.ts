@@ -169,6 +169,38 @@ async function scannerInsightsAreaTrackedOnly(): Promise<{ status: string; evide
   }
 }
 
+async function scannerUSCoverageAndNoData(): Promise<{ status: string; evidence: Evidence[]; notes?: string }>{
+  const enhancedPath = path.join(APP_DIR, 'components', 'EnhancedGeoGrid.tsx')
+  const geoPath = path.join(APP_DIR, 'lib', 'geo.ts')
+  try {
+    const [enhanced, geo] = await Promise.all([
+      fs.readFile(enhancedPath, 'utf-8'),
+      fs.readFile(geoPath, 'utf-8').catch(() => '')
+    ])
+    const evidence: Evidence[] = []
+    // Check no-data indicator rendered
+    if (!/No live data yet/i.test(enhanced)) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Missing "No live data yet" tooltip/indicator for empty areas' })
+    }
+    // Check that serviceAreas missing entries are handled
+    if (!/serviceAreas\n\s*\.filter\(/.test(enhanced)) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'No placeholders for tracked areas without data' })
+    }
+    // Basic coverage check: common cities should be in geo or resolvable
+    const samples = ['New York, NY', 'Los Angeles, CA', 'Chicago, IL', 'Miami, FL']
+    for (const s of samples) {
+      const key = s.toLowerCase().replace(/\s+/g,' ')
+      if (!new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(geo.toLowerCase())) {
+        evidence.push({ file: path.relative(ROOT, geoPath), line: 1, snippet: `Missing coords for sample city: ${s}` })
+      }
+    }
+    const status = evidence.length === 0 ? 'achieved' : (evidence.length <= 2 ? 'warning' : 'not_achieved')
+    return { status, evidence }
+  } catch (e) {
+    return { status: 'not_achieved', evidence: [{ file: path.relative(ROOT, enhancedPath), line: 0, snippet: 'Files not accessible' }] }
+  }
+}
+
 async function scannerCompetitorLegendAlignment(): Promise<{ status: string; evidence: Evidence[]; notes?: string }>{
   const enhancedPath = path.join(APP_DIR, 'components', 'EnhancedGeoGrid.tsx')
   try {
@@ -200,14 +232,15 @@ async function scannerCompetitorLegendAlignment(): Promise<{ status: string; evi
 
 export async function GET() {
   try {
-    const [goals, enc, legend, quick, insights, areaTracked, compAlign] = await Promise.all([
+    const [goals, enc, legend, quick, insights, areaTracked, compAlign, usCoverage] = await Promise.all([
       readGoals(),
       scannerEncoding(),
       scannerLegendConsistency(),
       scannerQuickStatsTimestamp(),
       scannerSmartInsightsFallback(),
       scannerInsightsAreaTrackedOnly(),
-      scannerCompetitorLegendAlignment()
+      scannerCompetitorLegendAlignment(),
+      scannerUSCoverageAndNoData()
     ])
 
     const now = new Date().toISOString()
@@ -258,6 +291,15 @@ export async function GET() {
         status: compAlign.status,
         evidence: compAlign.evidence,
         clashDescription: compAlign.evidence.length ? 'Competitor legend missing context or alignment to tracked data' : 'Competitor legend reflects tracked keyword and area details'
+      },
+      'us-coverage-and-no-data-indicator': {
+        title: 'US coverage and no-data indicator',
+        description: 'All US cities/states can be added for tracking. If a city has no live data, the map shows a clear “No live data yet” indicator at its location.',
+        category: 'data-accuracy',
+        guidance: 'Support adding any "City, ST" and render a gray placeholder bubble with “No live data yet” when ranks are unavailable.',
+        status: usCoverage.status,
+        evidence: usCoverage.evidence,
+        clashDescription: usCoverage.evidence.length ? 'Coverage gaps or missing no-data indicator detected' : 'Coverage and no-data indicators verified'
       },
       'insights-area-tracked-only': {
         title: 'Insights Area limited to tracked areas',
