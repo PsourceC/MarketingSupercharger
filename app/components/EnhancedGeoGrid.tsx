@@ -365,7 +365,7 @@ export default function EnhancedGeoGrid() {
   }
 
   const getPerformanceLabel = (score: number) => {
-    if (score <= 3) return 'Excellent! ����'
+    if (score <= 3) return 'Excellent! 🏆'
     if (score <= 5) return 'Very Good 🎯'
     if (score <= 10) return 'Good ✅'
     if (score <= 15) return 'Fair ⚠️'
@@ -976,6 +976,22 @@ export default function EnhancedGeoGrid() {
               <h4>Needs Attention</h4>
             </div>
             {(() => {
+              const areaName = selectedLocation ? currentLocations.find(l => l.id === selectedLocation)?.name : currentLocations[0]?.name
+              const threat = smartInsights?.threats?.[0]
+              if (smartInsights && threat && areaName) {
+                return (
+                  <>
+                    <p>
+                      In <strong>{areaName}</strong>, you rank #{threat.ourPosition} for "{threat.keyword}" while a competitor leads at #{threat.leaderPosition}. High demand (~{threat.volume.toLocaleString()} monthly searches).
+                    </p>
+                    <div className="insight-action">
+                      <button className="insight-btn" onClick={() => router.push('/seo-tracking')}>
+                        🚀 Launch {areaName} Campaign
+                      </button>
+                    </div>
+                  </>
+                )
+              }
               const withScores = viewLocations.filter(l => Number(l.overallScore) > 0)
               if (withScores.length === 0) {
                 return <p>No underperforming areas yet. Add areas or wait for data.</p>
@@ -1006,6 +1022,22 @@ export default function EnhancedGeoGrid() {
               <h4>Success Story</h4>
             </div>
             {(() => {
+              const areaName = selectedLocation ? currentLocations.find(l => l.id === selectedLocation)?.name : currentLocations[0]?.name
+              const win = smartInsights?.quickWins?.[0]
+              if (smartInsights && win && areaName) {
+                return (
+                  <>
+                    <p>
+                      Momentum in <strong>{areaName}</strong> — you're #{win.ourPosition} for "{win.keyword}". Small tweaks could beat the leader at #{win.leaderPosition}.
+                    </p>
+                    <div className="insight-action">
+                      <button className="insight-btn" onClick={() => router.push('/analytics')}>
+                        📊 Analyze {areaName}
+                      </button>
+                    </div>
+                  </>
+                )
+              }
               let bestTrendLoc: Location | null = null
               let bestChange = 0
               for (const l of viewLocations) {
