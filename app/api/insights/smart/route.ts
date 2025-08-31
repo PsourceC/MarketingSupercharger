@@ -131,7 +131,8 @@ export async function GET(request: NextRequest) {
     const items = Object.values(byKeyword).map((it: any) => {
       const volume = it.impressions > 0 ? Number(it.impressions) : estimateVolume(it.keyword, targetArea)
       const our = it.ourPosition > 0 ? it.ourPosition : 50
-      const leader = it.leaderPosition > 0 ? it.leaderPosition : 50
+      const inferredLeader = Math.max(1, Math.min(10, Math.round(our / 2)))
+      const leader = it.leaderPosition && it.leaderPosition > 0 ? it.leaderPosition : inferredLeader
       const gap = Math.max(0, our - leader)
       const potentialClicks = Math.max(0, Math.round(volume * ((ctrByPosition(leader) - ctrByPosition(our)) / 100)))
       return {
