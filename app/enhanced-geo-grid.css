@@ -120,6 +120,69 @@
   transform: translateY(-1px);
 }
 
+/* Area List Management */
+.full-row {
+  width: 100%;
+}
+.area-list-card {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  width: 100%;
+}
+.area-list-header {
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 0.75rem;
+}
+.area-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.5rem;
+}
+.area-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+.area-item.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+.area-name {
+  background: transparent;
+  border: none;
+  color: #374151;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+.area-remove {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+.area-remove:hover {
+  background: #dc2626;
+}
+.area-empty {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
 /* Map Section Layout */
 .map-section {
   display: grid;
