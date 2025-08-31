@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { NextRequest, NextResponse } from 'next/server'
+
 export function middleware(request: NextRequest) {
   // Only apply middleware in development mode
   if (process.env.NODE_ENV !== 'development') {
