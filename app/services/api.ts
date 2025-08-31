@@ -1,4 +1,5 @@
 // API service layer for solar business dashboard data
+import * as Sentry from '@sentry/nextjs'
 
 export interface Metric {
   id: string
@@ -107,6 +108,7 @@ export async function apiFetch<T>(endpoint: string, options?: RequestInit, retri
           await new Promise(resolve => setTimeout(resolve, 2000))
           continue
         }
+        try { Sentry.captureException(error, { tags: { reason: 'timeout' }, extra: { url, attempt } }) } catch {}
         throw new Error(`Request timed out`)
       }
 
@@ -116,10 +118,12 @@ export async function apiFetch<T>(endpoint: string, options?: RequestInit, retri
           await new Promise(resolve => setTimeout(resolve, 2000))
           continue
         }
+        try { Sentry.captureException(error, { tags: { reason: 'network' }, extra: { url, attempt } }) } catch {}
         throw new Error(`Network error: ${error.message}`)
       }
 
       // For other errors, don't retry
+      try { Sentry.captureException(error, { tags: { reason: 'apiFetch-other' }, extra: { url, attempt } }) } catch {}
       throw error
     } finally {
       clearTimeout(timeoutId)
