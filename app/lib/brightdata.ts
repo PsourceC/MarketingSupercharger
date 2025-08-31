@@ -22,13 +22,19 @@ export class BrightDataService {
   private simulationMode = true // Set to false when real API endpoint is configured
 
   constructor() {
-    this.apiKey = process.env.BRIGHTDATA_API_KEY || ''
-    if (!this.apiKey) {
-      throw new Error('BRIGHTDATA_API_KEY environment variable is required')
+    const key = process.env.BRIGHTDATA_API_KEY || ''
+    const realEnabled = !!process.env.BRIGHTDATA_REAL_API_ENABLED
+
+    if (!key) {
+      // No key provided: run safely in simulation mode
+      this.apiKey = ''
+      this.simulationMode = true
+      return
     }
 
-    // Check if we should use real API (when endpoint is properly configured)
-    this.simulationMode = !process.env.BRIGHTDATA_REAL_API_ENABLED
+    this.apiKey = key
+    // Use real API only when explicitly enabled
+    this.simulationMode = !realEnabled
   }
 
   async searchGoogle(query: string, location?: string): Promise<BrightDataSearchResponse> {
