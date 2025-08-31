@@ -48,7 +48,7 @@ async function scannerEncoding(): Promise<{ status: string; evidence: Evidence[]
   const files = await walk(APP_DIR)
   const evidence: Evidence[] = []
   for (const f of files) {
-    const hits = await searchInFile(f, /\ufffd|�/)
+    const hits = await searchInFile(f, /\ufffd/)
     evidence.push(...hits)
   }
   return { status: evidence.length === 0 ? 'achieved' : 'not_achieved', evidence }
