@@ -921,7 +921,7 @@ export default function EnhancedGeoGrid() {
               <h4>Needs Attention</h4>
             </div>
             {(() => {
-              const withScores = currentLocations.filter(l => Number(l.overallScore) > 0)
+              const withScores = viewLocations.filter(l => Number(l.overallScore) > 0)
               if (withScores.length === 0) {
                 return <p>No underperforming areas yet. Add areas or wait for data.</p>
               }
