@@ -238,6 +238,9 @@
 .legend-dot.good {
   background: #f59e0b;
 }
+.legend-dot.very-good {
+  background: #3b82f6;
+}
 
 .legend-dot.fair {
   background: #f97316;
