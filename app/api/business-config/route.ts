@@ -19,7 +19,7 @@ function normalizeKeywords(value: any) {
 export async function GET() {
   try {
     const res = await query(`
-      SELECT business_name, website_url, service_areas, target_keywords
+      SELECT business_name, website, service_areas, target_keywords
       FROM solar_business_info
       ORDER BY created_at DESC
       LIMIT 1
@@ -39,7 +39,7 @@ export async function GET() {
 
     return NextResponse.json({
       businessName: row.business_name || '',
-      websiteUrl: row.website_url || '',
+      websiteUrl: row.website || '',
       serviceAreas: row.service_areas || [],
       targetKeywords: tk,
     })
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     // Upsert a new record; keep history via created_at
     await query(
-      `INSERT INTO solar_business_info (business_name, website_url, service_areas, target_keywords)
+      `INSERT INTO solar_business_info (business_name, website, service_areas, target_keywords)
        VALUES ($1, $2, $3, $4)`,
       [businessName, websiteUrl, serviceAreas, targetKeywords]
     )
