@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const { withSentryConfig } = require('@sentry/nextjs')
+
 const nextConfig = {
   // Essential server-only package configuration
   experimental: {
@@ -89,4 +91,12 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withSentryConfig(nextConfig, {
+  silent: true,
+  org: 'astrawatt-solar',
+  project: 'solar-dashboard',
+  widenClientFileUpload: true,
+  // Only enable webpack plugins when auth token is present to avoid build failures
+  disableServerWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+  disableClientWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+})
