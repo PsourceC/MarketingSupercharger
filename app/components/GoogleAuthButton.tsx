@@ -2,6 +2,7 @@
 
 
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../services/api'
 
 export default function GoogleAuthButton() {
   const [isLoading, setIsLoading] = useState(false)
@@ -30,8 +31,7 @@ export default function GoogleAuthButton() {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch('/api/auth/status')
-      const data = await response.json()
+      const data = await apiFetch<any>('/auth/status')
 
       if (data.connected) {
         setAuthStatus('connected')
@@ -47,8 +47,7 @@ export default function GoogleAuthButton() {
     setAuthStatus('connecting')
 
     try {
-      const response = await fetch('/api/auth/google')
-      const data = await response.json()
+      const data = await apiFetch<any>('/auth/google')
 
       if (data.authUrl) {
         // Open in new tab to avoid iframe blocking issues
