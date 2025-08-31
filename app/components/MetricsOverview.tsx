@@ -13,6 +13,7 @@ export default function MetricsOverview() {
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [compLoading, setCompLoading] = useState(false)
+  const [topKeywords, setTopKeywords] = useState<{ keyword: string; avgPosition: number; clicks: number; impressions: number; ctr: number }[]>([])
 
   // Fetch real metrics data
   useEffect(() => {
