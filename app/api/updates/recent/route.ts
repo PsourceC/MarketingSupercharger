@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 
+import { NextResponse } from 'next/server'
+
 // This would connect to your real-time monitoring services:
 // - Webhook endpoints from various APIs
 // - Database queries for recent changes
