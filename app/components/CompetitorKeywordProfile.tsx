@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from 'react'
+import { suggestCities } from '../lib/city-suggestions'
 
 type TargetKeywords = {
   global: string[]
@@ -55,6 +56,7 @@ export default function CompetitorKeywordProfile() {
   const [websiteUrl, setWebsiteUrl] = useState('')
   const [serviceAreas, setServiceAreas] = useState<string[]>([])
   const [areaInput, setAreaInput] = useState('')
+  const [areaMatches, setAreaMatches] = useState<string[]>([])
   const [activeArea, setActiveArea] = useState<string>('Central Austin')
   const [target, setTarget] = useState<TargetKeywords>({ global: [], areas: {}, competitors: {} })
   const [suggestions, setSuggestions] = useState<Record<string, { keyword: string; estimatedVolume: number; competitorCount: number; opportunity: number }[]>>({})
@@ -89,23 +91,40 @@ export default function CompetitorKeywordProfile() {
   const areaKeywords = useMemo(() => target.areas[activeArea] || [], [target, activeArea])
   const areaSuggestions = useMemo(() => suggestions[activeArea] || [], [suggestions, activeArea])
 
-  const addArea = () => {
-    const v = areaInput.trim()
+  const persistConfig = async (areas: string[], newTarget: TargetKeywords) => {
+    try {
+      const payload = { businessName, websiteUrl, serviceAreas: areas, targetKeywords: newTarget }
+      await fetch('/api/business-config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    } catch {}
+  }
+
+  const addArea = (value?: string) => {
+    const v = (value ?? areaInput).trim()
     if (!v) return
-    if (serviceAreas.includes(v)) return
-    setServiceAreas(prev => [...prev, v])
-    setTarget(prev => ({ ...prev, areas: { ...prev.areas, [v]: [] }, competitors: { ...prev.competitors, [v]: [] } }))
+    if (serviceAreas.includes(v)) { setAreaInput(''); setAreaMatches([]); return }
+    const nextAreas = [...serviceAreas, v]
+    const nextTarget: TargetKeywords = {
+      ...target,
+      areas: { ...target.areas, [v]: target.areas[v] || [] },
+      competitors: { ...target.competitors, [v]: target.competitors[v] || [] }
+    }
+    setServiceAreas(nextAreas)
+    setTarget(nextTarget)
+    setActiveArea(v)
     setAreaInput('')
+    setAreaMatches([])
+    persistConfig(nextAreas, nextTarget)
   }
 
   const removeArea = (name: string) => {
-    setServiceAreas(prev => prev.filter(a => a !== name))
-    setTarget(prev => {
-      const { [name]: _, ...restAreas } = prev.areas
-      const { [name]: __, ...restComps } = prev.competitors
-      return { ...prev, areas: restAreas, competitors: restComps }
-    })
-    if (activeArea === name) setActiveArea(serviceAreas.find(a => a !== name) || '')
+    const nextAreas = serviceAreas.filter(a => a !== name)
+    const { [name]: _ignoredA, ...restAreas } = target.areas
+    const { [name]: _ignoredB, ...restComps } = target.competitors
+    const nextTarget: TargetKeywords = { ...target, areas: restAreas, competitors: restComps }
+    setServiceAreas(nextAreas)
+    setTarget(nextTarget)
+    if (activeArea === name) setActiveArea(nextAreas[0] || '')
+    persistConfig(nextAreas, nextTarget)
   }
 
   const updateAreaKeywords = (values: string[]) => {
@@ -197,9 +216,29 @@ export default function CompetitorKeywordProfile() {
             ))}
           </div>
           <div className="add-area-row">
-            <input value={areaInput} onChange={e => setAreaInput(e.target.value)} placeholder="Add area (e.g., South Austin)" />
-            <button className="small-btn" onClick={addArea}>＋ Add</button>
+            <input
+              value={areaInput}
+              onChange={e => {
+                const v = e.target.value
+                setAreaInput(v)
+                setAreaMatches(v.length >= 2 ? suggestCities(v, 8) : [])
+              }}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addArea() } }}
+              placeholder="Add area (e.g., Austin, TX)"
+            />
+            <button className="small-btn" onClick={() => addArea()}>＋ Add</button>
             {activeArea && <button className="small-btn danger" onClick={() => removeArea(activeArea)}>✕ Remove Selected</button>}
+            {areaMatches.length > 0 && (
+              <div className="area-suggest-panel">
+                <ul>
+                  {areaMatches.map(s => (
+                    <li key={s}>
+                      <button className="suggestion-item" onClick={() => addArea(s)}>{s}</button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
 
