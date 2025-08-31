@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { fetchRecentUpdates, triggerDataRefresh, dataSubscription, type DataUpdate } from '../services/api'
+import CornerTooltip from './CornerTooltip'
 
 
 interface RefreshStatus {
@@ -259,7 +260,18 @@ export default function DataRefreshSystem() {
   const secondsUntilRefresh = timeUntilNextRefresh % 60
 
   return (
-    <div className="data-refresh-system">
+    <div className="data-refresh-system" style={{ position: 'relative' }}>
+      <CornerTooltip
+        title="Data Refresh"
+        ariaLabel="Help: Data Refresh"
+        aiContext={{ auto: refreshStatus.autoRefreshEnabled, interval: refreshStatus.refreshInterval }}
+        content={() => (
+          <div>
+            <p>Manual refresh updates all connected data. Auto-refresh checks on a schedule and sends a global event to update widgets.</p>
+            <p style={{ marginTop: 6 }}>Use Auto ON for background updates; OFF to reduce API calls.</p>
+          </div>
+        )}
+      />
       {/* Refresh Status Header */}
       <div className="refresh-status-header">
         <div className="refresh-info">
