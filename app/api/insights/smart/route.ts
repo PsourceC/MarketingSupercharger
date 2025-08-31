@@ -155,6 +155,42 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => (b.volume - a.volume) || (a.leaderPosition - b.leaderPosition))
       .slice(0, Math.max(3, Math.min(5, limit)))
 
+    // Compute recommended additional keywords for this area (not yet tracked)
+    const existing = new Set(items.map(i => i.keyword))
+    const candidateBase = [
+      'solar installation',
+      'best solar company',
+      'solar panels',
+      'solar installer near me',
+      'affordable solar',
+      'cheap solar',
+      'top rated solar installers',
+      'tesla powerwall',
+      'home battery backup',
+      'enphase',
+      'rec solar panels',
+      'solar rebates',
+      'solar tax credit',
+      'solar financing',
+      'net metering',
+    ]
+    const compIndex: Record<string, number> = {}
+    for (const r of compRows.rows) {
+      const k = String(r.keyword)
+      const current = compIndex[k] || 0
+      compIndex[k] = Math.max(current, r.best_pos ? 1 : 0) // presence indicator; detailed counts require another query
+    }
+    const recommendedKeywords = candidateBase
+      .filter(k => !existing.has(k))
+      .map(k => {
+        const volume = estimateVolume(k, targetArea)
+        const competitorCount = compIndex[k] ? 5 : 3
+        const opportunity = Math.max(0, Math.min(100, Math.round(volume / 120) - Math.min(60, competitorCount * 10)))
+        return { keyword: k, estimatedVolume: volume, competitorCount, opportunity }
+      })
+      .sort((a, b) => b.opportunity - a.opportunity)
+      .slice(0, 8)
+
     // Recommended actions per top opportunity
     const recommendations = opportunities.slice(0, 5).map(o => ({
       area: targetArea,
@@ -191,6 +227,7 @@ export async function GET(request: NextRequest) {
       opportunities,
       quickWins,
       threats,
+      recommendedKeywords,
       recommendations
     })
   } catch (e: any) {
