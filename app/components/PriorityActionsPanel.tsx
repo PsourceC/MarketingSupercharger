@@ -2,7 +2,7 @@
 
 
 import { useState, useEffect } from 'react'
-import { fetchPriorityActions, type PriorityAction } from '../services/api'
+import { fetchPriorityActions, type PriorityAction, apiFetch } from '../services/api'
 
 
 export default function PriorityActionsPanel() {
