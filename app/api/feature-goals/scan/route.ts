@@ -143,13 +143,14 @@ async function scannerInsightsAreaTrackedOnly(): Promise<{ status: string; evide
     const usesAreaForCompetitors = /getAreaCompetitors\(areaName\)/.test(content)
     const hasDefaultSetter = /if \(!selectedAreaName && locs\.length\)\s*\{[\s\S]*setSelectedAreaName\(/.test(content)
     const hasFallbackDefault = /const\s+areaName\s*=\s*selectedAreaName\s*\|\|\s*currentLocations\[0\]\?\.name/.test(content)
+    const usesServiceAreasForSelect = /serviceAreas\.length\s*\?\s*serviceAreas\.map\(.*?\)\s*:\s*currentLocations\.map\(/s.test(content)
 
     if (!hasInsightsLabel) {
       const line = content.split(/\r?\n/).findIndex(l => l.includes('Insights Area')) + 1
       evidence.push({ file: path.relative(ROOT, enhancedPath), line: Math.max(1, line), snippet: 'Missing Insights Area control label' })
     }
-    if (!hasOptionsFromLocations) {
-      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Insights Area options are not sourced from currentLocations.map(...)' })
+    if (!usesServiceAreasForSelect) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Insights Area options must be limited to Tracked Areas (serviceAreas) with fallback to currentLocations' })
     }
     if (!hasValueBinding) {
       evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Insights Area select not wired to selectedAreaName setter' })
