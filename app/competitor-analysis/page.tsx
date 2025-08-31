@@ -1,6 +1,5 @@
 'use client'
 
-'use client'
 
 import { useState, useEffect } from 'react'
 import { fetchCompetitorData, refreshCompetitorData } from '../services/api'
