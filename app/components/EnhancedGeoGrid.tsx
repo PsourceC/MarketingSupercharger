@@ -1019,7 +1019,34 @@ export default function EnhancedGeoGrid() {
                 </CircleMarker>
               )
             })}
-            
+
+            {/* No-data placeholders for tracked areas without data */}
+            {serviceAreas
+              .filter((name) => !currentLocations.some(l => l.name === name))
+              .map((name, idx) => {
+                const coords = getCityCoords(name)
+                if (!coords) return null
+                return (
+                  <CircleMarker
+                    key={`nodata-${name}-${idx}`}
+                    center={[coords.lat, coords.lng]}
+                    radius={10}
+                    fillColor="#9ca3af"
+                    color="#6b7280"
+                    weight={2}
+                    opacity={0.9}
+                    fillOpacity={0.35}
+                  >
+                    <Tooltip>
+                      <div className="competitor-tooltip-enhanced">
+                        <strong>{name}</strong><br/>
+                        <span>No live data yet</span>
+                      </div>
+                    </Tooltip>
+                  </CircleMarker>
+                )
+              })}
+
             {/* Competitor locations */}
             {showCompetitors && (
               (selectedAreaName ? [selectedAreaName] : currentLocations.map(l => l.name))
