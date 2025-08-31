@@ -21,7 +21,7 @@ export async function POST() {
         await query(
           `INSERT INTO solar_locations (location_name, latitude, longitude, overall_score, last_updated)
            VALUES ($1, $2, $3, $4, NOW())`,
-          [area, coords.lat, coords.lng, 75]
+          [area, coords.lat, coords.lng, 0]
         )
       }
     }
