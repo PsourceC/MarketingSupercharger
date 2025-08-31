@@ -335,7 +335,8 @@ export default function EnhancedGeoGrid() {
   }
 
   const getAreaCompetitors = (areaName: string) => {
-    return competitors.map(comp => {
+    const list = (dynamicCompetitors.length ? dynamicCompetitors : competitors)
+    return list.map(comp => {
       const location = comp.locations.find(loc => loc.areaName === areaName)
       return location ? { ...comp, location } : null
     }).filter(Boolean)
