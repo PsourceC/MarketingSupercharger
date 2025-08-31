@@ -33,5 +33,12 @@
     "description": "Competitors legend shows context (keyword/overall), uses selected area details, and ranks from tracked positions.",
     "category": "ui-consistency",
     "guidance": "Display context label (Based on: …), use getAreaCompetitors(areaName), apply selectedKeyword, and sort by rank."
+  },
+  {
+    "id": "insights-area-tracked-only",
+    "title": "Insights Area limited to tracked areas",
+    "description": "Insights Area dropdown only lists areas present on the map (currentLocations) and used for competitor comparisons.",
+    "category": "ui-consistency",
+    "guidance": "Populate options from currentLocations.map(...), bind to selectedAreaName, and feed getAreaCompetitors(areaName)."
   }
 ]
