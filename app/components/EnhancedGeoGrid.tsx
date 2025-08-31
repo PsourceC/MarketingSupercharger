@@ -651,8 +651,19 @@ export default function EnhancedGeoGrid() {
 
       <div className="map-section">
         <div className="map-sidebar">
-          <div className="performance-legend">
-            <h4>🎯 Performance Guide</h4>
+          <div className="performance-legend" style={{ position: 'relative' }}>
+            <CornerTooltip
+              title="Performance Guide"
+              ariaLabel="Help: Performance Guide"
+              position="top-right"
+              aiContext={{ colorScale: ['#10b981','#3b82f6','#f59e0b','#f97316','#ef4444'] }}
+              content={() => (
+                <div>
+                  <p>Dot color maps to rank: green (top 5) → red (25+). Larger dots indicate better ranks.</p>
+                </div>
+              )}
+            />
+            <h4>��� Performance Guide</h4>
             <div className="legend-grid">
               <div className="legend-item excellent">
                 <div className="legend-circle" style={{ backgroundColor: '#10b981' }}></div>
@@ -683,7 +694,19 @@ export default function EnhancedGeoGrid() {
           </div>
 
           {showCompetitors && (
-            <div className="competitor-legend">
+            <div className="competitor-legend" style={{ position: 'relative' }}>
+              <CornerTooltip
+                title="Competitors"
+                ariaLabel="Help: Competitors"
+                position="top-right"
+                aiContext={{ selectedArea: selectedAreaName || currentLocations[0]?.name, competitorCount: (getAreaCompetitors(selectedAreaName || currentLocations[0]?.name || '') as any[]).length }}
+                content={() => (
+                  <div>
+                    <p>Shows tracked competitors in the selected area with their average rank and market share.</p>
+                    <p style={{ marginTop: 6 }}>Use Comparison Mode to scale by market share and color by gap.</p>
+                  </div>
+                )}
+              />
               <h4>🥊 Competitors</h4>
               <div className="competitor-list">
                 {(() => {
@@ -703,7 +726,18 @@ export default function EnhancedGeoGrid() {
             </div>
           )}
 
-          <div className="map-stats">
+          <div className="map-stats" style={{ position: 'relative' }}>
+            <CornerTooltip
+              title="Quick Stats"
+              ariaLabel="Help: Quick Stats"
+              position="top-right"
+              aiContext={{ selectedKeyword, bestWorstBasedOn: selectedKeyword === 'all' ? 'overall' : 'keyword' }}
+              content={() => (
+                <div>
+                  <p>Best and weakest areas based on the selected keyword (or overall). Use this to focus efforts.</p>
+                </div>
+              )}
+            />
             <h4>📊 Quick Stats</h4>
             {(() => {
               const scored = currentLocations.map(l => ({
@@ -773,7 +807,18 @@ export default function EnhancedGeoGrid() {
           )}
         </div>
 
-        <div className="map-container-enhanced">
+        <div className="map-container-enhanced" style={{ position: 'relative' }}>
+          <CornerTooltip
+            title="Map Details"
+            ariaLabel="Help: Map Details"
+            position="top-right"
+            aiContext={{ showCompetitors, competitorComparisonMode }}
+            content={() => (
+              <div>
+                <p>Click any circle for details. Enable competitors to see their ranks; toggle Comparison Mode for share-weighted bubbles.</p>
+              </div>
+            )}
+          />
           <MapContainer
             center={currentLocations.length > 0 ? [currentLocations[0].lat, currentLocations[0].lng] : [30.4518, -97.7431]}
             zoom={10}
@@ -1001,7 +1046,18 @@ export default function EnhancedGeoGrid() {
         </div>
       </div>
 
-      <div className="insights-enhanced">
+      <div className="insights-enhanced" style={{ position: 'relative' }}>
+        <CornerTooltip
+          title="Smart Insights"
+          ariaLabel="Help: Smart Insights"
+          position="top-right"
+          aiContext={{ area: selectedAreaName || currentLocations[0]?.name, hasInsights: Boolean(smartInsights) }}
+          content={() => (
+            <div>
+              <p>Automated opportunities, risks, and wins for the selected area. Actions adapt to current data.</p>
+            </div>
+          )}
+        />
         <h3>💡 Smart Insights</h3>
         <div className="insights-grid-enhanced">
           <div className="insight-card opportunity">
