@@ -132,6 +132,37 @@ async function scannerSmartInsightsFallback(): Promise<{ status: string; evidenc
   }
 }
 
+async function scannerInsightsAreaTrackedOnly(): Promise<{ status: string; evidence: Evidence[]; notes?: string }>{
+  const enhancedPath = path.join(APP_DIR, 'components', 'EnhancedGeoGrid.tsx')
+  try {
+    const content = await fs.readFile(enhancedPath, 'utf-8')
+    const evidence: Evidence[] = []
+    const hasInsightsLabel = content.includes('📍 Insights Area:')
+    const hasOptionsFromLocations = /\{currentLocations\.map\(l\s*=>\s*\(/.test(content)
+    const hasValueBinding = /setSelectedAreaName\(e\.target\.value/.test(content)
+    const usesAreaForCompetitors = /getAreaCompetitors\(areaName\)/.test(content)
+
+    if (!hasInsightsLabel) {
+      const line = content.split(/\r?\n/).findIndex(l => l.includes('Insights Area')) + 1
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: Math.max(1, line), snippet: 'Missing Insights Area control label' })
+    }
+    if (!hasOptionsFromLocations) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Insights Area options are not sourced from currentLocations.map(...)' })
+    }
+    if (!hasValueBinding) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Insights Area select not wired to selectedAreaName setter' })
+    }
+    if (!usesAreaForCompetitors) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Competitor list not derived via getAreaCompetitors(areaName)' })
+    }
+
+    const status = evidence.length === 0 ? 'achieved' : (evidence.length <= 2 ? 'warning' : 'not_achieved')
+    return { status, evidence }
+  } catch {
+    return { status: 'not_achieved', evidence: [{ file: path.relative(ROOT, enhancedPath), line: 0, snippet: 'EnhancedGeoGrid.tsx not found' }] }
+  }
+}
+
 async function scannerCompetitorLegendAlignment(): Promise<{ status: string; evidence: Evidence[]; notes?: string }>{
   const enhancedPath = path.join(APP_DIR, 'components', 'EnhancedGeoGrid.tsx')
   try {
@@ -163,12 +194,13 @@ async function scannerCompetitorLegendAlignment(): Promise<{ status: string; evi
 
 export async function GET() {
   try {
-    const [goals, enc, legend, quick, insights, compAlign] = await Promise.all([
+    const [goals, enc, legend, quick, insights, areaTracked, compAlign] = await Promise.all([
       readGoals(),
       scannerEncoding(),
       scannerLegendConsistency(),
       scannerQuickStatsTimestamp(),
       scannerSmartInsightsFallback(),
+      scannerInsightsAreaTrackedOnly(),
       scannerCompetitorLegendAlignment()
     ])
 
@@ -220,6 +252,15 @@ export async function GET() {
         status: compAlign.status,
         evidence: compAlign.evidence,
         clashDescription: compAlign.evidence.length ? 'Competitor legend missing context or alignment to tracked data' : 'Competitor legend reflects tracked keyword and area details'
+      },
+      'insights-area-tracked-only': {
+        title: 'Insights Area limited to tracked areas',
+        description: 'Insights Area dropdown only lists areas present on the map (currentLocations) and used for competitor comparisons.',
+        category: 'ui-consistency',
+        guidance: 'Populate options from currentLocations.map(...), bind to selectedAreaName, and feed getAreaCompetitors(areaName).',
+        status: areaTracked.status,
+        evidence: areaTracked.evidence,
+        clashDescription: areaTracked.evidence.length ? 'Insights Area not fully constrained to tracked map/competitor areas' : 'Insights Area is constrained to tracked areas and used consistently'
       }
     }
 
