@@ -471,7 +471,7 @@ export default function EnhancedGeoGrid() {
         body: JSON.stringify({ area: canonical, limit: 12 })
       }).catch(() => null)
 
-      await fetch('/api/competitor-tracking/schedule', { method: 'POST' })
+      fetch('/api/competitor-tracking/schedule', { method: 'POST' }).catch(() => null)
       const locs: any[] = await fetch('/api/locations').then(r => r.json())
       const mapped: Location[] = locs.map((l: any) => ({
         id: String(l.id || l.name),
