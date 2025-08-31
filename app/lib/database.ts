@@ -1,4 +1,5 @@
 import { Pool } from 'pg'
+import * as Sentry from '@sentry/nextjs'
 
 // Create a connection pool for better performance
 const connectionString = process.env.DATABASE_URL
