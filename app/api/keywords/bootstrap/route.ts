@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '../../../lib/server-only'
 import { brightData } from '../../../lib/brightdata'
+import { getCityCoords } from '../../../lib/geo'
 
 export const dynamic = 'force-dynamic'
 
@@ -100,10 +101,11 @@ export async function POST(req: NextRequest) {
     const locRes = await query('SELECT id FROM solar_locations WHERE location_name = $1', [area])
     let locationId: number
     if (locRes.rows.length === 0) {
+      const coords = getCityCoords(area) || { lat: 0, lng: 0 }
       const ins = await query(
         `INSERT INTO solar_locations (location_name, latitude, longitude, overall_score)
          VALUES ($1, $2, $3, $4) RETURNING id`,
-        [area, 0, 0, 75]
+        [area, coords.lat, coords.lng, 75]
       )
       locationId = ins.rows[0].id
     } else {
