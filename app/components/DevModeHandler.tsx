@@ -65,7 +65,6 @@ export default function DevModeHandler() {
 
     // Cleanup function
     return () => {
-      window.fetch = originalFetch
       window.removeEventListener('error', handleError)
       window.removeEventListener('unhandledrejection', handleUnhandledRejection)
       console.error = originalConsoleError
