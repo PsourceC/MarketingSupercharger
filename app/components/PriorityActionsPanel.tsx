@@ -53,7 +53,7 @@ export default function PriorityActionsPanel() {
   const handleAutomateAction = async (action: PriorityAction) => {
     try {
       // Enable automation for this action
-      const response = await fetch('/api/auto-schedule', {
+      const response = await apiFetch('/auto-schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
