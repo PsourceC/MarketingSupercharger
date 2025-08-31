@@ -344,7 +344,7 @@ export default function EnhancedGeoGrid() {
       })
       .catch(() => {})
     return () => { cancelled = true; controller.abort() }
-  }, [selectedLocation, currentLocations])
+  }, [selectedLocation, currentLocations, selectedKeyword])
 
   const getScoreColor = (score: number) => {
     if (score <= 5) return '#10b981' // Green - excellent (top 5)
