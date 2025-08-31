@@ -440,6 +440,55 @@ export default function DevProfilePage() {
         </div>
       </div>
 
+      {/* Feature Goals & Clashes */}
+      <div className="feature-clashes-card">
+        <div className="clashes-header">
+          <h2>🧭 Feature Goals & Clashes</h2>
+          <p className="clashes-subtitle">Clear, actionable list of expected behaviors vs current implementation with guidance to resolve</p>
+        </div>
+        <div className="clash-grid">
+          <div className="clash-card">
+            <div className="clash-title">🎨 Performance Guide — Legend vs Label</div>
+            <div className="clash-body">
+              <div className="clash-row"><span className="clash-label">Goal</span><span className="clash-value">Ranks map consistently across legend, labels, and colors</span></div>
+              <div className="clash-row"><span className="clash-label">Current</span><span className="clash-value">Legend shows 6–10 as “Very Good”; labels show 6–10 as “Good”</span></div>
+              <div className="clash-row"><span className="clash-label">Impact</span><span className="clash-value">Confusion about what colors/labels mean on the map</span></div>
+              <div className="clash-row"><span className="clash-label">Guidance</span><span className="clash-value">Unify ranges: 1–5 Excellent, 6–10 Very Good, 11–15 Good, 16–25 Fair, 25+ Needs Work</span></div>
+            </div>
+          </div>
+
+          <div className="clash-card">
+            <div className="clash-title">🔡 Encoding/Emoji Corruption</div>
+            <div className="clash-body">
+              <div className="clash-row"><span className="clash-label">Goal</span><span className="clash-value">Readable labels with proper emoji/icons</span></div>
+              <div className="clash-row"><span className="clash-label">Current</span><span className="clash-value">Corrupted text appears: “Fair ��️”, “���� Run Area Update”, “��� Performance Guide”</span></div>
+              <div className="clash-row"><span className="clash-label">Impact</span><span className="clash-value">Reduces clarity and professional polish</span></div>
+              <div className="clash-row"><span className="clash-label">Guidance</span><span className="clash-value">Replace with “Fair ⚠️”, “▶️ Run Area Update”, “📘 Performance Guide”</span></div>
+            </div>
+          </div>
+
+          <div className="clash-card">
+            <div className="clash-title">⏱️ Quick Stats — Last Update</div>
+            <div className="clash-body">
+              <div className="clash-row"><span className="clash-label">Goal</span><span className="clash-value">Show the data timestamp from rankings status</span></div>
+              <div className="clash-row"><span className="clash-label">Current</span><span className="clash-value">Shows button refresh time instead of data timestamp</span></div>
+              <div className="clash-row"><span className="clash-label">Impact</span><span className="clash-value">Users may think data is newer/older than it is</span></div>
+              <div className="clash-row"><span className="clash-label">Guidance</span><span className="clash-value">Use rankings status timestamp (rankStatus.lastUpdated)</span></div>
+            </div>
+          </div>
+
+          <div className="clash-card">
+            <div className="clash-title">💡 Smart Insights — Fallback Copy</div>
+            <div className="clash-body">
+              <div className="clash-row"><span className="clash-label">Goal</span><span className="clash-value">Accurate messaging when volume is unknown or zero</span></div>
+              <div className="clash-row"><span className="clash-label">Current</span><span className="clash-value">Says “major market” even when monthly searches are zero</span></div>
+              <div className="clash-row"><span className="clash-label">Impact</span><span className="clash-value">Overstates opportunity; can mislead prioritization</span></div>
+              <div className="clash-row"><span className="clash-label">Guidance</span><span className="clash-value">If volume ≤ 0: “Low current search activity.” Else: “Estimated X monthly searches.”</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Status Overview */}
       <div className="status-overview-card">
         <div className="overall-status">
