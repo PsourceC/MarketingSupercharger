@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '../../lib/server-only'
+import * as Sentry from '@sentry/nextjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -99,6 +100,7 @@ export async function GET() {
     return NextResponse.json({ areas: byArea })
   } catch (e: any) {
     console.error('GET /api/keyword-discovery error:', e)
+    try { Sentry.captureException(e, { tags: { route: 'keyword-discovery', method: 'GET' } }) } catch {}
     return NextResponse.json({ error: 'Failed to discover keywords', details: e.message }, { status: 500 })
   }
 }
@@ -123,6 +125,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   } catch (e: any) {
     console.error('POST /api/keyword-discovery error:', e)
+    try { Sentry.captureException(e, { tags: { route: 'keyword-discovery', method: 'POST' } }) } catch {}
     return NextResponse.json({ error: 'Failed to save discovered keywords', details: e.message }, { status: 500 })
   }
 }
