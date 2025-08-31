@@ -9,6 +9,7 @@ export function getCityCoords(area: string): { lat: number; lng: number } | null
     'pflugerville, tx': { lat: 30.4394, lng: -97.6200 },
     'leander, tx': { lat: 30.5788, lng: -97.8531 },
     'hutto, tx': { lat: 30.5427, lng: -97.5464 },
+    'lakeway, tx': { lat: 30.3632, lng: -97.9961 },
     'san antonio, tx': { lat: 29.4241, lng: -98.4936 },
     'phoenix, az': { lat: 33.4484, lng: -112.0740 },
     'tucson, az': { lat: 32.2226, lng: -110.9747 },
