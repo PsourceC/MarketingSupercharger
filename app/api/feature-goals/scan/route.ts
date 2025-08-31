@@ -58,7 +58,7 @@ async function scannerLegendConsistency(): Promise<{ status: string; evidence: E
   const files = await walk(path.join(APP_DIR, 'components'))
   const badPatterns = [
     /Good\s*\(6\s*[-–]\s*15\)/i,
-    /Very\s*Good\s*\(6\s*[-–]\s*10\)/i,
+    /Good\s*\(6\s*[-–]\s*10\)/i,
     /Top\s*10\)/i
   ]
   const evidence: Evidence[] = []
