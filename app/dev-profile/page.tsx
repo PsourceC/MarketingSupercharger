@@ -54,7 +54,7 @@ export default function DevProfilePage() {
     return () => {
       clearInterval(healthCheckInterval)
     }
-  }, [autoRefreshEnabled, isChecking])
+  }, [autoRefreshEnabled, isChecking, goalScanLoading])
 
   const scanFeatureGoals = async (silent = false) => {
     if (!silent) setGoalScanLoading(true)
