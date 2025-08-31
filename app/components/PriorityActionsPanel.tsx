@@ -26,7 +26,7 @@ export default function PriorityActionsPanel() {
         })
       })
 
-      if (response.ok) {
+      if (response) {
         // Navigate to appropriate page based on action category
         const targetPage = getActionTargetPage(action)
         if (targetPage) {
@@ -62,7 +62,7 @@ export default function PriorityActionsPanel() {
         })
       })
 
-      if (response.ok) {
+      if (response) {
         alert(`Automation enabled for: ${action.title}\n\nThis action will now run automatically based on triggers.`)
 
         // Refresh actions list
