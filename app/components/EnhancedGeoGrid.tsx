@@ -820,7 +820,7 @@ export default function EnhancedGeoGrid() {
                 </div>
               )}
             />
-            <h4>📊 Quick Stats</h4>
+            <h4>�� Quick Stats</h4>
             {(() => {
               const scored = trackedLocations.map(l => ({
                 loc: l,
@@ -1061,7 +1061,7 @@ export default function EnhancedGeoGrid() {
                 .filter((c: any) => selectedCompetitor === 'all' || c.name === selectedCompetitor)
             ).map((competitor: any, idx: number) => {
               const areaName = competitor.location.areaName
-              const yourLocation = currentLocations.find(l => l.name === areaName)
+              const yourLocation = trackedLocations.find(l => l.name === areaName)
               const yourScore = yourLocation ? getPositionRanking(yourLocation, selectedKeyword) : 20
               const gap = getCompetitiveGap(yourScore, competitor.location.score)
               const markerSize = competitorComparisonMode ? (competitor.location.marketShare / 5) : 8
