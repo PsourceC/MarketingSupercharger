@@ -614,9 +614,14 @@ export default function EnhancedGeoGrid() {
             onChange={(e) => setSelectedAreaName(e.target.value || null)}
             className="enhanced-select"
           >
-            {(serviceAreas.length ? serviceAreas : currentLocations.map(l => l.name)).map((nameOr) => (
-              <option key={String(nameOr)} value={String(nameOr)}>{String(nameOr)}</option>
-            ))}
+            {serviceAreas.length
+              ? serviceAreas.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))
+              : currentLocations.map((l) => (
+                  <option key={l.name} value={l.name}>{l.name}</option>
+                ))
+            }
           </select>
         </div>
 
