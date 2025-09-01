@@ -42,6 +42,13 @@
     "guidance": "Default selectedAreaName to first tracked area (or currentLocations[0].name as fallback); build options from serviceAreas when available, otherwise currentLocations; bind to selectedAreaName; and use getAreaCompetitors(areaName)."
   },
   {
+    "id": "smart-insights-tracked-areas-only",
+    "title": "Smart Insights derived only from tracked areas",
+    "description": "Smart Insights (Best Opportunity, Needs Attention, Success Story) are generated using data exclusively from tracked areas.",
+    "category": "data-accuracy",
+    "guidance": "Fetch insights with area = selectedAreaName or currentLocations[0].name; render insight details from smartInsights/opportunities/threats/quickWins; avoid untracked area references."
+  },
+  {
     "id": "us-coverage-and-no-data-indicator",
     "title": "US coverage and no-data indicator",
     "description": "All US cities/states can be added for tracking. If a city has no live data, the map shows a clear ��No live data yet” indicator at its location.",
