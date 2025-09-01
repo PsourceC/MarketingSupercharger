@@ -348,7 +348,7 @@ export default function EnhancedGeoGrid() {
 
     // Load smart insights and ranking status scoped to selected area
     useEffect(() => {
-      const areaName = selectedAreaName || currentLocations[0]?.name
+      const areaName = selectedAreaName || (serviceAreas.length ? serviceAreas[0] : currentLocations[0]?.name)
       if (!areaName) return
       let cancelled = false
 
@@ -365,7 +365,7 @@ export default function EnhancedGeoGrid() {
         .catch(() => {})
 
       return () => { cancelled = true }
-    }, [selectedAreaName, currentLocations])
+    }, [selectedAreaName, currentLocations, serviceAreas])
 
   const getScoreColor = (score: number) => {
     if (score <= 5) return '#10b981' // Green - excellent (top 5)
