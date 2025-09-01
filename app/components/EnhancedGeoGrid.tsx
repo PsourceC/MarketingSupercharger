@@ -780,7 +780,7 @@ export default function EnhancedGeoGrid() {
                 title="Competitors"
                 ariaLabel="Help: Competitors"
                 position="top-right"
-                aiContext={{ selectedArea: selectedAreaName || currentLocations[0]?.name, competitorCount: (getAreaCompetitors(selectedAreaName || currentLocations[0]?.name || '') as any[]).length }}
+                aiContext={{ selectedArea: selectedAreaName || trackedLocations[0]?.name, competitorCount: (getAreaCompetitors(selectedAreaName || trackedLocations[0]?.name || '') as any[]).length }}
                 content={() => (
                   <div>
                     <p>Shows tracked competitors in the selected area with their average rank and market share.</p>
