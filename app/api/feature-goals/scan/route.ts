@@ -230,9 +230,60 @@ async function scannerCompetitorLegendAlignment(): Promise<{ status: string; evi
   }
 }
 
+async function scannerSmartInsightsTrackedAreasOnly(): Promise<{ status: string; evidence: Evidence[]; notes?: string }>{
+  const enhancedPath = path.join(APP_DIR, 'components', 'EnhancedGeoGrid.tsx')
+  try {
+    const content = await fs.readFile(enhancedPath, 'utf-8')
+    const evidence: Evidence[] = []
+
+    // Ensure insights fetch is scoped to tracked area name
+    const hasAreaConst = /const\s+areaName\s*=\s*selectedAreaName\s*\|\|\s*currentLocations\[0\]\?\.name/.test(content)
+    const hasInsightsFetch = /apiFetch<[^>]*>\(`\/insights\/smart\?area=\$\{encodeURIComponent\(areaName\)\}`\)/.test(content)
+    if (!hasAreaConst || !hasInsightsFetch) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Smart Insights fetch must use area = selectedAreaName || currentLocations[0]?.name' })
+    }
+
+    // Ensure the three cards exist
+    if (!/<h4>Best Opportunity<\/h4>/.test(content)) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Missing Best Opportunity card' })
+    }
+    if (!/<h4>Needs Attention<\/h4>/.test(content)) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Missing Needs Attention card' })
+    }
+    if (!/<h4>Success Story<\/h4>/.test(content)) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Missing Success Story card' })
+    }
+
+    // Ensure rich details (positions, leader, potential clicks, volume) are referenced
+    const hasOppDetails = /opportunities\?\.?\[0\]/.test(content) && /potentialClicks/.test(content) && /leaderPosition/.test(content) && /ourPosition/.test(content)
+    if (!hasOppDetails) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Best Opportunity should reference ourPosition, leaderPosition, and potentialClicks from smartInsights' })
+    }
+    const hasThreatDetails = /threats\?\.?\[0\]/.test(content) && /volume/.test(content) && /leaderPosition/.test(content) && /ourPosition/.test(content)
+    if (!hasThreatDetails) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Needs Attention should reference ourPosition, leaderPosition, and volume from smartInsights' })
+    }
+    const hasWinDetails = /quickWins\?\.?\[0\]/.test(content) && /ourPosition/.test(content) && /leaderPosition/.test(content)
+    if (!hasWinDetails) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Success Story should reference ourPosition and leaderPosition from smartInsights' })
+    }
+
+    // Ensure the rendering uses an area derived from tracked selections/locations inside cards
+    const hasCardAreaRef = /const\s+areaName\s*=\s*selectedLocation\s*\?\s*currentLocations\.find\(l\s*=>\s*l\.id === selectedLocation\)\?\.name\s*:\s*currentLocations\[0\]\?\.name/.test(content)
+    if (!hasCardAreaRef) {
+      evidence.push({ file: path.relative(ROOT, enhancedPath), line: 1, snippet: 'Cards should reference areaName derived from currentLocations/selectedLocation' })
+    }
+
+    const status = evidence.length === 0 ? 'achieved' : (evidence.length <= 2 ? 'warning' : 'not_achieved')
+    return { status, evidence }
+  } catch {
+    return { status: 'not_achieved', evidence: [{ file: path.relative(ROOT, enhancedPath), line: 0, snippet: 'EnhancedGeoGrid.tsx not found' }] }
+  }
+}
+
 export async function GET() {
   try {
-    const [goals, enc, legend, quick, insights, areaTracked, compAlign, usCoverage] = await Promise.all([
+    const [goals, enc, legend, quick, insights, areaTracked, compAlign, usCoverage, insightsTracked] = await Promise.all([
       readGoals(),
       scannerEncoding(),
       scannerLegendConsistency(),
@@ -240,7 +291,8 @@ export async function GET() {
       scannerSmartInsightsFallback(),
       scannerInsightsAreaTrackedOnly(),
       scannerCompetitorLegendAlignment(),
-      scannerUSCoverageAndNoData()
+      scannerUSCoverageAndNoData(),
+      scannerSmartInsightsTrackedAreasOnly()
     ])
 
     const now = new Date().toISOString()
@@ -309,6 +361,15 @@ export async function GET() {
         status: areaTracked.status,
         evidence: areaTracked.evidence,
         clashDescription: areaTracked.evidence.length ? 'Insights Area not fully constrained to tracked map/competitor areas' : 'Insights Area is constrained to tracked areas and used consistently'
+      },
+      'smart-insights-tracked-areas-only': {
+        title: 'Smart Insights derived only from tracked areas',
+        description: 'Smart Insights (Best Opportunity, Needs Attention, Success Story) are generated using data exclusively from tracked areas.',
+        category: 'data-accuracy',
+        guidance: 'Fetch insights with area = selectedAreaName or currentLocations[0].name; render detail from smartInsights/opportunities/threats/quickWins; avoid untracked area references.',
+        status: insightsTracked.status,
+        evidence: insightsTracked.evidence,
+        clashDescription: insightsTracked.evidence.length ? 'Smart Insights not clearly tied to tracked areas or missing rich details' : 'Smart Insights scoped to tracked areas with rich details'
       }
     }
 
