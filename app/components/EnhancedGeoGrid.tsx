@@ -820,7 +820,7 @@ export default function EnhancedGeoGrid() {
                 </div>
               )}
             />
-            <h4>�� Quick Stats</h4>
+            <h4>📊 Quick Stats</h4>
             {(() => {
               const scored = trackedLocations.map(l => ({
                 loc: l,
@@ -1159,7 +1159,7 @@ export default function EnhancedGeoGrid() {
           title="Smart Insights"
           ariaLabel="Help: Smart Insights"
           position="top-right"
-          aiContext={{ area: selectedAreaName || currentLocations[0]?.name, hasInsights: Boolean(smartInsights) }}
+          aiContext={{ area: selectedAreaName || trackedLocations[0]?.name, hasInsights: Boolean(smartInsights) }}
           content={() => (
             <div>
               <p>Automated opportunities, risks, and wins for the selected area. Actions adapt to current data.</p>
