@@ -548,7 +548,7 @@ export default function EnhancedGeoGrid() {
               <p>Use the controls to choose a keyword and area. Circles show your rank: green=best, red=needs work. Toggle competitors to compare ranks and market share.</p>
               <ul style={{ margin: '6px 0 0 1em' }}>
                 <li>Current keyword: <strong>{selectedKeyword}</strong></li>
-                <li>Insights area: <strong>{selectedAreaName || currentLocations[0]?.name || '—'}</strong></li>
+                <li>Insights area: <strong>{selectedAreaName || trackedLocations[0]?.name || '—'}</strong></li>
                 <li>Mode: <strong>{rankStatus?.mode === 'live' ? 'Live' : 'Simulation'}</strong></li>
               </ul>
             </div>
