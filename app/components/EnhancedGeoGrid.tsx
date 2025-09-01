@@ -902,7 +902,7 @@ export default function EnhancedGeoGrid() {
             )}
           />
           <MapContainer
-            center={currentLocations.length > 0 ? [currentLocations[0].lat, currentLocations[0].lng] : [30.4518, -97.7431]}
+            center={trackedLocations.length > 0 ? [trackedLocations[0].lat, trackedLocations[0].lng] : [30.4518, -97.7431]}
             zoom={10}
             className="austin-map-leaflet leaflet-fixed-size"
 >
