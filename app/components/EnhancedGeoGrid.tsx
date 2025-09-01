@@ -532,7 +532,8 @@ export default function EnhancedGeoGrid() {
     )
   }
 
-  const viewLocations: Location[] = selectedLocation ? (currentLocations.filter(l => l.id === selectedLocation)) : currentLocations
+  const trackedLocations: Location[] = serviceAreas.length ? currentLocations.filter(l => serviceAreas.includes(l.name)) : currentLocations
+  const viewLocations: Location[] = selectedLocation ? (trackedLocations.filter(l => l.id === selectedLocation)) : trackedLocations
 
   return (
     <div className="enhanced-geo-grid relative-block">
