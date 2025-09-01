@@ -851,7 +851,7 @@ export default function EnhancedGeoGrid() {
 
           {selectedLocation && (
             <div className="area-top-keywords">
-              <h4>🏆 Top Keywords — {currentLocations.find(l => l.id === selectedLocation)?.name}</h4>
+              <h4>🏆 Top Keywords — {trackedLocations.find(l => l.id === selectedLocation)?.name}</h4>
               <div className="top-list">
                 {(topByArea[currentLocations.find(l => l.id === selectedLocation)?.name || ''] || []).map(k => (
                   <div key={k.keyword} className="top-row">
