@@ -1,4 +1,5 @@
 // API service layer for solar business dashboard data
+import * as Sentry from '@sentry/nextjs'
 
 export interface Metric {
   id: string
@@ -57,23 +58,79 @@ export interface DataUpdate {
 // Base API configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api'
 
-// Generic API fetch function
-async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
+// Generic API fetch function with improved error handling
+export async function apiFetch<T>(endpoint: string, options?: RequestInit, retries = 1): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
-  
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-    ...options,
-  })
 
-  if (!response.ok) {
-    throw new Error(`API call failed: ${response.status} ${response.statusText}`)
+  let lastError: Error
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
+
+    try {
+      // Avoid external signals overriding our timeout controller
+      const { signal: _ignoredSignal, headers: userHeaders, ...rest } = options || {}
+
+      const response = await fetch(url, {
+        ...rest,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(userHeaders || {}),
+        },
+        signal: controller.signal,
+      })
+
+      if (!response.ok) {
+        // Don't retry for client errors (4xx)
+        if (response.status >= 400 && response.status < 500) {
+          throw new Error(`Client error: ${response.status} ${response.statusText}`)
+        }
+
+        // Retry for server errors (5xx) if retries left
+        if (attempt < retries) {
+          console.warn(`API call failed (attempt ${attempt + 1}), retrying...`, response.status)
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+          continue
+        }
+
+        throw new Error(`Server error: ${response.status} ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      return data
+    } catch (error: any) {
+      lastError = error
+
+      if (error.name === 'AbortError') {
+        console.warn(`API call timeout or aborted (attempt ${attempt + 1})`)
+        if (attempt < retries) {
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          continue
+        }
+        try { Sentry.captureException(error, { tags: { reason: 'timeout' }, extra: { url, attempt } }) } catch {}
+        throw new Error(`Request timed out`)
+      }
+
+      if (typeof error.message === 'string' && error.message.includes('Failed to fetch')) {
+        console.warn(`Network error (attempt ${attempt + 1}):`, error.message)
+        if (attempt < retries) {
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          continue
+        }
+        try { Sentry.captureException(error, { tags: { reason: 'network' }, extra: { url, attempt } }) } catch {}
+        throw new Error(`Network error: ${error.message}`)
+      }
+
+      // For other errors, don't retry
+      try { Sentry.captureException(error, { tags: { reason: 'apiFetch-other' }, extra: { url, attempt } }) } catch {}
+      throw error
+    } finally {
+      clearTimeout(timeoutId)
+    }
   }
 
-  return response.json()
+  throw lastError
 }
 
 // Business metrics API calls
@@ -235,10 +292,24 @@ export async function fetchReviewData() {
 // Data refresh trigger
 export async function triggerDataRefresh() {
   try {
-    await apiFetch('/refresh', { method: 'POST' })
+    const [compRes, refreshRes, liveRes] = await Promise.allSettled([
+      apiFetch('/competitor-tracking/schedule', { method: 'POST' }),
+      apiFetch('/refresh', { method: 'POST' }, 2),
+      apiFetch('/live-rankings/schedule', { method: 'POST' })
+    ])
+
+    const ok = (compRes.status === 'fulfilled') || (refreshRes.status === 'fulfilled') || (liveRes.status === 'fulfilled')
+    if (!ok) throw new Error('All refresh tasks failed')
+    console.log('Data refresh tasks complete', { competitorSchedule: compRes.status, refresh: refreshRes.status })
     return true
-  } catch (error) {
-    console.error('Failed to trigger data refresh:', error)
+  } catch (error: any) {
+    console.error('Failed to trigger data refresh:', error.message)
+
+    if (error.message.includes('timeout') || error.message.includes('Network error')) {
+      console.warn('Data refresh may have started despite network issues')
+      return true
+    }
+
     return false
   }
 }

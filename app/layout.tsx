@@ -11,6 +11,10 @@ import './gmb-automation/gmb-styles.css'
 import './seo-tracking/seo-styles.css'
 import './review-management/review-styles.css'
 import './recommendations/recommendations-styles.css'
+import './error-handling.css'
+import ErrorBoundary from './components/ErrorBoundary'
+import DevModeHandler from './components/DevModeHandler'
+import HealthCheck from './components/HealthCheck'
 
 export const metadata: Metadata = {
   title: 'Astrawatt Solar Marketing Automation',
@@ -22,9 +26,22 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const isDevelopment = process.env.NODE_ENV === 'development'
+
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={isDevelopment ? 'suppress-dev-warnings' : ''}>
+        <ErrorBoundary>
+          <DevModeHandler />
+          {isDevelopment && (
+            <div className="dev-mode-active">DEV MODE</div>
+          )}
+          <div className="prevent-layout-shift">
+            {children}
+          </div>
+          <HealthCheck />
+        </ErrorBoundary>
+      </body>
     </html>
   )
 }

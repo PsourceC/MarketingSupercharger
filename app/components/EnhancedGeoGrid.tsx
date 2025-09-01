@@ -1,7 +1,13 @@
 'use client'
 
+
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import { suggestCities } from '../lib/city-suggestions'
+import { getCityCoords } from '../lib/geo'
+import { triggerDataRefresh, apiFetch } from '../services/api'
+import CornerTooltip from './CornerTooltip'
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false })
@@ -219,17 +225,147 @@ const competitors: Competitor[] = [
 ]
 
 export default function EnhancedGeoGrid() {
+  const router = useRouter()
   const [selectedKeyword, setSelectedKeyword] = useState<string>('all')
   const [showCompetitors, setShowCompetitors] = useState(true)
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
+  const [selectedAreaName, setSelectedAreaName] = useState<string | null>(null)
   const [mapReady, setMapReady] = useState(false)
-  const [lastRefresh, setLastRefresh] = useState(new Date())
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [competitorComparisonMode, setCompetitorComparisonMode] = useState(false)
   const [selectedCompetitor, setSelectedCompetitor] = useState<string>('all')
+  const [topByArea, setTopByArea] = useState<Record<string, { keyword: string; avgPosition: number; clicks: number; impressions: number; ctr: number }[]>>({})
+  const [availableKeywords, setAvailableKeywords] = useState<string[]>([
+    'solar-panels-near-austin',
+    'best-solar-company',
+    'cheap-solar-near-me',
+    'top-rated-installers',
+    'affordable-solar'
+  ])
+  const [currentLocations, setCurrentLocations] = useState<Location[]>(locations)
+  const [dbLocations, setDbLocations] = useState<Array<{ name: string; lat: number; lng: number }>>([])
+  const [serviceAreas, setServiceAreas] = useState<string[]>([])
+  const [dynamicCompetitors, setDynamicCompetitors] = useState<Competitor[]>([])
+  const [competitorAnalysesRaw, setCompetitorAnalysesRaw] = useState<any[]>([])
+  const [newArea, setNewArea] = useState<string>('')
+  const [areaSuggestions, setAreaSuggestions] = useState<string[]>([])
+  const [rankStatus, setRankStatus] = useState<{ lastUpdated: string | null; mode: 'live' | 'simulation' } | null>(null)
+  const [smartInsights, setSmartInsights] = useState<null | {
+    area: string,
+    generatedAt: string,
+    keywordsAnalyzed: number,
+    opportunities: Array<{ keyword: string; volume: number; ourPosition: number; leader: string | null; leaderPosition: number; gap: number; potentialClicks: number }>,
+    quickWins: Array<{ keyword: string; volume: number; ourPosition: number; leader: string | null; leaderPosition: number; gap: number; potentialClicks: number }>,
+    threats: Array<{ keyword: string; volume: number; ourPosition: number; leader: string | null; leaderPosition: number; gap: number; potentialClicks: number }>,
+    recommendedKeywords: Array<{ keyword: string; estimatedVolume: number; competitorCount: number; opportunity: number }>,
+    recommendations: Array<{ area: string; keyword: string; suggestions: any[] }>
+  }>(null)
 
   useEffect(() => {
     setMapReady(true)
+    // preload top keywords by area
+    apiFetch<any>('/rankings/by-area').then(data => {
+      if (data?.areas) {
+        setTopByArea(data.areas)
+        const all = new Set<string>()
+        Object.values(data.areas as Record<string, any[]>).forEach(list => {
+          (list as any[]).forEach(k => all.add(k.keyword))
+        })
+        if (all.size > 0) setAvailableKeywords(Array.from(all))
+      }
+    }).catch(() => {})
+
+    // Load DB locations to map area names to coordinates and render bubbles
+    apiFetch<any[]>('/locations').then((locs: any[]) => {
+      if (Array.isArray(locs) && locs.length > 0) {
+        setDbLocations(locs.map(l => ({ name: l.name, lat: Number(l.lat), lng: Number(l.lng) })))
+        if (!selectedAreaName && locs.length) {
+          setSelectedAreaName(String(locs[0].name))
+        }
+        const mapped: Location[] = locs.map((l: any) => ({
+          id: String(l.id || l.name),
+          name: String(l.name),
+          lat: Number(l.lat),
+          lng: Number(l.lng),
+          overallScore: Number(l.overallScore || 0),
+          keywordScores: (l.keywordScores || {}),
+          population: Number(l.population || 0),
+          searchVolume: Number(l.searchVolume || 0),
+          lastUpdated: String(l.lastUpdated || '—'),
+          trends: Array.isArray(l.trends) ? l.trends : []
+        }))
+        setCurrentLocations(mapped)
+      }
+    }).catch(() => {})
+
+    // Load dynamic competitors discovered/tracked by backend
+    apiFetch<any>('/competitor-tracking').then(data => {
+      try {
+        if (!data || !Array.isArray(data.competitors)) return
+        setCompetitorAnalysesRaw(data.competitors)
+        const palette = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#22c55e', '#eab308']
+        const byAreaCoords = (areaName: string) => {
+          const m = dbLocations.find(d => d.name === areaName)
+          if (m) return { lat: m.lat, lng: m.lng }
+          return { lat: 30.2672, lng: -97.7431 }
+        }
+        const comps: Competitor[] = (data.competitors as any[]).map((a: any, idx: number) => {
+          const color = palette[idx % palette.length]
+          const avg = Math.round(Number(a?.averagePosition || 0)) || 50
+          const groups: Record<string, { positions: number[]; traffic: number }> = {}
+          for (const r of (a?.rankings || [])) {
+            const loc = String(r.location || 'Unknown')
+            const pos = Number(r.position || 0)
+            if (!groups[loc]) groups[loc] = { positions: [], traffic: 0 }
+            if (pos > 0) groups[loc].positions.push(pos)
+            groups[loc].traffic += Number(r.estimatedTraffic || 0)
+          }
+          const locationsList = Object.keys(groups).map(areaName => {
+            const coords = byAreaCoords(areaName)
+            const positions = groups[areaName].positions
+            const score = positions.length ? Math.round(positions.reduce((s, p) => s + p, 0) / positions.length) : avg
+            const marketShare = Math.max(5, Math.min(40, Math.round(groups[areaName].traffic / 100)))
+            return { lat: coords.lat, lng: coords.lng, score, areaName, marketShare, recentTrend: 'stable' as const }
+          })
+          const compName = a?.competitor?.name || a?.competitor?.domain || 'Competitor'
+          return { name: compName, score: avg, color, locations: locationsList }
+        })
+        if (comps.length) setDynamicCompetitors(comps)
+      } catch {}
+    }).catch(() => {})
   }, [])
+
+  // Load service areas list for management UI
+  useEffect(() => {
+    apiFetch<any>('/business-config')
+      .then(cfg => {
+        const areas: string[] = Array.isArray(cfg?.serviceAreas) ? cfg.serviceAreas : []
+        setServiceAreas(areas)
+        if (!selectedAreaName && areas.length) setSelectedAreaName(areas[0])
+      })
+      .catch(() => {})
+  }, [])
+
+    // Load smart insights and ranking status scoped to selected area
+    useEffect(() => {
+      const areaName = selectedAreaName || currentLocations[0]?.name
+      if (!areaName) return
+      let cancelled = false
+
+      apiFetch<any>(`/insights/smart?area=${encodeURIComponent(areaName)}`)
+        .then(data => { if (!cancelled && data && data.area) setSmartInsights(data) })
+        .catch(() => {})
+
+      apiFetch<any>(`/rankings/status?area=${encodeURIComponent(areaName)}`)
+        .then(data => {
+          if (cancelled || !data?.status?.length) return
+          const s = data.status[0]
+          setRankStatus({ lastUpdated: s.lastUpdated || null, mode: s.mode === 'live' ? 'live' : 'simulation' })
+        })
+        .catch(() => {})
+
+      return () => { cancelled = true }
+    }, [selectedAreaName, currentLocations])
 
   const getScoreColor = (score: number) => {
     if (score <= 5) return '#10b981' // Green - excellent (top 5)
@@ -248,8 +384,29 @@ export default function EnhancedGeoGrid() {
   }
 
   const getPositionRanking = (location: Location, keyword: string) => {
-    if (keyword === 'all') return location.overallScore
-    return location.keywordScores[keyword] || 20
+    if (keyword === 'all') {
+      const direct = Number(location.overallScore || 0)
+      if (direct > 0) return direct
+      const ranks = Object.values(location.keywordScores || {}).map(v => Number(v) || 0).filter(v => v > 0)
+      const avg = ranks.length ? Math.round(ranks.reduce((a, b) => a + b, 0) / ranks.length) : 20
+      return avg
+    }
+    const direct = Number(location.keywordScores[keyword] || 0)
+    if (direct > 0) return direct
+    const norm = (s: string) => s.toLowerCase().replace(/[,\-]/g, ' ').replace(/\s+/g, ' ').trim()
+    const base = norm(keyword).replace(/\s+[a-z]{2}$/i, '').replace(/\s+[a-z]+,?\s*[a-z]{2}$/i, '')
+    // try prefix match and includes match
+    const entries = Object.entries(location.keywordScores)
+    for (const [k, v] of entries) {
+      const nk = norm(k)
+      if (nk.startsWith(base) || nk.includes(base)) {
+        const n = Number(v || 0)
+        if (n > 0) return n
+      }
+    }
+    // fallback to overall
+    const fallback = Number(location.overallScore || 0)
+    return fallback > 0 ? fallback : 20
   }
 
   const getPerformanceLabel = (score: number) => {
@@ -268,7 +425,22 @@ export default function EnhancedGeoGrid() {
   }
 
   const getAreaCompetitors = (areaName: string) => {
-    return competitors.map(comp => {
+    // Prefer raw analyses to compute per-keyword positions; fallback to pre-aggregated
+    if (competitorAnalysesRaw.length) {
+      const palette = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#22c55e', '#eab308']
+      return competitorAnalysesRaw.map((a: any, idx: number) => {
+        const color = palette[idx % palette.length]
+        const ranks = (a.rankings || []).filter((r: any) => String(r.location) === areaName)
+        const filtered = selectedKeyword === 'all' ? ranks : ranks.filter((r: any) => String(r.keyword) === selectedKeyword)
+        const positions = filtered.map((r: any) => Number(r.position || 0)).filter((p: number) => p > 0)
+        const score = positions.length ? Math.round(positions.reduce((s: number, p: number) => s + p, 0) / positions.length) : (Math.round(Number(a.averagePosition || 50)) || 50)
+        const traffic = filtered.reduce((s: number, r: any) => s + Number(r.estimatedTraffic || 0), 0)
+        const marketShare = Math.max(5, Math.min(40, Math.round(traffic / 100)))
+        return { name: a.competitor?.name || a.competitor?.domain || 'Competitor', color, location: { lat: 0, lng: 0, score, areaName, marketShare, recentTrend: 'stable' as const } }
+      }).filter(Boolean)
+    }
+    const list = (dynamicCompetitors.length ? dynamicCompetitors : competitors)
+    return list.map(comp => {
       const location = comp.locations.find(loc => loc.areaName === areaName)
       return location ? { ...comp, location } : null
     }).filter(Boolean)
@@ -282,10 +454,71 @@ export default function EnhancedGeoGrid() {
     }
   }
 
-  const refreshData = () => {
+  const refreshData = async () => {
     setLastRefresh(new Date())
-    // In a real app, this would trigger an API call
-    console.log('Refreshing map data...')
+    try {
+      const ok = await triggerDataRefresh()
+      if (!ok) throw new Error('Refresh tasks failed')
+      window.dispatchEvent(new CustomEvent('dataRefresh'))
+    } catch (error) {
+      console.warn('Non-blocking refresh error:', (error as any)?.message || error)
+    }
+  }
+
+  async function addAreaByName(areaNameInput: string) {
+    const raw = String(areaNameInput || '').trim()
+    if (!raw) return
+    const canonical = /,\s*[A-Za-z]{2}$/.test(raw) ? raw : `${raw}, TX`
+    const coords = getCityCoords(canonical)
+    if (!coords) {
+      const sug = suggestCities(raw)
+      setAreaSuggestions(sug)
+      return
+    }
+    try {
+      const cfg = await apiFetch<any>('/business-config')
+      const serviceAreas: string[] = Array.isArray(cfg.serviceAreas) ? cfg.serviceAreas : []
+      if (serviceAreas.includes(canonical)) return
+      const payload = {
+        businessName: cfg.businessName || '',
+        websiteUrl: cfg.websiteUrl || '',
+        serviceAreas: [...serviceAreas, canonical],
+        targetKeywords: cfg.targetKeywords || { global: [], areas: {}, competitors: {} }
+      }
+      await apiFetch<any>('/business-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      setServiceAreas(payload.serviceAreas)
+      if (!selectedAreaName) setSelectedAreaName(canonical)
+      // Bootstrap initial rankings for this area so the map has real data
+      await apiFetch<any>('/keywords/bootstrap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ area: canonical, limit: 12 })
+      }).catch(() => null)
+
+      apiFetch<any>('/competitor-tracking/schedule', { method: 'POST' }).catch(() => null)
+      const locs: any[] = await apiFetch<any[]>('/locations')
+      const mapped: Location[] = locs.map((l: any) => ({
+        id: String(l.id || l.name),
+        name: String(l.name),
+        lat: Number(l.lat),
+        lng: Number(l.lng),
+        overallScore: Number(l.overallScore || 0),
+        keywordScores: (l.keywordScores || {}),
+        population: Number(l.population || 0),
+        searchVolume: Number(l.searchVolume || 0),
+        lastUpdated: String(l.lastUpdated || '—'),
+        trends: Array.isArray(l.trends) ? l.trends : []
+      }))
+      setCurrentLocations(mapped)
+      setNewArea('')
+      setAreaSuggestions([])
+    } catch (e) {
+      console.error('Failed to add area')
+    }
   }
 
   if (!mapReady) {
@@ -299,22 +532,40 @@ export default function EnhancedGeoGrid() {
     )
   }
 
+  const viewLocations: Location[] = selectedLocation ? (currentLocations.filter(l => l.id === selectedLocation)) : currentLocations
+
   return (
-    <div className="enhanced-geo-grid">
+    <div className="enhanced-geo-grid relative-block">
+      <div className="section-help-anchor">
+        <CornerTooltip
+          title="Map & Competitor View"
+          position="top-right"
+          ariaLabel="Help: Map & Competitors"
+          aiContext={{ selectedKeyword, selectedAreaName, showCompetitors, competitorComparisonMode, rankStatus }}
+          content={() => (
+            <div>
+              <p>Use the controls to choose a keyword and area. Circles show your rank: green=best, red=needs work. Toggle competitors to compare ranks and market share.</p>
+              <ul style={{ margin: '6px 0 0 1em' }}>
+                <li>Current keyword: <strong>{selectedKeyword}</strong></li>
+                <li>Insights area: <strong>{selectedAreaName || currentLocations[0]?.name || '—'}</strong></li>
+                <li>Mode: <strong>{rankStatus?.mode === 'live' ? 'Live' : 'Simulation'}</strong></li>
+              </ul>
+            </div>
+          )}
+        />
+      </div>
       <div className="geo-controls-enhanced">
         <div className="control-group">
           <label className="control-label">🔍 Target Keyword:</label>
-          <select 
+          <select
             value={selectedKeyword}
             onChange={(e) => setSelectedKeyword(e.target.value)}
             className="enhanced-select"
           >
             <option value="all">📊 Overall Performance</option>
-            <option value="solar-panels-near-austin">☀️ Solar panels near Austin</option>
-            <option value="best-solar-company">🏆 Best solar company near me</option>
-            <option value="cheap-solar-near-me">💰 Cheap solar near me</option>
-            <option value="top-rated-installers">⭐ Top rated solar installers</option>
-            <option value="affordable-solar">💵 Affordable solar near me</option>
+            {availableKeywords.map(k => (
+              <option key={k} value={k}>{k}</option>
+            ))}
           </select>
         </div>
         
@@ -338,7 +589,7 @@ export default function EnhancedGeoGrid() {
               className="enhanced-select competitor-select"
             >
               <option value="all">All Competitors</option>
-              {competitors.map(comp => (
+              {(dynamicCompetitors.length ? dynamicCompetitors : competitors).map(comp => (
                 <option key={comp.name} value={comp.name}>{comp.name}</option>
               ))}
             </select>
@@ -357,43 +608,160 @@ export default function EnhancedGeoGrid() {
         </div>
 
         <div className="control-group">
-          <button 
+          <label className="control-label">📍 Insights Area:</label>
+          <select
+            value={selectedAreaName || ''}
+            onChange={(e) => setSelectedAreaName(e.target.value || null)}
+            className="enhanced-select"
+          >
+            {(serviceAreas.length ? serviceAreas : currentLocations.map(l => l.name)).map((nameOr) => (
+              <option key={String(nameOr)} value={String(nameOr)}>{String(nameOr)}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="control-group">
+          <button
             onClick={refreshData}
             className="refresh-button"
             title="Get latest ranking data"
           >
             🔄 Refresh Data
           </button>
+          {rankStatus && (
+            <div className="freshness-note">
+              <span>{rankStatus.mode === 'live' ? '🔴 Live' : '📊 Simulated'}</span>
+              <span> • Updated {rankStatus.lastUpdated ? new Date(rankStatus.lastUpdated).toLocaleString() : '—'}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="control-group">
+          <label className="control-label">➕ Add Area:</label>
+          <div className="add-area-inline">
+            <input
+              className="enhanced-select"
+              placeholder="e.g., Lakeway, TX"
+              value={newArea}
+              onChange={(e) => {
+                const v = e.target.value
+                setNewArea(v)
+                setAreaSuggestions(v.trim() ? suggestCities(v) : [])
+              }}
+              list="area-suggestions"
+            />
+            <button
+              className="refresh-button"
+              onClick={() => addAreaByName(newArea)}
+              title="Add area and refresh data"
+            >
+              ➕ Add
+            </button>
+            <datalist id="area-suggestions">
+              {areaSuggestions.map(s => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
+          </div>
+        </div>
+
+        <div className="control-group full-row">
+          <div className="area-list-card">
+            <div className="area-list-header">Tracked Areas</div>
+            <ul className="area-list">
+              {serviceAreas.length === 0 && <li className="area-empty">No areas yet. Add one above.</li>}
+              {serviceAreas.map((area) => (
+                <li key={area} className={`area-item ${selectedAreaName === area ? 'active' : ''}`}>
+                  <button className="area-name" onClick={() => setSelectedAreaName(area)} title="Select area for insights">
+                    {area}
+                  </button>
+                  <button
+                    className="area-remove"
+                    title="Remove area"
+                    onClick={async () => {
+                      try {
+                        const cfg = await apiFetch<any>('/business-config')
+                        const areas: string[] = Array.isArray(cfg?.serviceAreas) ? cfg.serviceAreas : []
+                        const next = areas.filter((a: string) => a !== area)
+                        await apiFetch<any>('/business-config', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            businessName: cfg.businessName || '',
+                            websiteUrl: cfg.websiteUrl || '',
+                            serviceAreas: next,
+                            targetKeywords: cfg.targetKeywords || { global: [], areas: {}, competitors: {} }
+                          })
+                        })
+                        setServiceAreas(next)
+                        const locs: any[] = await apiFetch<any[]>('/locations')
+                        const mapped: Location[] = locs.map((l: any) => ({
+                          id: String(l.id || l.name),
+                          name: String(l.name),
+                          lat: Number(l.lat),
+                          lng: Number(l.lng),
+                          overallScore: Number(l.overallScore || 0),
+                          keywordScores: (l.keywordScores || {}),
+                          population: Number(l.population || 0),
+                          searchVolume: Number(l.searchVolume || 0),
+                          lastUpdated: String(l.lastUpdated || '—'),
+                          trends: Array.isArray(l.trends) ? l.trends : []
+                        }))
+                        setCurrentLocations(mapped)
+                        setDbLocations(locs.map(l => ({ name: l.name, lat: Number(l.lat), lng: Number(l.lng) })))
+                        if (selectedAreaName === area) {
+                          setSelectedAreaName(next[0] || mapped[0]?.name || null)
+                        }
+                      } catch {}
+                    }}
+                  >
+                    ✖
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
 
       <div className="map-section">
         <div className="map-sidebar">
-          <div className="performance-legend">
-            <h4>🎯 Performance Guide</h4>
+          <div className="performance-legend relative-block">
+            <CornerTooltip
+              title="Performance Guide"
+              ariaLabel="Help: Performance Guide"
+              position="top-right"
+              aiContext={{ colorScale: ['#10b981','#3b82f6','#f59e0b','#f97316','#ef4444'] }}
+              content={() => (
+                <div>
+                  <p>Dot color maps to rank: green (top 5) → red (25+). Larger dots indicate better ranks.</p>
+                </div>
+              )}
+            />
+            <h4>📘 Performance Guide</h4>
             <div className="legend-grid">
               <div className="legend-item excellent">
-                <div className="legend-circle" style={{ backgroundColor: '#10b981' }}></div>
+                <div className="legend-circle rank-excellent"></div>
                 <span>Top 5 Positions</span>
                 <span className="legend-desc">Excellent! 🏆</span>
               </div>
               <div className="legend-item very-good">
-                <div className="legend-circle" style={{ backgroundColor: '#3b82f6' }}></div>
+                <div className="legend-circle rank-very-good"></div>
                 <span>Positions 6-10</span>
                 <span className="legend-desc">Very Good 🎯</span>
               </div>
               <div className="legend-item good">
-                <div className="legend-circle" style={{ backgroundColor: '#f59e0b' }}></div>
+                <div className="legend-circle rank-good"></div>
                 <span>Positions 11-15</span>
                 <span className="legend-desc">Good ✅</span>
               </div>
               <div className="legend-item fair">
-                <div className="legend-circle" style={{ backgroundColor: '#f97316' }}></div>
+                <div className="legend-circle rank-fair"></div>
                 <span>Positions 16-25</span>
                 <span className="legend-desc">Fair ⚠️</span>
               </div>
               <div className="legend-item poor">
-                <div className="legend-circle" style={{ backgroundColor: '#ef4444' }}></div>
+                <div className="legend-circle rank-poor"></div>
                 <span>Position 25+</span>
                 <span className="legend-desc">Needs Work 🚨</span>
               </div>
@@ -401,58 +769,144 @@ export default function EnhancedGeoGrid() {
           </div>
 
           {showCompetitors && (
-            <div className="competitor-legend">
-              <h4>🥊 Competitors</h4>
-              <div className="competitor-list">
-                {competitors.map(comp => (
-                  <div key={comp.name} className="competitor-item">
-                    <div 
-                      className="competitor-marker" 
-                      style={{ backgroundColor: comp.color }}
-                    ></div>
-                    <div className="competitor-info">
-                      <span className="competitor-name">{comp.name}</span>
-                      <span className="competitor-score">Avg: #{comp.score}</span>
-                    </div>
+            <div className="competitor-legend relative-block">
+              <CornerTooltip
+                title="Competitors"
+                ariaLabel="Help: Competitors"
+                position="top-right"
+                aiContext={{ selectedArea: selectedAreaName || currentLocations[0]?.name, competitorCount: (getAreaCompetitors(selectedAreaName || currentLocations[0]?.name || '') as any[]).length }}
+                content={() => (
+                  <div>
+                    <p>Shows tracked competitors in the selected area with their average rank and market share.</p>
+                    <p style={{ marginTop: 6 }}>Use Comparison Mode to scale by market share and color by gap.</p>
                   </div>
-                ))}
+                )}
+              />
+              <h4>🥊 Competitors</h4>
+              <div className="legend-context">Based on: {selectedKeyword === 'all' ? 'overall' : selectedKeyword}</div>
+              <div className="competitor-list">
+                {(() => {
+                  const areaName = selectedAreaName || currentLocations[0]?.name
+                  const list: any[] = areaName ? (getAreaCompetitors(areaName) as any[]) : []
+                  return list.sort((a: any, b: any) => a.location.score - b.location.score).map((comp: any) => (
+                    <div key={comp.name} className="competitor-item">
+                      <div className="competitor-marker" style={{ backgroundColor: comp.color }}></div>
+                      <div className="competitor-info">
+                        <span className="competitor-name">{comp.name}</span>
+                        <span className="competitor-score">#{comp.location.score} in {areaName}</span>
+                      </div>
+                    </div>
+                  ))
+                })()}
               </div>
             </div>
           )}
 
-          <div className="map-stats">
+          <div className="map-stats relative-block">
+            <CornerTooltip
+              title="Quick Stats"
+              ariaLabel="Help: Quick Stats"
+              position="top-right"
+              aiContext={{ selectedKeyword, bestWorstBasedOn: selectedKeyword === 'all' ? 'overall' : 'keyword' }}
+              content={() => (
+                <div>
+                  <p>Best and weakest areas based on the selected keyword (or overall). Use this to focus efforts.</p>
+                </div>
+              )}
+            />
             <h4>📊 Quick Stats</h4>
-            <div className="stats-list">
-              <div className="stat-item">
-                <span className="stat-label">Best Area:</span>
-                <span className="stat-value">Pflugerville (#3)</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Needs Focus:</span>
-                <span className="stat-value">Central Austin (#12)</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Last Update:</span>
-                <span className="stat-value">{lastRefresh.toLocaleTimeString()}</span>
-              </div>
-            </div>
+            {(() => {
+              const scored = currentLocations.map(l => ({
+                loc: l,
+                score: selectedKeyword === 'all' ? Number(l.overallScore || 0) : getPositionRanking(l, selectedKeyword)
+              })).filter(x => x.score > 0)
+              const best = scored.length ? scored.reduce((a, b) => (a.score <= b.score ? a : b)) : null
+              const worst = scored.length ? scored.reduce((a, b) => (a.score >= b.score ? a : b)) : null
+              const bestLabel = best ? `${best.loc.name} (#${Math.round(best.score)})` : '—'
+              const worstLabel = worst ? `${worst.loc.name} (#${Math.round(worst.score)})` : '—'
+              return (
+                <div className="stats-list">
+                  <div className="stat-item">
+                    <span className="stat-label">Best Area:</span>
+                    <span className="stat-value">{bestLabel}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Needs Focus:</span>
+                    <span className="stat-value">{worstLabel}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Last Update:</span>
+                    <span className="stat-value">{rankStatus?.lastUpdated ? new Date(rankStatus.lastUpdated).toLocaleString() : '—'}</span>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
+
+          {selectedLocation && (
+            <div className="area-top-keywords">
+              <h4>🏆 Top Keywords — {currentLocations.find(l => l.id === selectedLocation)?.name}</h4>
+              <div className="top-list">
+                {(topByArea[currentLocations.find(l => l.id === selectedLocation)?.name || ''] || []).map(k => (
+                  <div key={k.keyword} className="top-row">
+                    <div className="kw">{k.keyword}</div>
+                    <div className="pos">#{Math.round(k.avgPosition || 0)}</div>
+                    <div className="clicks">👆 {k.clicks}</div>
+                    <div className="ctr">📊 {k.ctr}%</div>
+                  </div>
+                ))}
+              </div>
+              <button
+                className="insight-btn"
+                onClick={async () => {
+                  try {
+                    const areaName = currentLocations.find(l => l.id === selectedLocation)?.name
+                    if (!areaName) return
+                    const top = (topByArea[areaName] || []).slice(0, 5).map(k => k.keyword)
+                    const cfg = await apiFetch<any>('/business-config')
+                    const domain = new URL(cfg.websiteUrl || 'https://example.com').hostname.replace('www.','')
+                    await apiFetch<any>('/auto-ranking', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ keywords: top, locations: [areaName], domain })
+                    })
+                    alert('Area update started for top keywords')
+                  } catch (e) {
+                    alert('Failed to run area update')
+                  }
+                }}
+              >
+                ▶️ Run Area Update
+              </button>
+              <p className="hint">Uses Bright Data (or simulation) to scrape and update rankings for these keywords.</p>
+            </div>
+          )}
         </div>
 
-        <div className="map-container-enhanced">
+        <div className="map-container-enhanced relative-block">
+          <CornerTooltip
+            title="Map Details"
+            ariaLabel="Help: Map Details"
+            position="top-right"
+            aiContext={{ showCompetitors, competitorComparisonMode }}
+            content={() => (
+              <div>
+                <p>Click any circle for details. Enable competitors to see their ranks; toggle Comparison Mode for share-weighted bubbles.</p>
+              </div>
+            )}
+          />
           <MapContainer
-            center={locations.length > 0 ? [locations[0].lat, locations[0].lng] : [30.4518, -97.7431]}
+            center={currentLocations.length > 0 ? [currentLocations[0].lat, currentLocations[0].lng] : [30.4518, -97.7431]}
             zoom={10}
-            style={{ height: '500px', width: '100%' }}
-            className="austin-map-leaflet"
-          >
+            className="austin-map-leaflet leaflet-fixed-size"
+>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             
             {/* Your business locations */}
-            {locations.map(location => {
+            {currentLocations.map(location => {
               const score = selectedKeyword === 'all' 
                 ? location.overallScore 
                 : getPositionRanking(location, selectedKeyword)
@@ -471,7 +925,11 @@ export default function EnhancedGeoGrid() {
                   opacity={1}
                   fillOpacity={0.8}
                   eventHandlers={{
-                    click: () => setSelectedLocation(location.id === selectedLocation ? null : location.id)
+                    click: () => {
+                      const next = location.id === selectedLocation ? null : location.id
+                      setSelectedLocation(next)
+                      setSelectedAreaName(location.name)
+                    }
                   }}
                 >
                   <Tooltip permanent={false} direction="top">
@@ -561,105 +1019,147 @@ export default function EnhancedGeoGrid() {
                 </CircleMarker>
               )
             })}
-            
-            {/* Competitor locations */}
-            {showCompetitors && competitors
-              .filter(comp => selectedCompetitor === 'all' || comp.name === selectedCompetitor)
-              .map(competitor =>
-              competitor.locations.map((loc, idx) => {
-                const yourLocation = locations.find(l => l.name === loc.areaName)
-                const yourScore = yourLocation ? getPositionRanking(yourLocation, selectedKeyword) : 20
-                const gap = getCompetitiveGap(yourScore, loc.score)
-                const markerSize = competitorComparisonMode ? (loc.marketShare / 5) : 8
 
+            {/* No-data placeholders for tracked areas without data */}
+            {serviceAreas
+              .filter((name) => !currentLocations.some(l => l.name === name))
+              .map((name, idx) => {
+                const coords = getCityCoords(name)
+                if (!coords) return null
                 return (
                   <CircleMarker
-                    key={`${competitor.name}-${idx}`}
-                    center={[loc.lat + 0.01, loc.lng + 0.01]} // Slight offset to avoid overlap
-                    radius={markerSize}
-                    fillColor={competitor.color}
-                    color={competitorComparisonMode ? gap.color : "white"}
-                    weight={competitorComparisonMode ? 3 : 2}
-                    opacity={0.8}
-                    fillOpacity={competitorComparisonMode ? 0.7 : 0.6}
+                    key={`nodata-${name}-${idx}`}
+                    center={[coords.lat, coords.lng]}
+                    radius={10}
+                    fillColor="#9ca3af"
+                    color="#6b7280"
+                    weight={2}
+                    opacity={0.9}
+                    fillOpacity={0.35}
                   >
                     <Tooltip>
                       <div className="competitor-tooltip-enhanced">
-                        <strong>{competitor.name}</strong><br/>
-                        <span>#{loc.score} in {loc.areaName}</span><br/>
-                        <span style={{ color: gap.color, fontWeight: 'bold' }}>
-                          {gap.text}
-                        </span><br/>
-                        <span className="market-share">
-                          {loc.marketShare}% market share
-                        </span><br/>
-                        <span className="trend">
-                          {getTrendIcon(loc.recentTrend)}
-                          {loc.recentTrend === 'up' ? 'Growing' :
-                           loc.recentTrend === 'down' ? 'Declining' : 'Stable'}
-                        </span>
+                        <strong>{name}</strong><br/>
+                        <span>No live data yet</span>
                       </div>
                     </Tooltip>
-
-                    <Popup>
-                      <div className="competitor-popup">
-                        <h3>{competitor.name} - {loc.areaName}</h3>
-                        <div className="competitor-popup-content">
-                          <div className="popup-stat">
-                            <span className="popup-label">Their Ranking:</span>
-                            <span className="popup-value">#{loc.score}</span>
-                          </div>
-                          <div className="popup-stat">
-                            <span className="popup-label">Your Ranking:</span>
-                            <span className="popup-value">#{yourScore}</span>
-                          </div>
-                          <div className="popup-stat">
-                            <span className="popup-label">Competitive Gap:</span>
-                            <span className="popup-value" style={{ color: gap.color }}>
-                              {gap.text}
-                            </span>
-                          </div>
-                          <div className="popup-stat">
-                            <span className="popup-label">Market Share:</span>
-                            <span className="popup-value">{loc.marketShare}%</span>
-                          </div>
-                          <div className="popup-stat">
-                            <span className="popup-label">Recent Trend:</span>
-                            <span className="popup-value">
-                              {getTrendIcon(loc.recentTrend)}
-                              {loc.recentTrend === 'up' ? 'Growing' :
-                               loc.recentTrend === 'down' ? 'Declining' : 'Stable'}
-                            </span>
-                          </div>
-
-                          <div className="competitive-insights">
-                            <h4>💡 Opportunity</h4>
-                            {gap.status === 'winning' ? (
-                              <p className="insight-text success">
-                                You're dominating this area! Focus on maintaining your lead.
-                              </p>
-                            ) : gap.status === 'close' ? (
-                              <p className="insight-text warning">
-                                Close competition - small improvements could give you the edge.
-                              </p>
-                            ) : (
-                              <p className="insight-text danger">
-                                Significant gap to close. Consider targeted campaigns here.
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </Popup>
                   </CircleMarker>
                 )
-              })
-            )}
+              })}
+
+            {/* Competitor locations */}
+            {showCompetitors && (
+              (selectedAreaName ? [selectedAreaName] : currentLocations.map(l => l.name))
+                .flatMap(areaName => getAreaCompetitors(areaName))
+                .filter(Boolean)
+                .filter((c: any) => selectedCompetitor === 'all' || c.name === selectedCompetitor)
+            ).map((competitor: any, idx: number) => {
+              const areaName = competitor.location.areaName
+              const yourLocation = currentLocations.find(l => l.name === areaName)
+              const yourScore = yourLocation ? getPositionRanking(yourLocation, selectedKeyword) : 20
+              const gap = getCompetitiveGap(yourScore, competitor.location.score)
+              const markerSize = competitorComparisonMode ? (competitor.location.marketShare / 5) : 8
+              // Use DB coords for area when available
+              const coords = dbLocations.find(d => d.name === areaName) || { lat: yourLocation?.lat || 30.2672, lng: yourLocation?.lng || -97.7431 }
+
+              return (
+                <CircleMarker
+                  key={`${competitor.name}-${areaName}-${idx}`}
+                  center={[coords.lat + 0.01, coords.lng + 0.01]}
+                  radius={markerSize}
+                  fillColor={competitor.color}
+                  color={competitorComparisonMode ? gap.color : "white"}
+                  weight={competitorComparisonMode ? 3 : 2}
+                  opacity={0.8}
+                  fillOpacity={competitorComparisonMode ? 0.7 : 0.6}
+                >
+                  <Tooltip>
+                    <div className="competitor-tooltip-enhanced">
+                      <strong>{competitor.name}</strong><br/>
+                      <span>#{competitor.location.score} in {areaName}</span><br/>
+                      <span style={{ color: gap.color, fontWeight: 'bold' }}>
+                        {gap.text}
+                      </span><br/>
+                      <span className="market-share">
+                        {competitor.location.marketShare}% market share
+                      </span><br/>
+                      <span className="trend">
+                        {getTrendIcon(competitor.location.recentTrend)}
+                        {competitor.location.recentTrend === 'up' ? 'Growing' :
+                         competitor.location.recentTrend === 'down' ? 'Declining' : 'Stable'}
+                      </span>
+                    </div>
+                  </Tooltip>
+
+                  <Popup>
+                    <div className="competitor-popup">
+                      <h3>{competitor.name} - {areaName}</h3>
+                      <div className="competitor-popup-content">
+                        <div className="popup-stat">
+                          <span className="popup-label">Their Ranking:</span>
+                          <span className="popup-value">#{competitor.location.score}</span>
+                        </div>
+                        <div className="popup-stat">
+                          <span className="popup-label">Your Ranking:</span>
+                          <span className="popup-value">#{yourScore}</span>
+                        </div>
+                        <div className="popup-stat">
+                          <span className="popup-label">Competitive Gap:</span>
+                          <span className="popup-value" style={{ color: gap.color }}>
+                            {gap.text}
+                          </span>
+                        </div>
+                        <div className="popup-stat">
+                          <span className="popup-label">Market Share:</span>
+                          <span className="popup-value">{competitor.location.marketShare}%</span>
+                        </div>
+                        <div className="popup-stat">
+                          <span className="popup-label">Recent Trend:</span>
+                          <span className="popup-value">
+                            {getTrendIcon(competitor.location.recentTrend)}
+                            {competitor.location.recentTrend === 'up' ? 'Growing' :
+                             competitor.location.recentTrend === 'down' ? 'Declining' : 'Stable'}
+                          </span>
+                        </div>
+
+                        <div className="competitive-insights">
+                          <h4>💡 Opportunity</h4>
+                          {gap.status === 'winning' ? (
+                            <p className="insight-text success">
+                              You're dominating this area! Focus on maintaining your lead.
+                            </p>
+                          ) : gap.status === 'close' ? (
+                            <p className="insight-text warning">
+                              Close competition - small improvements could give you the edge.
+                            </p>
+                          ) : (
+                            <p className="insight-text danger">
+                              Significant gap to close. Consider targeted campaigns here.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Popup>
+                </CircleMarker>
+              )
+            })}
           </MapContainer>
         </div>
       </div>
 
-      <div className="insights-enhanced">
+      <div className="insights-enhanced relative-block">
+        <CornerTooltip
+          title="Smart Insights"
+          ariaLabel="Help: Smart Insights"
+          position="top-right"
+          aiContext={{ area: selectedAreaName || currentLocations[0]?.name, hasInsights: Boolean(smartInsights) }}
+          content={() => (
+            <div>
+              <p>Automated opportunities, risks, and wins for the selected area. Actions adapt to current data.</p>
+            </div>
+          )}
+        />
         <h3>💡 Smart Insights</h3>
         <div className="insights-grid-enhanced">
           <div className="insight-card opportunity">
@@ -667,35 +1167,173 @@ export default function EnhancedGeoGrid() {
               <span className="insight-icon">🎯</span>
               <h4>Best Opportunity</h4>
             </div>
-            <p><strong>Pflugerville</strong> is your strongest area at position #3. Push for #1 to dominate this market!</p>
-            <div className="insight-action">
-              <button className="insight-btn">📱 Boost Pflugerville GMB</button>
-            </div>
+            {(() => {
+              // Prefer smart insights when available for the selected area
+              const areaName = selectedLocation ? currentLocations.find(l => l.id === selectedLocation)?.name : currentLocations[0]?.name
+              const cand = smartInsights?.opportunities?.[0]
+              if (smartInsights && cand && areaName) {
+                return (
+                  <>
+                    <p>
+                      In <strong>{areaName}</strong>, "{cand.keyword}" is a high-impact opportunity: leader at #{cand.leaderPosition} vs you at #{cand.ourPosition}. Estimated +{cand.potentialClicks} clicks if you close the gap.
+                    </p>
+                    <div className="insight-action">
+                      <button
+                        className="insight-btn"
+                        onClick={async () => {
+                          try {
+                            await apiFetch<any>('/gmb-posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'service', business: areaName }) })
+                            await apiFetch<any>('/gmb-posts/schedule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: `Why we're the best for ${cand.keyword} in ${areaName}`, content: `Looking for ${cand.keyword} in ${areaName}? We deliver top results. Book your free quote today.`, scheduleDate: new Date(Date.now() + 48*3600*1000).toISOString() }) })
+                            alert('Action queued: GMB content generated and scheduled')
+                          } catch {
+                            alert('Failed to queue post')
+                          }
+                        }}
+                      >
+                        ✍️ Create & Schedule GMB Post
+                      </button>
+                    </div>
+                  </>
+                )
+              }
+              const withScores = viewLocations.filter(l => Number(l.overallScore) > 0)
+              if (withScores.length === 0) {
+                return <p>Add or select a service area with data to see opportunities.</p>
+              }
+              const best = withScores.reduce((a, b) => (a.overallScore <= b.overallScore ? a : b))
+              const bestLabel = best.name
+              const bestRank = `#${Math.round(best.overallScore || 0)}`
+              return (
+                <>
+                  <p><strong>{bestLabel}</strong> is your strongest area at position {bestRank}. Push for #1 to dominate this market!</p>
+                  <div className="insight-action">
+                    <button
+                      className="insight-btn"
+                      onClick={() => router.push('/gmb-automation')}
+                    >
+                      📱 Boost {bestLabel} GMB
+                    </button>
+                  </div>
+                </>
+              )
+            })()}
           </div>
-          
+
           <div className="insight-card warning">
             <div className="insight-header">
               <span className="insight-icon">⚠️</span>
               <h4>Needs Attention</h4>
             </div>
-            <p><strong>Central Austin</strong> at position #12 needs work. This is your biggest potential market with 12,400 monthly searches.</p>
-            <div className="insight-action">
-              <button className="insight-btn">🚀 Launch Austin Campaign</button>
-            </div>
+            {(() => {
+              const areaName = selectedLocation ? currentLocations.find(l => l.id === selectedLocation)?.name : currentLocations[0]?.name
+              const threat = smartInsights?.threats?.[0]
+              if (smartInsights && threat && areaName) {
+                return (
+                  <>
+                    <p>
+                      In <strong>{areaName}</strong>, you rank #{threat.ourPosition} for "{threat.keyword}" while a competitor leads at #{threat.leaderPosition}. High demand (~{threat.volume.toLocaleString()} monthly searches).
+                    </p>
+                    <div className="insight-action">
+                      <button className="insight-btn" onClick={() => router.push('/seo-tracking')}>
+                        🚀 Launch {areaName} Campaign
+                      </button>
+                    </div>
+                  </>
+                )
+              }
+              const withScores = viewLocations.filter(l => Number(l.overallScore) > 0)
+              if (withScores.length === 0) {
+                return <p>No underperforming areas yet. Add areas or wait for data.</p>
+              }
+              const worst = withScores.reduce((a, b) => (a.overallScore >= b.overallScore ? a : b))
+              const label = worst.name
+              const rank = `#${Math.round(worst.overallScore || 0)}`
+              const volumeNum = Number(worst.searchVolume || 0)
+              const volumeText = volumeNum.toLocaleString()
+              return (
+                <>
+                  <p><strong>{label}</strong> at position {rank} needs work. {volumeNum > 0 ? <>Estimated {volumeText} monthly searches.</> : <>Low current search activity.</>}</p>
+                  <div className="insight-action">
+                    <button
+                      className="insight-btn"
+                      onClick={() => router.push('/seo-tracking')}
+                    >
+                      🚀 Launch {label} Campaign
+                    </button>
+                  </div>
+                </>
+              )
+            })()}
           </div>
-          
+
           <div className="insight-card success">
             <div className="insight-header">
               <span className="insight-icon">✅</span>
               <h4>Success Story</h4>
             </div>
-            <p><strong>Cedar Park</strong> jumped +3 positions this month! Whatever you're doing there, replicate it elsewhere.</p>
-            <div className="insight-action">
-              <button className="insight-btn">📊 Analyze Cedar Park</button>
-            </div>
+            {(() => {
+              const areaName = selectedLocation ? currentLocations.find(l => l.id === selectedLocation)?.name : currentLocations[0]?.name
+              const win = smartInsights?.quickWins?.[0]
+              if (smartInsights && win && areaName) {
+                return (
+                  <>
+                    <p>
+                      Momentum in <strong>{areaName}</strong> — you're #{win.ourPosition} for "{win.keyword}". Small tweaks could beat the leader at #{win.leaderPosition}.
+                    </p>
+                    <div className="insight-action">
+                      <button className="insight-btn" onClick={() => router.push('/analytics')}>
+                        📊 Analyze {areaName}
+                      </button>
+                    </div>
+                  </>
+                )
+              }
+              let bestTrendLoc: Location | null = null
+              let bestChange = 0
+              for (const l of viewLocations) {
+                const topPositive = Math.max(0, ...l.trends.map(t => Number(t.change) || 0))
+                if (topPositive > bestChange) {
+                  bestChange = topPositive
+                  bestTrendLoc = l
+                }
+              }
+              if (!bestTrendLoc || bestChange <= 0) {
+                return <p>As rankings improve, success highlights will appear here.</p>
+              }
+              const area = bestTrendLoc.name
+              const changeText = `jumped +${bestChange} positions recently`
+              return (
+                <>
+                  <p><strong>{area}</strong> {changeText}! Whatever you are doing there, replicate it elsewhere.</p>
+                  <div className="insight-action">
+                    <button
+                      className="insight-btn"
+                      onClick={() => router.push('/analytics')}
+                    >
+                      📊 Analyze {area}
+                    </button>
+                  </div>
+                </>
+              )
+            })()}
           </div>
         </div>
       </div>
+
+      {smartInsights?.recommendedKeywords?.length ? (
+        <div className="insights-recommendations">
+          <h4>🔎 Recommended Keywords for {smartInsights.area}</h4>
+          <div className="top-list">
+            {smartInsights.recommendedKeywords.slice(0, 8).map((k: any) => (
+              <div key={k.keyword} className="top-row">
+                <div className="kw">{k.keyword}</div>
+                <div className="clicks">Vol ~{k.estimatedVolume}</div>
+                <div className="ctr">Opp {k.opportunity}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

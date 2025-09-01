@@ -238,6 +238,9 @@
 .legend-dot.good {
   background: #f59e0b;
 }
+.legend-dot.very-good {
+  background: #3b82f6;
+}
 
 .legend-dot.fair {
   background: #f97316;
@@ -608,6 +611,44 @@
   font-size: 0.9rem;
 }
 
+.comparison-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.comparison-note p {
+  margin: 0;
+  color: #374151;
+  font-size: 0.85rem;
+}
+
+.comparison-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.comp-refresh-btn, .comp-setup-btn {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.comp-refresh-btn:hover, .comp-setup-btn:hover {
+  background: #f3f4f6;
+}
+
 .comparison-bars {
   display: flex;
   flex-direction: column;
@@ -698,6 +739,43 @@
 .trend-item.neutral {
   background: #f9fafb;
   color: #6b7280;
+}
+
+/* Profile Config Styles */
+.profile-config {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+.profile-config .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.profile-config .section-header h2 { margin: 0; color: #333; font-size: 1.1rem; }
+.profile-config .section-header p { margin: 0; color: #6b7280; }
+.config-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; }
+.config-grid { display: grid; grid-template-columns: 300px 1fr; gap: 1rem; }
+.config-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; }
+.config-card.wide { grid-column: span 2; }
+.form-row { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.75rem; }
+.form-row label { font-size: 0.85rem; color: #374151; font-weight: 600; }
+.form-row input, .form-row textarea, .add-area-row input, .profile-config textarea { border: 1px solid #d1d5db; border-radius: 6px; padding: 0.5rem 0.6rem; font-size: 0.9rem; }
+.hint { color: #6b7280; font-size: 0.8rem; margin-top: 0.25rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+.chip { border: 1px solid #d1d5db; background: #f9fafb; border-radius: 999px; padding: 0.3rem 0.75rem; font-size: 0.85rem; cursor: pointer; color: #374151; }
+.chip.active { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
+.add-area-row { display: flex; gap: 0.5rem; align-items: center; }
+.small-btn { border: 1px solid #d1d5db; background: #fff; border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.85rem; cursor: pointer; font-weight: 600; color: #374151; }
+.small-btn.danger { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
+.area-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.area-actions { display: flex; gap: 0.5rem; }
+.spacer { height: 0.75rem; }
+.config-footer { display: flex; justify-content: flex-end; margin-top: 1rem; }
+.save-btn { background: #3b82f6; color: #fff; border: none; border-radius: 8px; padding: 0.6rem 1rem; font-weight: 700; cursor: pointer; }
+.save-btn:hover { background: #2563eb; }
+
+@media (max-width: 900px) {
+  .config-grid { grid-template-columns: 1fr; }
+  .config-card.wide { grid-column: span 1; }
 }
 
 /* Automation Tools Grid Styles */
@@ -1174,7 +1252,7 @@
 }
 
 .next-steps li:before {
-  content: '�� ';
+  content: '→ ';
   color: #3b82f6;
   margin-right: 0.5rem;
 }

@@ -1,6 +1,9 @@
 'use client'
 
+
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../services/api'
+import CornerTooltip from './CornerTooltip'
 
 export default function GoogleAuthButton() {
   const [isLoading, setIsLoading] = useState(false)
@@ -29,8 +32,7 @@ export default function GoogleAuthButton() {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch('/api/auth/status')
-      const data = await response.json()
+      const data = await apiFetch<any>('/auth/status')
 
       if (data.connected) {
         setAuthStatus('connected')
@@ -46,8 +48,7 @@ export default function GoogleAuthButton() {
     setAuthStatus('connecting')
 
     try {
-      const response = await fetch('/api/auth/google')
-      const data = await response.json()
+      const data = await apiFetch<any>('/auth/google')
 
       if (data.authUrl) {
         // Open in new tab to avoid iframe blocking issues
@@ -126,7 +127,17 @@ export default function GoogleAuthButton() {
   }
 
   return (
-    <div id="google-auth" className="google-auth-container">
+    <div id="google-auth" className="google-auth-container" style={{ position: 'relative' }}>
+      <CornerTooltip
+        title="Google Search Console"
+        ariaLabel="Help: Google Search Console"
+        content={() => (
+          <div>
+            <p>Connect to show LIVE search data. If blocked by OAuth, you can use sample data or paste CSV in Import.</p>
+            <p style={{ marginTop: 6 }}>After connecting, the dashboard auto-refreshes.</p>
+          </div>
+        )}
+      />
       <button
         onClick={handleAuthenticate}
         disabled={isLoading || authStatus === 'connected'}
@@ -147,7 +158,7 @@ export default function GoogleAuthButton() {
             ⚠️ OAuth setup needed. Add this redirect URI to Google Cloud Console:
           </p>
           <code className="redirect-uri-code">
-            https://da6999115c974d4388527cf50744332c-14cf5492-00a1-4a72-bec8-711809.fly.dev/api/auth/google/callback
+            {window.location.origin}/api/auth/google/callback
           </code>
           <p className="auth-help-text">
             💡 <strong>Quick alternative:</strong> Use sample data below while setting up OAuth!

@@ -1,6 +1,8 @@
 'use client'
 
+
 import Link from 'next/link'
+import CornerTooltip from './CornerTooltip'
 
 interface AutomationTool {
   id: string
@@ -149,7 +151,18 @@ export default function AutomationToolsGrid() {
   const goodTools = automationTools.filter(tool => tool.status === 'good')
 
   return (
-    <div className="automation-tools-grid">
+    <div className="automation-tools-grid" style={{ position: 'relative' }}>
+      <CornerTooltip
+        title="Automation Tools"
+        ariaLabel="Help: Automation Tools"
+        aiContext={{ urgent: automationTools.filter(t => t.status==='urgent').length, warning: automationTools.filter(t => t.status==='warning').length }}
+        content={() => (
+          <div>
+            <p>Each card represents a tool. Status: ✅ good, ⚠️ needs attention, 🚨 critical. "🤖 AUTO" means it can run on its own.</p>
+            <p style={{ marginTop: 6 }}>Click a card to manage. High-impact items should be addressed first.</p>
+          </div>
+        )}
+      />
       {/* Urgent Tools - Priority Section */}
       {urgentTools.length > 0 && (
         <div className="tools-section urgent-section">

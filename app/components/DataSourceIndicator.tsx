@@ -1,6 +1,8 @@
 'use client'
 
+
 import { useState, useEffect } from 'react'
+import CornerTooltip from './CornerTooltip'
 
 interface DataSourceStatus {
   connected: boolean
@@ -85,7 +87,18 @@ export default function DataSourceIndicator() {
   }
 
   return (
-    <div className="data-source-indicator">
+    <div className="data-source-indicator" style={{ position: 'relative' }}>
+      <CornerTooltip
+        title="Data Source"
+        ariaLabel="Help: Data Source"
+        aiContext={{ isLive: status.isLive, source: status.source }}
+        content={() => (
+          <div>
+            <p>Shows whether data is LIVE or SAMPLE. Sources: Google Search Console or AI Ranking Tracker.</p>
+            {status.lastUpdated && <p style={{ marginTop: 6 }}>Checked: {new Date(status.lastUpdated).toLocaleString()}</p>}
+          </div>
+        )}
+      />
       <div className="data-source-status">
         <span className={`status-dot ${status.isLive ? 'live' : 'sample'}`}></span>
         <span className="source-text">

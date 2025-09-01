@@ -1,5 +1,6 @@
 'use client'
 
+
 import { useState, useEffect } from 'react'
 
 interface Location {
@@ -147,21 +148,28 @@ export default function GeoGrid() {
   const [hoveredLocation, setHoveredLocation] = useState<string | null>(null)
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return '#10b981' // Green - excellent
-    if (score >= 60) return '#f59e0b' // Yellow - good
-    if (score >= 40) return '#f97316' // Orange - fair
-    return '#ef4444' // Red - poor
+    if (score <= 5) return '#10b981' // Green - excellent (top 5)
+    if (score <= 10) return '#3b82f6' // Blue - very good (6-10)
+    if (score <= 15) return '#f59e0b' // Yellow - good (11-15)
+    if (score <= 25) return '#f97316' // Orange - fair (16-25)
+    return '#ef4444' // Red - needs work (25+)
   }
 
   const getScoreSize = (score: number) => {
-    const base = 12
-    const multiplier = score / 100
-    return Math.max(base + (multiplier * 20), 8)
+    if (score <= 5) return 24
+    if (score <= 10) return 20
+    if (score <= 15) return 16
+    if (score <= 25) return 12
+    return 10
   }
 
   const getPositionRanking = (location: Location, keyword: string) => {
-    if (keyword === 'all') return location.overallScore
-    return location.keywordScores[keyword] || 20
+    if (keyword === 'all') {
+      const ranks = Object.values(location.keywordScores).map(v => Number(v) || 0).filter(v => v > 0)
+      const avg = ranks.length ? ranks.reduce((a, b) => a + b, 0) / ranks.length : 20
+      return Math.round(avg)
+    }
+    return Number(location.keywordScores[keyword] || 0) || 20
   }
 
   return (
@@ -204,8 +212,12 @@ export default function GeoGrid() {
               <span>Excellent (Top 5)</span>
             </div>
             <div className="legend-item">
+              <div className="legend-dot very-good"></div>
+              <span>Very Good (6-10)</span>
+            </div>
+            <div className="legend-item">
               <div className="legend-dot good"></div>
-              <span>Good (6-15)</span>
+              <span>Good (11-15)</span>
             </div>
             <div className="legend-item">
               <div className="legend-dot fair"></div>
@@ -213,7 +225,7 @@ export default function GeoGrid() {
             </div>
             <div className="legend-item">
               <div className="legend-dot poor"></div>
-              <span>Poor (25+)</span>
+              <span>Needs Work (25+)</span>
             </div>
           </div>
           
@@ -272,7 +284,7 @@ export default function GeoGrid() {
                     fontSize="10"
                     fontWeight="bold"
                   >
-                    {selectedKeyword === 'all' ? score : location.keywordScores[selectedKeyword] || '20+'}
+                    {Math.round(score) || '—'}
                   </text>
                   
                   {/* Location label */}

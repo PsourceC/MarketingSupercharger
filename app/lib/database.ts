@@ -1,4 +1,5 @@
 import { Pool } from 'pg'
+import * as Sentry from '@sentry/nextjs'
 
 // Create a connection pool for better performance
 const connectionString = process.env.DATABASE_URL
@@ -25,10 +26,10 @@ try {
 const pool = new Pool({
   connectionString,
   ssl,
-  max: 10,
-  idleTimeoutMillis: 60000,
-  connectionTimeoutMillis: 10000,
-  acquireTimeoutMillis: 20000,
+  max: 5, // Reduced from 10 to prevent connection exhaustion
+  idleTimeoutMillis: 30000, // Reduced idle timeout
+  connectionTimeoutMillis: 15000, // Increased connection timeout
+  acquireTimeoutMillis: 30000, // Increased acquire timeout
   allowExitOnIdle: true,
 })
 
@@ -63,6 +64,9 @@ export async function query(text: string, params?: any[], retries = 2) {
     }
   }
 
+  try {
+    Sentry.captureException(lastError, { tags: { scope: 'db.query' }, extra: { text: text.substring(0, 200), params } })
+  } catch {}
   throw lastError
 }
 
@@ -96,7 +100,7 @@ export async function getCurrentMetrics() {
 export async function getLocationPerformance() {
   try {
     const locationQuery = `
-      SELECT 
+      SELECT
         l.id,
         l.location_name as name,
         l.latitude as lat,
@@ -113,28 +117,54 @@ export async function getLocationPerformance() {
       GROUP BY l.id, l.location_name, l.latitude, l.longitude, l.overall_score, l.population, l.search_volume, l.last_updated
       ORDER BY l.overall_score DESC
     `
-    
-    const result = await query(locationQuery)
-    
+
+    const perKeywordQuery = `
+      SELECT location_id, keyword, AVG(ranking_position) AS avg_pos
+      FROM solar_keyword_rankings
+      WHERE created_at >= NOW() - INTERVAL '60 days'
+      GROUP BY location_id, keyword
+    `
+
+    const [locationRes, perKeywordRes] = await Promise.all([
+      query(locationQuery),
+      query(perKeywordQuery)
+    ])
+
+    const keywordByLocation: Record<string, Record<string, number>> = {}
+    for (const r of perKeywordRes.rows) {
+      const lid = String(r.location_id)
+      if (!keywordByLocation[lid]) keywordByLocation[lid] = {}
+      const k = String(r.keyword)
+      const v = r.avg_pos ? Math.round(Number(r.avg_pos)) : 0
+      if (v > 0) keywordByLocation[lid][k] = v
+    }
+
     // Transform data to match expected format
-    return result.rows.map(row => ({
-      id: row.id.toString(),
-      name: row.name,
-      lat: parseFloat(row.lat),
-      lng: parseFloat(row.lng),
-      overallScore: parseFloat(row.overall_score || '0'),
-      keywordScores: {}, // Will be filled by keyword data
-      population: parseInt(row.population || '0'),
-      searchVolume: parseInt(row.search_volume || '0'),
-      lastUpdated: row.last_updated?.toISOString() || new Date().toISOString(),
-      trends: [
-        {
-          keyword: 'solar installation',
-          change: Math.round((Math.random() - 0.5) * 10), // Random for demo
-          changeText: `${row.avg_ranking > 0 ? 'Position ' + Math.round(row.avg_ranking) : 'No data'}`
-        }
-      ]
-    }))
+    return locationRes.rows.map(row => {
+      const avg = Number(row.avg_ranking || 0)
+      const score = Number(row.overall_score || 0)
+      // Prefer calculated average ranking when available; fall back to stored score
+      const effective = avg > 0 ? Math.round(avg) : (score > 0 ? score : 0)
+      const lid = String(row.id)
+      return {
+        id: row.id.toString(),
+        name: row.name,
+        lat: parseFloat(row.lat),
+        lng: parseFloat(row.lng),
+        overallScore: effective,
+        keywordScores: keywordByLocation[lid] || {},
+        population: parseInt(row.population || '0'),
+        searchVolume: parseInt(row.search_volume || '0'),
+        lastUpdated: row.last_updated?.toISOString() || new Date().toISOString(),
+        trends: [
+          {
+            keyword: 'solar installation',
+            change: Math.round((Math.random() - 0.5) * 10),
+            changeText: `${avg > 0 ? 'Position ' + Math.round(avg) : 'No data'}`
+          }
+        ]
+      }
+    })
   } catch (error) {
     console.error('Error fetching location performance:', error)
     return []

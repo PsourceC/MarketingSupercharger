@@ -1,5 +1,6 @@
 'use client'
 
+
 import { useState } from 'react'
 import EnhancedGeoGrid from './EnhancedGeoGrid'
 import MetricsOverview from './MetricsOverview'
@@ -7,6 +8,7 @@ import AutomationToolsGrid from './AutomationToolsGrid'
 import PriorityActionsPanel from './PriorityActionsPanel'
 import DataRefreshSystem from './DataRefreshSystem'
 import DevProfile from './DevProfile'
+import CompetitorKeywordProfile from './CompetitorKeywordProfile'
 
 export default function UnifiedDashboard() {
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
@@ -52,6 +54,11 @@ export default function UnifiedDashboard() {
               <p>Your solar business performance at a glance</p>
             </div>
             <MetricsOverview />
+          </div>
+
+          {/* Competitor & Keyword Profile */}
+          <div className="profile-config-section">
+            <CompetitorKeywordProfile />
           </div>
 
           <div className="summary-insights-section">

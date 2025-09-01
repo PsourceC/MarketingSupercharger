@@ -100,6 +100,47 @@ export async function POST() {
       UNIQUE(competitor_id, keyword)
     )`,
 
+    // New tables for financing
+    `CREATE TABLE IF NOT EXISTS solar_financing_requests (
+      id SERIAL PRIMARY KEY,
+      reference_id VARCHAR(50) UNIQUE NOT NULL,
+      first_name VARCHAR(100),
+      last_name VARCHAR(100),
+      email VARCHAR(255),
+      phone VARCHAR(20),
+      address TEXT,
+      annual_income NUMERIC,
+      monthly_debt NUMERIC,
+      employment_status VARCHAR(100),
+      credit_score VARCHAR(50),
+      system_cost NUMERIC,
+      loan_term VARCHAR(20),
+      status VARCHAR(50) DEFAULT 'pending_review',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`,
+
+    // New tables for GMB posts
+    `CREATE TABLE IF NOT EXISTS solar_scheduled_posts (
+      id SERIAL PRIMARY KEY,
+      post_id VARCHAR(100) NOT NULL,
+      title TEXT,
+      content TEXT,
+      schedule_date DATE,
+      status VARCHAR(50) DEFAULT 'scheduled',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS solar_published_posts (
+      id SERIAL PRIMARY KEY,
+      post_id VARCHAR(100) NOT NULL,
+      title TEXT,
+      content TEXT,
+      keywords JSONB,
+      platform VARCHAR(100),
+      published_at TIMESTAMPTZ DEFAULT NOW(),
+      status VARCHAR(50) DEFAULT 'published'
+    )`,
+
     // Add indexes for performance
     'CREATE INDEX IF NOT EXISTS idx_solar_citations_last_checked ON solar_citations(last_checked)',
     'CREATE INDEX IF NOT EXISTS idx_solar_citations_status ON solar_citations(status)',
@@ -108,7 +149,11 @@ export async function POST() {
     'CREATE INDEX IF NOT EXISTS idx_solar_competitor_rankings_competitor ON solar_competitor_rankings(competitor_id)',
     'CREATE INDEX IF NOT EXISTS idx_solar_competitor_rankings_keyword ON solar_competitor_rankings(keyword)',
     'CREATE INDEX IF NOT EXISTS idx_solar_competitor_rankings_position ON solar_competitor_rankings(position)',
-    
+    'CREATE INDEX IF NOT EXISTS idx_solar_financing_requests_email ON solar_financing_requests(email)',
+    'CREATE INDEX IF NOT EXISTS idx_solar_financing_requests_status ON solar_financing_requests(status)',
+    'CREATE INDEX IF NOT EXISTS idx_solar_scheduled_posts_schedule_date ON solar_scheduled_posts(schedule_date)',
+    'CREATE INDEX IF NOT EXISTS idx_solar_published_posts_published_at ON solar_published_posts(published_at)',
+
     'COMMIT'
   ]
 

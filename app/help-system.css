@@ -319,6 +319,20 @@
   background: #2563eb;
 }
 
+/* Corner Tooltip */
+.corner-tooltip { position: absolute; z-index: 50; }
+.corner-top-right { top: 8px; right: 8px; }
+.corner-top-left { top: 8px; left: 8px; }
+.corner-bottom-right { bottom: 8px; right: 8px; }
+.corner-bottom-left { bottom: 8px; left: 8px; }
+.corner-help-button { background: rgba(0,0,0,0.6); color: #fff; border: 0; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: help; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.corner-help-button:hover { background: rgba(0,0,0,0.75); }
+.corner-help-icon { font-size: 14px; line-height: 1; }
+.corner-help-popover { position: absolute; top: 34px; right: 0; background: #111827; color: #fff; min-width: 240px; max-width: 340px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); padding: 12px 12px 10px; font-size: 12px; }
+.corner-help-title { font-weight: 700; margin-bottom: 6px; font-size: 13px; }
+.corner-help-content { line-height: 1.4; color: #e5e7eb; }
+.corner-help-note { margin-top: 8px; color: #9ca3af; font-style: italic; font-size: 11px; }
+
 /* Tooltip System */
 .tooltip-trigger {
   position: relative;

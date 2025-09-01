@@ -24,6 +24,9 @@ interface ConnectionStatus {
 }
 
 export default function DevProfilePage() {
+  const [goalScanLoading, setGoalScanLoading] = useState(false)
+  const [featureGoals, setFeatureGoals] = useState<any[]>([])
+  const [lastGoalScan, setLastGoalScan] = useState<string>('')
   const [mounted, setMounted] = useState(false)
   const [connections, setConnections] = useState<ConnectionStatus[]>([])
   const [isChecking, setIsChecking] = useState(false)
@@ -35,19 +38,59 @@ export default function DevProfilePage() {
   useEffect(() => {
     setMounted(true)
     void checkAllConnections().catch(() => {})
+    void scanFeatureGoals(true).catch(() => {})
 
     // Set up automatic health checks - longer interval in development to avoid HMR conflicts
     const healthCheckInterval = setInterval(() => {
       if (autoRefreshEnabled && !isChecking && document.visibilityState === 'visible') {
         console.log('Running automatic health check...')
-        checkAllConnections(true).catch(() => {}) // Pass true for silent/background check
+        checkAllConnections(true).catch(() => {})
       }
-    }, isDevelopment ? 10 * 60 * 1000 : 5 * 60 * 1000) // 10 minutes in dev, 5 minutes in production
+      if (autoRefreshEnabled && !goalScanLoading && document.visibilityState === 'visible') {
+        scanFeatureGoals(true).catch(() => {})
+      }
+    }, isDevelopment ? 10 * 60 * 1000 : 5 * 60 * 1000)
 
     return () => {
       clearInterval(healthCheckInterval)
     }
-  }, [autoRefreshEnabled, isChecking])
+  }, [autoRefreshEnabled, isChecking, goalScanLoading])
+
+  const scanFeatureGoals = async (silent = false) => {
+    // Skip during webpack HMR cycles to avoid transient fetch errors
+    if (isDevelopment && (window as any).__webpack_require__?.hmrM) {
+      console.log('Skipping goals scan - webpack HMR in progress')
+      return
+    }
+
+    const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 8000) => {
+      return await new Promise<Response>((resolve) => {
+        const timeoutId = setTimeout(() => {
+          resolve(new Response(JSON.stringify({ error: 'timeout' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+        }, timeoutMs)
+        fetch(input, init)
+          .then((res) => { clearTimeout(timeoutId); resolve(res) })
+          .catch((err: any) => {
+            clearTimeout(timeoutId)
+            resolve(new Response(JSON.stringify({ error: err?.message || 'fetch failed' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+          })
+      })
+    }
+
+    if (!silent) setGoalScanLoading(true)
+    try {
+      const res = await fetchWithTimeout('/api/feature-goals/scan', { cache: 'no-cache', headers: { 'Cache-Control': 'no-cache' } }, 8000)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setFeatureGoals(data.goals || [])
+      setLastGoalScan(new Date().toISOString())
+    } catch (e) {
+      // swallow to avoid HMR noise
+      console.warn('Goal scan skipped/failed', (e as any)?.message || e)
+    } finally {
+      if (!silent) setGoalScanLoading(false)
+    }
+  }
 
   const checkAllConnections = async (silent = false) => {
     // Skip checks if webpack is hot reloading (in development)
@@ -430,13 +473,106 @@ export default function DevProfilePage() {
               Auto-refresh (5min)
             </label>
           </div>
-          <button
-            onClick={() => checkAllConnections()}
-            disabled={isChecking}
-            className="refresh-btn"
-          >
-            {isChecking ? '⏳' : '🔄'} {isChecking ? 'Checking...' : 'Refresh All'}
-          </button>
+          <div className="header-buttons">
+            <button
+              onClick={() => checkAllConnections()}
+              disabled={isChecking}
+              className="refresh-btn"
+            >
+              {isChecking ? '⏳' : '🔄'} {isChecking ? 'Checking...' : 'Refresh All'}
+            </button>
+            <button
+              onClick={() => scanFeatureGoals()}
+              disabled={goalScanLoading}
+              className="refresh-btn"
+            >
+              {goalScanLoading ? '⏳' : '🧭'} {goalScanLoading ? 'Scanning...' : 'Scan Goals'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Dynamic Feature Goals Status */}
+      <div className="feature-goals-section">
+        <div className="clashes-header">
+          <h3>Feature Goals Status</h3>
+          {lastGoalScan && (
+            <span className="last-health-check">Last scan: {new Date(lastGoalScan).toLocaleTimeString()}</span>
+          )}
+        </div>
+        <div className="clash-grid">
+          {featureGoals.map((g) => (
+            <div key={g.id} className="clash-card">
+              <div className="clash-title">
+                {g.title}
+                <span className={"status-pill status-" + g.status}>{g.status === 'achieved' ? 'Achieved' : g.status === 'warning' ? 'Warning' : 'Not Achieved'}</span>
+              </div>
+              <div className="clash-body">
+                <div className="clash-row"><span className="clash-label">Goal</span><span className="clash-value">{g.description}</span></div>
+                <div className="clash-row"><span className="clash-label">Status</span><span className="clash-value">{g.clashDescription || '—'}</span></div>
+                <div className="clash-row"><span className="clash-label">Evidence</span><span className="clash-value">{(g.evidence || []).length} issue(s){(g.evidence || []).length > 0 ? ' found' : ''}</span></div>
+                {(g.evidence || []).length > 0 && (
+                  <details className="evidence-details">
+                    <summary>Show details</summary>
+                    <ul className="evidence-list">
+                      {g.evidence.slice(0, 8).map((e: any, idx: number) => (
+                        <li key={idx}><code>{e.file}:{e.line}</code> — {e.snippet}</li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Feature Goals & Clashes */}
+      <div className="feature-clashes-card">
+        <div className="clashes-header">
+          <h2>🧭 Feature Goals & Clashes</h2>
+          <p className="clashes-subtitle">Clear, actionable list of expected behaviors vs current implementation with guidance to resolve</p>
+        </div>
+        <div className="clash-grid">
+          <div className="clash-card">
+            <div className="clash-title">🎨 Performance Guide — Legend vs Label</div>
+            <div className="clash-body">
+              <div className="clash-row"><span className="clash-label">Goal</span><span className="clash-value">Ranks map consistently across legend, labels, and colors</span></div>
+              <div className="clash-row"><span className="clash-label">Current</span><span className="clash-value">Legend shows 6–10 as “Very Good”; labels show 6–10 as “Good”</span></div>
+              <div className="clash-row"><span className="clash-label">Impact</span><span className="clash-value">Confusion about what colors/labels mean on the map</span></div>
+              <div className="clash-row"><span className="clash-label">Guidance</span><span className="clash-value">Unify ranges: 1–5 Excellent, 6–10 Very Good, 11–15 Good, 16–25 Fair, 25+ Needs Work</span></div>
+            </div>
+          </div>
+
+          <div className="clash-card">
+            <div className="clash-title">🔡 Encoding/Emoji Corruption</div>
+            <div className="clash-body">
+              <div className="clash-row"><span className="clash-label">Goal</span><span className="clash-value">Readable labels with proper emoji/icons</span></div>
+              <div className="clash-row"><span className="clash-label">Current</span><span className="clash-value">Previously showed corrupted glyphs for emoji/icons; ensure “Fair ⚠️”, ��▶️ Run Area Update”, “📘 Performance Guide” render correctly</span></div>
+              <div className="clash-row"><span className="clash-label">Impact</span><span className="clash-value">Reduces clarity and professional polish</span></div>
+              <div className="clash-row"><span className="clash-label">Guidance</span><span className="clash-value">Replace with “Fair ⚠️”, “▶️ Run Area Update”, “📘 Performance Guide”</span></div>
+            </div>
+          </div>
+
+          <div className="clash-card">
+            <div className="clash-title">⏱️ Quick Stats — Last Update</div>
+            <div className="clash-body">
+              <div className="clash-row"><span className="clash-label">Goal</span><span className="clash-value">Show the data timestamp from rankings status</span></div>
+              <div className="clash-row"><span className="clash-label">Current</span><span className="clash-value">Shows button refresh time instead of data timestamp</span></div>
+              <div className="clash-row"><span className="clash-label">Impact</span><span className="clash-value">Users may think data is newer/older than it is</span></div>
+              <div className="clash-row"><span className="clash-label">Guidance</span><span className="clash-value">Use rankings status timestamp (rankStatus.lastUpdated)</span></div>
+            </div>
+          </div>
+
+          <div className="clash-card">
+            <div className="clash-title">💡 Smart Insights — Fallback Copy</div>
+            <div className="clash-body">
+              <div className="clash-row"><span className="clash-label">Goal</span><span className="clash-value">Accurate messaging when volume is unknown or zero</span></div>
+              <div className="clash-row"><span className="clash-label">Current</span><span className="clash-value">Says “major market” even when monthly searches are zero</span></div>
+              <div className="clash-row"><span className="clash-label">Impact</span><span className="clash-value">Overstates opportunity; can mislead prioritization</span></div>
+              <div className="clash-row"><span className="clash-label">Guidance</span><span className="clash-value">If volume ≤ 0: “Low current search activity.” Else: “Estimated X monthly searches.”</span></div>
+            </div>
+          </div>
         </div>
       </div>
 
