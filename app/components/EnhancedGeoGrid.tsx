@@ -792,7 +792,7 @@ export default function EnhancedGeoGrid() {
               <div className="legend-context">Based on: {selectedKeyword === 'all' ? 'overall' : selectedKeyword}</div>
               <div className="competitor-list">
                 {(() => {
-                  const areaName = selectedAreaName || currentLocations[0]?.name
+                  const areaName = selectedAreaName || trackedLocations[0]?.name
                   const list: any[] = areaName ? (getAreaCompetitors(areaName) as any[]) : []
                   return list.sort((a: any, b: any) => a.location.score - b.location.score).map((comp: any) => (
                     <div key={comp.name} className="competitor-item">
