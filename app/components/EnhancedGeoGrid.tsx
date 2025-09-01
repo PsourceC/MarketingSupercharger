@@ -866,7 +866,7 @@ export default function EnhancedGeoGrid() {
                 className="insight-btn"
                 onClick={async () => {
                   try {
-                    const areaName = currentLocations.find(l => l.id === selectedLocation)?.name
+                    const areaName = trackedLocations.find(l => l.id === selectedLocation)?.name
                     if (!areaName) return
                     const top = (topByArea[areaName] || []).slice(0, 5).map(k => k.keyword)
                     const cfg = await apiFetch<any>('/business-config')
