@@ -912,7 +912,7 @@ export default function EnhancedGeoGrid() {
             />
             
             {/* Your business locations */}
-            {currentLocations.map(location => {
+            {trackedLocations.map(location => {
               const score = selectedKeyword === 'all' 
                 ? location.overallScore 
                 : getPositionRanking(location, selectedKeyword)
