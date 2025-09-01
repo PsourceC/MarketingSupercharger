@@ -822,7 +822,7 @@ export default function EnhancedGeoGrid() {
             />
             <h4>📊 Quick Stats</h4>
             {(() => {
-              const scored = currentLocations.map(l => ({
+              const scored = trackedLocations.map(l => ({
                 loc: l,
                 score: selectedKeyword === 'all' ? Number(l.overallScore || 0) : getPositionRanking(l, selectedKeyword)
               })).filter(x => x.score > 0)
