@@ -1175,7 +1175,7 @@ export default function EnhancedGeoGrid() {
             </div>
             {(() => {
               // Prefer smart insights when available for the selected area
-              const areaName = selectedLocation ? currentLocations.find(l => l.id === selectedLocation)?.name : currentLocations[0]?.name
+              const areaName = selectedLocation ? trackedLocations.find(l => l.id === selectedLocation)?.name : trackedLocations[0]?.name
               const cand = smartInsights?.opportunities?.[0]
               if (smartInsights && cand && areaName) {
                 return (
@@ -1231,7 +1231,7 @@ export default function EnhancedGeoGrid() {
               <h4>Needs Attention</h4>
             </div>
             {(() => {
-              const areaName = selectedLocation ? currentLocations.find(l => l.id === selectedLocation)?.name : currentLocations[0]?.name
+              const areaName = selectedLocation ? trackedLocations.find(l => l.id === selectedLocation)?.name : trackedLocations[0]?.name
               const threat = smartInsights?.threats?.[0]
               if (smartInsights && threat && areaName) {
                 return (
@@ -1278,7 +1278,7 @@ export default function EnhancedGeoGrid() {
               <h4>Success Story</h4>
             </div>
             {(() => {
-              const areaName = selectedLocation ? currentLocations.find(l => l.id === selectedLocation)?.name : currentLocations[0]?.name
+              const areaName = selectedLocation ? trackedLocations.find(l => l.id === selectedLocation)?.name : trackedLocations[0]?.name
               const win = smartInsights?.quickWins?.[0]
               if (smartInsights && win && areaName) {
                 return (
