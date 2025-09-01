@@ -853,7 +853,7 @@ export default function EnhancedGeoGrid() {
             <div className="area-top-keywords">
               <h4>🏆 Top Keywords — {trackedLocations.find(l => l.id === selectedLocation)?.name}</h4>
               <div className="top-list">
-                {(topByArea[currentLocations.find(l => l.id === selectedLocation)?.name || ''] || []).map(k => (
+                {(topByArea[trackedLocations.find(l => l.id === selectedLocation)?.name || ''] || []).map(k => (
                   <div key={k.keyword} className="top-row">
                     <div className="kw">{k.keyword}</div>
                     <div className="pos">#{Math.round(k.avgPosition || 0)}</div>
