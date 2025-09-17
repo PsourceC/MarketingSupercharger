@@ -252,6 +252,36 @@ export default function EnhancedGeoGrid() {
     return () => clearInterval(interval)
   }, [])
 
+  // Safe fetch (never throws) to avoid FullStory instrumentation errors
+  const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 15000) => {
+    try {
+      const controller = new AbortController()
+      const t = setTimeout(() => controller.abort(), timeoutMs)
+      const res = await fetch(input, { ...init, signal: controller.signal, headers: { 'Cache-Control': 'no-cache', ...(init.headers||{}) } })
+      clearTimeout(t)
+      return res
+    } catch (err: any) {
+      const body = JSON.stringify({ error: err?.message || 'fetch failed' })
+      return new Response(body, { status: 599, headers: { 'Content-Type': 'application/json' } })
+    }
+  }
+
+  const refreshCompetitorsAction = async () => {
+    try {
+      setCompRefreshing(true)
+      setDataNotice('Discovering competitors...')
+      const base = typeof window !== 'undefined' ? window.location.origin : ''
+      const res = await fetchWithTimeout(`${base}/api/competitor-discovery`, { method: 'POST' }, 20000)
+      if (!res.ok) {
+        setUseFallbackLegend(true)
+        setDataNotice('Competitor discovery failed. Showing local competitors list.')
+      }
+      await refreshCompetitorSummary()
+    } finally {
+      setCompRefreshing(false)
+    }
+  }
+
   // Suppress benign FullStory HMR fetch errors that do not affect app functionality
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -545,16 +575,7 @@ export default function EnhancedGeoGrid() {
                   <button
                     className="small-refresh-btn"
                     disabled={compRefreshing}
-                    onClick={async ()=>{
-                      try {
-                        setCompRefreshing(true)
-                        setDataNotice('Discovering competitors...')
-                        await fetch('/api/competitor-discovery', { method: 'POST' })
-                        await refreshCompetitorSummary()
-                      } finally {
-                        setCompRefreshing(false)
-                      }
-                    }}
+                    onClick={refreshCompetitorsAction}
                     title="Re-discover competitors across service areas"
                   >{compRefreshing ? '⏳ Updating...' : '🔍 Refresh'}</button>
                 </div>
@@ -607,19 +628,7 @@ export default function EnhancedGeoGrid() {
                 <span className="stat-value">{lastRefresh.toLocaleTimeString()}</span>
               </div>
             </div>
-            <button className="refresh-button" onClick={async ()=>{
-              try {
-                setCompRefreshing(true)
-                setDataNotice('Discovering competitors...')
-                await fetch('/api/competitor-discovery', { method: 'POST' })
-                await refreshCompetitorSummary()
-              } catch {
-                setUseFallbackLegend(true)
-                setDataNotice('Competitor discovery failed. Showing local competitors list.')
-              } finally {
-                setCompRefreshing(false)
-              }
-            }}>{compRefreshing ? '⏳ Updating...' : '🔍 Refresh Competitors'}</button>
+            <button className="refresh-button" onClick={refreshCompetitorsAction}>{compRefreshing ? '⏳ Updating...' : '🔍 Refresh Competitors'}</button>
           </div>
         </div>
 
