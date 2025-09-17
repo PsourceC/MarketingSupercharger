@@ -29,8 +29,9 @@ export async function GET(request: NextRequest) {
 
     // Check for recent data (within last 6 hours for competitor data)
     const recentDataResult = await query(`
-      SELECT 
+      SELECT
         c.*,
+        (SELECT COALESCE(MAX(last_seen), NOW() - INTERVAL '9999 days') FROM solar_competitor_presence p WHERE p.competitor_id = c.id AND p.active = true) AS last_seen_active,
         array_agg(
           json_build_object(
             'keyword', cr.keyword,
@@ -44,6 +45,7 @@ export async function GET(request: NextRequest) {
       FROM solar_competitors c
       LEFT JOIN solar_competitor_rankings cr ON c.id = cr.competitor_id
       WHERE c.last_updated > NOW() - INTERVAL '6 hours'
+        AND EXISTS (SELECT 1 FROM solar_competitor_presence p WHERE p.competitor_id = c.id AND p.active = true)
       GROUP BY c.id
       ORDER BY c.last_updated DESC
     `)
@@ -56,7 +58,9 @@ export async function GET(request: NextRequest) {
         domain: row.domain,
         location: row.location,
         businessType: row.business_type,
-        lastUpdated: new Date(row.last_updated)
+        lastUpdated: new Date(row.last_updated),
+        lastSeen: row.last_seen_active ? new Date(row.last_seen_active) : null,
+        active: !!row.last_seen_active
       }))
 
       const rankings = recentDataResult.rows.flatMap(row => 
