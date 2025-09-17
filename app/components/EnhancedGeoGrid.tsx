@@ -241,6 +241,7 @@ export default function EnhancedGeoGrid() {
   const [useFallbackLegend, setUseFallbackLegend] = useState<boolean>(false)
   const [compRefreshing, setCompRefreshing] = useState<boolean>(false)
   const [competitorReasons, setCompetitorReasons] = useState<Record<string,string>>({})
+  const [trackedAnalyses, setTrackedAnalyses] = useState<any[]>([])
 
   useEffect(() => {
     setMapReady(true)
@@ -384,6 +385,7 @@ export default function EnhancedGeoGrid() {
       const res = await fetchWithTimeout('/api/competitor-tracking', { cache: 'no-cache' })
       const data = await res.json()
       if (res.ok && data?.summary?.topCompetitors) {
+        if (Array.isArray(data.competitors)) setTrackedAnalyses(data.competitors)
         const list = data.summary.topCompetitors.slice(0, 10).map((c: any) => ({
           name: c.name,
           domain: c.domain,
@@ -500,10 +502,32 @@ export default function EnhancedGeoGrid() {
   }
 
   const getAreaCompetitors = (areaName: string) => {
+    const list: any[] = []
+    if (trackedAnalyses.length) {
+      for (const a of trackedAnalyses) {
+        const best = (Array.isArray(a.rankings) ? a.rankings : [])
+          .filter((r: any) => r && r.position && r.position > 0 && r.position <= 50)
+          .filter((r: any) => {
+            const loc = String(r.location || '')
+            return loc.toLowerCase().includes(String(areaName).toLowerCase())
+          })
+          .sort((x: any, y: any) => (x.position || 99) - (y.position || 99))[0]
+        if (best) {
+          const color = (competitors.find(cc => cc.name.toLowerCase() === String(a.competitor?.name || a.name || '').toLowerCase())?.color) || '#6b7280'
+          list.push({
+            name: String(a.competitor?.name || a.name || ''),
+            color,
+            location: { score: best.position, areaName, marketShare: Math.max(5, 60 - best.position), recentTrend: a.trending || 'stable' }
+          })
+        }
+      }
+      return list.sort((x,y)=> x.location.score - y.location.score).slice(0,10)
+    }
+    // Fallback to demo locations data
     return competitors.map(comp => {
       const location = comp.locations.find(loc => loc.areaName === areaName)
       return location ? { ...comp, location } : null
-    }).filter(Boolean)
+    }).filter(Boolean).slice(0,10)
   }
 
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
