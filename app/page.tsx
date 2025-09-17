@@ -14,6 +14,10 @@ export default function Home() {
           <h1>🌞 Your Solar Business Dashboard</h1>
           <p>See how customers find your solar business online across Austin</p>
           <ClientTimestamp />
+          <div className="header-actions" aria-label="Quick links">
+            <Link href="/profile" className="back-button" aria-label="Open Business Profile">🏢 Business Profile</Link>
+            <Link href="/setup?service=business-profile" className="back-button" aria-label="Open Business Profile setup guide">⚙️ Setup Guide</Link>
+          </div>
         </div>
       </header>
 
