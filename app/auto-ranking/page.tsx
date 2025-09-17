@@ -34,6 +34,23 @@ export default function AutoRankingPage() {
   useEffect(() => {
     loadRecentRankings()
     loadAutomationStatus()
+    ;(async () => {
+      try {
+        const res = await fetch('/api/business', { cache: 'no-cache' })
+        if (res.ok) {
+          const data = await res.json()
+          const p = data.profile || {}
+          const domain = (p.website_url || '').toString().replace(/^https?:\/\//, '').replace(/\/$/, '')
+          const kws = Array.isArray(p.target_keywords) ? p.target_keywords : []
+          const locs = Array.isArray(p.service_areas) ? p.service_areas : []
+          setConfig(prev => ({
+            domain: domain || prev.domain,
+            keywords: kws.length ? kws : prev.keywords,
+            locations: locs.length ? locs : prev.locations
+          }))
+        }
+      } catch {}
+    })()
   }, [])
 
   const loadAutomationStatus = async () => {
