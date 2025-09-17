@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
             'url', cr.ranking_url,
             'title', cr.page_title,
             'estimatedTraffic', cr.estimated_traffic,
+            'location', cr.location,
             'lastChecked', cr.last_checked
           )
         ) as rankings
