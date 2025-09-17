@@ -1,0 +1,44 @@
+.system-status-page{max-width:1100px;margin:0 auto;padding:24px}
+.status-header{margin-bottom:16px}
+.header-row{display:flex;align-items:center;gap:12px}
+.back-link{text-decoration:none;color:#3b82f6}
+.status-title{margin:0;font-size:28px}
+.status-subtitle{margin:4px 0 8px;color:#6b7280}
+.updated-row{display:flex;align-items:center;gap:8px;color:#6b7280}
+.updated-indicator{display:inline-block}
+
+.section-title{margin:16px 0 8px}
+.loading-note,.empty-note{padding:12px;border:1px dashed #d1d5db;border-radius:8px;color:#6b7280}
+
+.live-data-section{margin:16px 0}
+.source-list{list-style:none;padding:0;margin:8px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px}
+.source-item{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#ffffff}
+.source-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.source-dot.live{background:#ef4444}
+.source-dot.partial{background:#f59e0b}
+.source-name{flex:1;font-weight:600}
+.source-state{color:#6b7280}
+.partial-block{margin-top:8px}
+.partial-title{font-size:14px;color:#6b7280;margin:8px 0}
+
+.all-services-section{margin:24px 0}
+.services-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.service-card{border:1px solid #e5e7eb;border-radius:12px;padding:14px;background:#ffffff}
+.service-card-header{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.service-name{margin:0;font-size:16px}
+.service-message{margin:0;color:#4b5563}
+
+.status-badge{padding:4px 8px;border-radius:9999px;font-size:12px;font-weight:700;letter-spacing:.2px}
+.status-badge.ok{background:#ecfdf5;color:#10b981}
+.status-badge.warn{background:#fffbeb;color:#f59e0b}
+.status-badge.fail{background:#fef2f2;color:#ef4444}
+
+.status-footer{margin:20px 0}
+.footer-actions{display:flex;gap:10px;flex-wrap:wrap}
+.link-button{display:inline-block;padding:8px 12px;border-radius:10px;background:#3b82f6;color:#ffffff;text-decoration:none}
+.link-button.secondary{background:#6b7280}
+
+@media (max-width: 640px){
+  .status-title{font-size:22px}
+  .services-grid{grid-template-columns:1fr}
+}
