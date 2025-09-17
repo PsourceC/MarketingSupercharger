@@ -501,16 +501,30 @@ export default function EnhancedGeoGrid() {
     return { status: 'behind', text: `Behind by ${gap} positions`, color: '#ef4444' }
   }
 
+  const areaToCity = (name: string) => {
+    const remove = ['central','north','south','east','west','downtown','uptown','greater','metro','area']
+    const parts = String(name).split(/\s+/).filter(p => !remove.includes(p.toLowerCase()))
+    return parts.join(' ').replace(/\s+/g,' ').trim()
+  }
+
   const getAreaCompetitors = (areaName: string) => {
     const list: any[] = []
+    const city = areaToCity(areaName)
     if (trackedAnalyses.length) {
       for (const a of trackedAnalyses) {
-        const best = (Array.isArray(a.rankings) ? a.rankings : [])
+        const rankings = Array.isArray(a.rankings) ? a.rankings : []
+        const byArea = rankings
           .filter((r: any) => r && r.position && r.position > 0 && r.position <= 50)
           .filter((r: any) => {
             const loc = String(r.location || '')
-            return loc.toLowerCase().includes(String(areaName).toLowerCase())
+            return (
+              loc.toLowerCase().includes(String(areaName).toLowerCase()) ||
+              (city && loc.toLowerCase().includes(city.toLowerCase()))
+            )
           })
+          .sort((x: any, y: any) => (x.position || 99) - (y.position || 99))
+        const best = byArea[0] || rankings
+          .filter((r: any) => r && r.position && r.position > 0 && r.position <= 50)
           .sort((x: any, y: any) => (x.position || 99) - (y.position || 99))[0]
         if (best) {
           const color = (competitors.find(cc => cc.name.toLowerCase() === String(a.competitor?.name || a.name || '').toLowerCase())?.color) || '#6b7280'
@@ -716,6 +730,9 @@ export default function EnhancedGeoGrid() {
                             color: (competitors.find(cc => cc.name.toLowerCase() === c.name.toLowerCase())?.color) || '#6b7280'
                           }))
                         : competitors.map(c => ({ name: c.name, averagePosition: c.score, color: c.color })))
+                  if (!items.length) return (
+                    <div className="data-status-banner">No competitors found for this area yet. Try Refresh or select another area.</div>
+                  )
                   return items.slice(0,10).map((comp: any) => (
                     <div key={comp.name} className="competitor-item">
                       <div className="competitor-marker" style={{ backgroundColor: comp.color }}></div>
