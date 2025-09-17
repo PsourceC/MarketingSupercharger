@@ -34,7 +34,11 @@ export class BrightDataService {
 
   async searchGoogle(query: string, location?: string): Promise<BrightDataSearchResponse> {
     if (this.simulationMode) {
-      return this.simulateGoogleSearch(query, location)
+      try {
+        return await this.searchDuckDuckGo(query, location)
+      } catch {
+        return this.simulateGoogleSearch(query, location)
+      }
     }
 
     try {
