@@ -702,13 +702,20 @@ export default function EnhancedGeoGrid() {
               )}
               <div className="competitor-list">
                 {(() => {
-                  const items = topCompetitorsList.length
-                    ? topCompetitorsList.map(c => ({
-                        name: c.name,
-                        averagePosition: c.averagePosition,
-                        color: (competitors.find(cc => cc.name.toLowerCase() === c.name.toLowerCase())?.color) || '#6b7280'
-                      }))
-                    : competitors.map(c => ({ name: c.name, averagePosition: c.score, color: c.color }))
+                  const currentAreaName = (() => {
+                    const sel = locations.find(l => l.id === selectedLocation)
+                    return sel?.name || locations[0]?.name || ''
+                  })()
+                  const areaItems = currentAreaName ? getAreaCompetitors(currentAreaName) : []
+                  const items = areaItems.length
+                    ? areaItems.map((c: any) => ({ name: c.name, averagePosition: c.location.score, color: c.color }))
+                    : (topCompetitorsList.length
+                        ? topCompetitorsList.map(c => ({
+                            name: c.name,
+                            averagePosition: c.averagePosition,
+                            color: (competitors.find(cc => cc.name.toLowerCase() === c.name.toLowerCase())?.color) || '#6b7280'
+                          }))
+                        : competitors.map(c => ({ name: c.name, averagePosition: c.score, color: c.color })))
                   return items.slice(0,10).map((comp: any) => (
                     <div key={comp.name} className="competitor-item">
                       <div className="competitor-marker" style={{ backgroundColor: comp.color }}></div>
