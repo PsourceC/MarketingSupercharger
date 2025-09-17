@@ -359,13 +359,25 @@ export default function EnhancedGeoGrid() {
     const missingFromTop = mapNames.filter(n => !topNames.includes(n))
     const missingFromMap = topNames.filter(n => !mapNames.includes(n))
     if (missingFromTop.length > 0 || missingFromMap.length > 0) {
+      // Still prefer showing tracked list (so reasons appear), but note mismatch
       setUseFallbackLegend(true)
-      setDataNotice('Live tracking list differs from map competitors. Showing local competitors list.')
+      setDataNotice('Live tracking differs from map examples. Showing tracked competitors with reasons.')
     } else {
       setUseFallbackLegend(false)
       setDataNotice(null)
     }
   }, [competitors, topCompetitorsList])
+
+  // Listen for competitor updates (triggered after saving Business Profile)
+  useEffect(() => {
+    const handler = () => { void refreshCompetitorSummary() }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('competitorsUpdated', handler as any)
+    }
+    return () => {
+      if (typeof window !== 'undefined') window.removeEventListener('competitorsUpdated', handler as any)
+    }
+  }, [])
 
   const refreshCompetitorSummary = async () => {
     try {
@@ -665,22 +677,17 @@ export default function EnhancedGeoGrid() {
                 </div>
               )}
               <div className="competitor-list">
-                {(
-                  useFallbackLegend || !topCompetitorsList.length
-                    ? competitors.map(c => ({ name: c.name, averagePosition: c.score, color: c.color }))
-                    : topCompetitorsList.map(c => ({
+                {(() => {
+                  const items = topCompetitorsList.length
+                    ? topCompetitorsList.map(c => ({
                         name: c.name,
                         averagePosition: c.averagePosition,
                         color: (competitors.find(cc => cc.name.toLowerCase() === c.name.toLowerCase())?.color) || '#6b7280'
                       }))
-                )
-                  .slice(0, 10)
-                  .map((comp: any) => (
+                    : competitors.map(c => ({ name: c.name, averagePosition: c.score, color: c.color }))
+                  return items.slice(0,10).map((comp: any) => (
                     <div key={comp.name} className="competitor-item">
-                      <div
-                        className="competitor-marker"
-                        style={{ backgroundColor: comp.color }}
-                      ></div>
+                      <div className="competitor-marker" style={{ backgroundColor: comp.color }}></div>
                       <div className="competitor-info">
                         <span className="competitor-name">{comp.name}</span>
                         <span className="competitor-score">Avg: #{comp.averagePosition}</span>
@@ -689,7 +696,8 @@ export default function EnhancedGeoGrid() {
                         )}
                       </div>
                     </div>
-                  ))}
+                  ))
+                })()}
               </div>
             </div>
           )}
