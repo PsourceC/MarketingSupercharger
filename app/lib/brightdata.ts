@@ -120,6 +120,35 @@ export class BrightDataService {
     }
   }
 
+  private async searchDuckDuckGo(query: string, location?: string): Promise<BrightDataSearchResponse> {
+    const params = new URLSearchParams({ q: query, kl: 'us-en' })
+    const url = `https://duckduckgo.com/html?${params.toString()}`
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+      }
+    })
+    if (!res.ok) throw new Error('ddg_failed')
+    const html = await res.text()
+
+    // Extract result anchors
+    const results: SearchResult[] = []
+    const anchorRegex = /<a[^>]*class=["'][^"']*result__a[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi
+    let m
+    let pos = 0
+    while ((m = anchorRegex.exec(html)) !== null && results.length < 30) {
+      const href = m[1]
+      const title = m[2].replace(/<[^>]+>/g, '').trim()
+      const url = href.startsWith('http') ? href : `https://duckduckgo.com${href}`
+      pos += 1
+      results.push({ title, url, position: pos })
+    }
+
+    return { results, total_results: results.length, search_metadata: { query, location } }
+  }
+
   private parseGoogleResults(data: any): SearchResult[] {
     try {
       // Bright Data returns raw HTML, we need to parse search results
