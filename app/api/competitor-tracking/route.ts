@@ -104,26 +104,47 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // Ensure new profile columns exist (idempotent)
+    await query("ALTER TABLE solar_competitors ADD COLUMN IF NOT EXISTS homepage_url TEXT")
+    await query("ALTER TABLE solar_competitors ADD COLUMN IF NOT EXISTS phone VARCHAR(32)")
+    await query("ALTER TABLE solar_competitors ADD COLUMN IF NOT EXISTS address TEXT")
+    await query("ALTER TABLE solar_competitors ADD COLUMN IF NOT EXISTS confidence_score INTEGER DEFAULT 0")
+    await query("ALTER TABLE solar_competitors ADD COLUMN IF NOT EXISTS is_local BOOLEAN DEFAULT false")
+    await query("ALTER TABLE solar_competitors ADD COLUMN IF NOT EXISTS evidence JSONB")
+
     // Store competitors in database
     for (const competitor of competitors) {
       await query(`
         INSERT INTO solar_competitors (
-          id, competitor_name, domain, location, business_type, last_updated
-        ) VALUES ($1, $2, $3, $4, $5, $6)
-        ON CONFLICT (id) 
+          id, competitor_name, domain, location, business_type, last_updated,
+          homepage_url, phone, address, confidence_score, is_local, evidence
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10,0), COALESCE($11,false), $12)
+        ON CONFLICT (id)
         DO UPDATE SET
           competitor_name = EXCLUDED.competitor_name,
           domain = EXCLUDED.domain,
           location = EXCLUDED.location,
           business_type = EXCLUDED.business_type,
-          last_updated = EXCLUDED.last_updated
+          last_updated = EXCLUDED.last_updated,
+          homepage_url = EXCLUDED.homepage_url,
+          phone = EXCLUDED.phone,
+          address = EXCLUDED.address,
+          confidence_score = EXCLUDED.confidence_score,
+          is_local = EXCLUDED.is_local,
+          evidence = EXCLUDED.evidence
       `, [
         competitor.id,
         competitor.name,
         competitor.domain,
         competitor.location,
         competitor.businessType,
-        competitor.lastUpdated
+        competitor.lastUpdated,
+        competitor.homepageUrl || null,
+        competitor.phone || null,
+        competitor.address || null,
+        competitor.confidenceScore ?? null,
+        competitor.isLocal ?? null,
+        competitor.evidence ? JSON.stringify(competitor.evidence) : null
       ])
     }
 
