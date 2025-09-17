@@ -240,6 +240,7 @@ export default function EnhancedGeoGrid() {
   const [dataNotice, setDataNotice] = useState<string | null>(null)
   const [useFallbackLegend, setUseFallbackLegend] = useState<boolean>(false)
   const [compRefreshing, setCompRefreshing] = useState<boolean>(false)
+  const [competitorReasons, setCompetitorReasons] = useState<Record<string,string>>({})
 
   useEffect(() => {
     setMapReady(true)
@@ -375,6 +376,30 @@ export default function EnhancedGeoGrid() {
           averagePosition: c.averagePosition,
           visibilityScore: c.visibilityScore
         }))
+        // Build reasons from analyses
+        const reasons: Record<string,string> = {}
+        if (Array.isArray(data.competitors)) {
+          for (const a of data.competitors) {
+            const comp = a.competitor || a
+            const name = (comp.name || '').toString()
+            const signals: string[] = []
+            if (comp.isLocal) signals.push('mentions service area')
+            if (comp.phone) signals.push('phone on site')
+            if (comp.address) signals.push('address on site')
+            if (Array.isArray(comp.evidence) && comp.evidence.length) {
+              const top = [...comp.evidence].sort((x:any,y:any)=> (y.weight||0)-(x.weight||0)).slice(0,2).map((e:any)=>e.reason)
+              signals.push(...top)
+            }
+            const ranked = Array.isArray(a.rankings) ? a.rankings.filter((r:any)=> r.position && r.position <= 20).length : 0
+            if (ranked>0) signals.push(`${ranked} keywords in top 20`)
+            const seen = comp.lastSeen ? new Date(comp.lastSeen) : null
+            const seenTxt = seen ? `last seen ${seen.toLocaleDateString()}` : ''
+            const conf = typeof comp.confidenceScore === 'number' ? `confidence ${comp.confidenceScore}` : ''
+            const why = [signals.slice(0,3).join(', '), seenTxt, conf].filter(Boolean).join(' • ')
+            if (name) reasons[name.toLowerCase()] = why
+          }
+        }
+        setCompetitorReasons(reasons)
         setTopCompetitorsList(list)
         if (list.length) setTopCompetitor({ name: list[0].name, score: list[0].averagePosition })
         const mapNames = competitors.map(c => c.name.toLowerCase())
@@ -649,6 +674,9 @@ export default function EnhancedGeoGrid() {
                       <div className="competitor-info">
                         <span className="competitor-name">{comp.name}</span>
                         <span className="competitor-score">Avg: #{comp.averagePosition}</span>
+                        {competitorReasons[comp.name.toLowerCase()] && (
+                          <span className="competitor-reason">Why: {competitorReasons[comp.name.toLowerCase()]}</span>
+                        )}
                       </div>
                     </div>
                   ))}
