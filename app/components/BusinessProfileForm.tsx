@@ -47,7 +47,12 @@ export default function BusinessProfileForm() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to save profile')
-      setMessage('Profile saved. Competitor comparisons will reflect your company.')
+      try {
+        await fetch('/api/competitor-discovery', { method: 'POST' })
+        setMessage('Profile saved. Re-discovering competitors now…')
+      } catch {
+        setMessage('Profile saved. You can refresh competitors from the map panel.')
+      }
     } catch (e: any) {
       setMessage(e?.message || 'Error saving profile')
     } finally {
