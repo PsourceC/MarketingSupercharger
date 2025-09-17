@@ -1,5 +1,6 @@
 import 'server-only'
 import { brightData } from './brightdata'
+import { competitorScraper, type ScrapedProfile } from './competitor-scraper'
 
 export interface Competitor {
   id: string
@@ -8,6 +9,12 @@ export interface Competitor {
   location: string
   businessType: 'solar_installer' | 'solar_retailer' | 'energy_company'
   lastUpdated: Date
+  homepageUrl?: string
+  phone?: string
+  address?: string
+  confidenceScore?: number
+  isLocal?: boolean
+  evidence?: { reason: string; weight: number }[]
 }
 
 export interface CompetitorRanking {
@@ -67,18 +74,27 @@ export class CompetitorTrackingService {
     for (const keyword of this.keywords) {
       try {
         const searchResults = await brightData.searchGoogle(keyword, this.location)
-        
+
         for (const result of searchResults.results) {
-          if (result.position <= 20) { // Top 20 results only
+          if (result.position <= 20) {
             const domain = this.extractDomain(result.url)
-            
-            // Skip your own domain and non-business domains
-            if (domain === this.yourDomain || this.isNonBusinessDomain(domain)) {
+
+            if (!domain || domain === this.yourDomain || this.isNonBusinessDomain(domain)) {
               continue
             }
 
             if (!competitors.has(domain)) {
-              const competitor = await this.analyzeCompetitorDomain(domain, result)
+              let profile: ScrapedProfile | null = null
+              try {
+                profile = await competitorScraper.evaluate(`https://${domain}`, [this.location])
+              } catch {}
+
+              if (!profile) {
+                // Skip weak/non-local/aggregator sites
+                continue
+              }
+
+              const competitor = await this.analyzeCompetitorDomainWithProfile(domain, result, profile)
               if (competitor) {
                 competitors.set(domain, competitor)
               }
@@ -86,8 +102,7 @@ export class CompetitorTrackingService {
           }
         }
 
-        // Add delay to avoid rate limiting
-        await this.delay(1500)
+        await this.delay(1200)
       } catch (error) {
         console.error(`Error discovering competitors for keyword "${keyword}":`, error)
       }
@@ -107,28 +122,17 @@ export class CompetitorTrackingService {
 
   private isNonBusinessDomain(domain: string): boolean {
     const nonBusinessDomains = [
-      'wikipedia.org',
-      'youtube.com',
-      'facebook.com',
-      'linkedin.com',
-      'yelp.com',
-      'bbb.org',
-      'angieslist.com',
-      'google.com',
-      'maps.google.com',
-      'energysage.com', // Platform, not direct competitor
-      'solar.com', // Platform
-      'solarpower.org',
-      'seia.org'
+      'wikipedia.org','youtube.com','facebook.com','linkedin.com','yelp.com','bbb.org','angi.com','angieslist.com',
+      'homeadvisor.com','thumbtack.com','porch.com','houzz.com','maps.google.com','google.com/maps','energysage.com',
+      'solar.com','solarreviews.com','solarpower.org','seia.org','trustpilot.com','birdeye.com','yellowpages.com'
     ]
 
     return nonBusinessDomains.some(nbd => domain.includes(nbd))
   }
 
-  private async analyzeCompetitorDomain(domain: string, searchResult: any): Promise<Competitor | null> {
+  private async analyzeCompetitorDomainWithProfile(domain: string, searchResult: any, profile: ScrapedProfile): Promise<Competitor | null> {
     try {
-      // Extract business info from domain and search result
-      const businessName = this.extractBusinessName(searchResult.title, domain)
+      const businessName = profile.businessName || this.extractBusinessName(searchResult.title, domain)
       const businessType = this.classifyBusinessType(searchResult.title, searchResult.snippet || '')
 
       return {
@@ -137,7 +141,13 @@ export class CompetitorTrackingService {
         domain,
         location: this.location,
         businessType,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
+        homepageUrl: profile.homepageUrl,
+        phone: profile.phone,
+        address: profile.address,
+        confidenceScore: profile.confidenceScore,
+        isLocal: profile.isLocal,
+        evidence: profile.evidence
       }
     } catch (error) {
       console.error(`Error analyzing competitor domain ${domain}:`, error)
