@@ -48,8 +48,14 @@ export default function BusinessProfileForm() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to save profile')
       try {
-        await fetch('/api/competitor-discovery', { method: 'POST' })
-        setMessage('Profile saved. Re-discovering competitors now…')
+        const d = await fetch('/api/competitor-discovery', { method: 'POST' })
+        if (d.ok) {
+          await fetch('/api/competitor-tracking', { cache: 'no-cache' })
+          if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('competitorsUpdated'))
+          setMessage('Profile saved. Competitors refreshed.')
+        } else {
+          setMessage('Profile saved. Discovery queued; use Refresh to update list.')
+        }
       } catch {
         setMessage('Profile saved. You can refresh competitors from the map panel.')
       }
