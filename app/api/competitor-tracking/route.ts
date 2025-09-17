@@ -27,6 +27,19 @@ export async function GET(request: NextRequest) {
 
     const competitorService = new CompetitorTrackingService(keywords, location, yourDomain)
 
+    // Ensure presence table exists (idempotent)
+    await query(`
+      CREATE TABLE IF NOT EXISTS solar_competitor_presence (
+        id SERIAL PRIMARY KEY,
+        competitor_id VARCHAR(100) NOT NULL,
+        area VARCHAR(200) NOT NULL,
+        first_seen TIMESTAMPTZ DEFAULT NOW(),
+        last_seen TIMESTAMPTZ DEFAULT NOW(),
+        active BOOLEAN DEFAULT true,
+        UNIQUE(competitor_id, area)
+      );
+    `)
+
     // Check for recent data (within last 6 hours for competitor data)
     const recentDataResult = await query(`
       SELECT
