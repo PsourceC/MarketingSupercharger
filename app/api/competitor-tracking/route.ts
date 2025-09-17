@@ -82,14 +82,14 @@ export async function GET(request: NextRequest) {
         active: !!row.last_seen_active
       }))
 
-      const rankings = recentDataResult.rows.flatMap(row => 
+      const rankings = recentDataResult.rows.flatMap(row =>
         (row.rankings || []).map((ranking: any) => ({
           competitorId: row.id,
           keyword: ranking.keyword,
           position: ranking.position,
           url: ranking.url || '',
           title: ranking.title || '',
-          location: location,
+          location: ranking.location || location,
           estimatedTraffic: ranking.estimatedTraffic || 0,
           lastChecked: new Date(ranking.lastChecked)
         }))
