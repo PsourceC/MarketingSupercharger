@@ -83,7 +83,13 @@ export async function POST() {
       location VARCHAR(200),
       business_type VARCHAR(50) CHECK (business_type IN ('solar_installer', 'solar_retailer', 'energy_company')),
       last_updated TIMESTAMPTZ DEFAULT NOW(),
-      created_at TIMESTAMPTZ DEFAULT NOW()
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      homepage_url TEXT,
+      phone VARCHAR(32),
+      address TEXT,
+      confidence_score INTEGER DEFAULT 0,
+      is_local BOOLEAN DEFAULT false,
+      evidence JSONB
     )`,
 
     `CREATE TABLE IF NOT EXISTS solar_competitor_rankings (
