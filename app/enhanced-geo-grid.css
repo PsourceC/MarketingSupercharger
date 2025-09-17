@@ -227,6 +227,18 @@
   border: 1px solid #e5e7eb;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
+.competitor-legend .legend-actions { display:flex; align-items:center; gap:8px }
+.small-refresh-btn {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.small-refresh-btn:disabled { opacity: 0.6; cursor: not-allowed }
 
 .data-status-banner {
   background: #fffbeb;
