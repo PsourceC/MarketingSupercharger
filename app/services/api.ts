@@ -57,20 +57,38 @@ export interface DataUpdate {
 // Base API configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api'
 
-// Generic API fetch function
+// Generic API fetch function (robust against instrumented fetch failures)
 async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
-  
-  const response = await fetch(url, {
+
+  const safeFetch = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 8000): Promise<Response> => {
+    return await new Promise<Response>((resolve) => {
+      const timeoutId = setTimeout(() => {
+        resolve(new Response(JSON.stringify({ error: 'timeout' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+      }, timeoutMs)
+      fetch(input, init)
+        .then((res) => { clearTimeout(timeoutId); resolve(res) })
+        .catch((err: any) => {
+          clearTimeout(timeoutId)
+          resolve(new Response(JSON.stringify({ error: err?.message || 'fetch failed' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+        })
+    })
+  }
+
+  const response = await safeFetch(url, {
     headers: {
       'Content-Type': 'application/json',
       ...options?.headers,
     },
+    cache: 'no-cache',
     ...options,
-  })
+  }, 10000)
 
   if (!response.ok) {
-    throw new Error(`API call failed: ${response.status} ${response.statusText}`)
+    // Bubble a controlled error for service-level fallbacks
+    let msg = 'API call failed'
+    try { const j = await response.json(); msg = j?.error || msg } catch {}
+    throw new Error(msg)
   }
 
   return response.json()
