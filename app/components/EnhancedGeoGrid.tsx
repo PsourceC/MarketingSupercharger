@@ -674,8 +674,8 @@ export default function EnhancedGeoGrid() {
                       <div className="competitor-info">
                         <span className="competitor-name">{comp.name}</span>
                         <span className="competitor-score">Avg: #{comp.averagePosition}</span>
-                        {competitorReasons[comp.name.toLowerCase()] && (
-                          <span className="competitor-reason">Why: {competitorReasons[comp.name.toLowerCase()]}</span>
+                        {competitorReasons[String(comp.name || '').toLowerCase()] && (
+                          <span className="competitor-reason">Why: {competitorReasons[String(comp.name || '').toLowerCase()]}</span>
                         )}
                       </div>
                     </div>
