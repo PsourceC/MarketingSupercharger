@@ -10,6 +10,7 @@ import './manual-import.css'
 export default function Home() {
   return (
     <div className="enhanced-dashboard">
+      <ErrorGuard />
       <header className="main-header">
         <div className="header-content">
           <h1>🌞 Your Solar Business Dashboard</h1>
