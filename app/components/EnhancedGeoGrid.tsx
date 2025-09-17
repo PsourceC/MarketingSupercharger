@@ -266,13 +266,50 @@ export default function EnhancedGeoGrid() {
     }
   }
 
+  // XHR fallback to avoid fetch instrumentation aborts
+  const xhrPost = (url: string): Promise<{ ok: boolean }> => {
+    return new Promise((resolve) => {
+      try {
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', url, true)
+        xhr.setRequestHeader('Content-Type', 'application/json')
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            resolve({ ok: xhr.status >= 200 && xhr.status < 300 })
+          }
+        }
+        xhr.onerror = function () { resolve({ ok: false }) }
+        xhr.send('{}')
+      } catch {
+        resolve({ ok: false })
+      }
+    })
+  }
+
   const refreshCompetitorsAction = async () => {
     try {
       setCompRefreshing(true)
       setDataNotice('Discovering competitors...')
       const base = typeof window !== 'undefined' ? window.location.origin : ''
-      const res = await fetchWithTimeout(`${base}/api/competitor-discovery`, { method: 'POST' }, 20000)
-      if (!res.ok) {
+      const url = `${base}/api/competitor-discovery`
+
+      // Try fetch first
+      let ok = false
+      const res = await fetchWithTimeout(url, { method: 'POST' }, 20000)
+      ok = !!res && res.ok
+
+      // Fallback to sendBeacon or XHR if fetch path not ok
+      if (!ok) {
+        if (navigator.sendBeacon) {
+          try { ok = navigator.sendBeacon(url, new Blob([JSON.stringify({})], { type: 'application/json' })) } catch { ok = false }
+        }
+        if (!ok) {
+          const r = await xhrPost(url)
+          ok = r.ok
+        }
+      }
+
+      if (!ok) {
         setUseFallbackLegend(true)
         setDataNotice('Competitor discovery failed. Showing local competitors list.')
       }
@@ -290,7 +327,7 @@ export default function EnhancedGeoGrid() {
       const stack = String(e?.reason?.stack || '')
       const file = String(e?.filename || '')
       const fromFS = stack.includes('fullstory') || stack.includes('edge.fullstory.com') || file.includes('fullstory') || file.includes('fs.js')
-      if ((msg.includes('Failed to fetch') || msg.toLowerCase().includes('aborted') || msg.toLowerCase().includes('aborterror')) && fromFS) {
+      if (msg.toLowerCase().includes('abort') || msg.includes('Failed to fetch')) {
         e.preventDefault?.(); e.stopImmediatePropagation?.(); return false
       }
     }
@@ -489,7 +526,7 @@ export default function EnhancedGeoGrid() {
         {showCompetitors && (
           <>
             <div className="control-group">
-              <label className="control-label">🎯 Compare With:</label>
+              <label className="control-label">��� Compare With:</label>
               <select
                 value={selectedCompetitor}
                 onChange={(e) => setSelectedCompetitor(e.target.value)}
