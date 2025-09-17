@@ -1,6 +1,7 @@
 import UnifiedDashboard from './components/UnifiedDashboard'
 import HelpSystem from './components/HelpSystem'
 import ClientTimestamp from './components/ClientTimestamp'
+import Link from 'next/link'
 import './unified-dashboard.css'
 import './google-auth.css'
 import './manual-import.css'
