@@ -333,7 +333,9 @@ export default function EnhancedGeoGrid() {
       const stack = String(e?.reason?.stack || '')
       const file = String(e?.filename || '')
       const fromFS = stack.includes('fullstory') || stack.includes('edge.fullstory.com') || file.includes('fullstory') || file.includes('fs.js')
-      if (msg.toLowerCase().includes('abort') || msg.includes('Failed to fetch')) {
+      const isAbort = msg.toLowerCase().includes('abort') || (e?.reason?.name === 'AbortError')
+      const isNetFail = msg.includes('Failed to fetch')
+      if (fromFS && (isAbort || isNetFail)) {
         e.preventDefault?.(); e.stopImmediatePropagation?.(); return false
       }
     }
