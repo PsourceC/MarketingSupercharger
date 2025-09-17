@@ -282,21 +282,23 @@ export default function EnhancedGeoGrid() {
     }
   }
 
-  // Suppress benign FullStory HMR fetch errors that do not affect app functionality
+  // Suppress benign FullStory-instrumented fetch errors (dev/HMR) that don't affect app
   useEffect(() => {
     if (typeof window === 'undefined') return
     const suppress = (e: any) => {
       const msg = String(e?.reason?.message || e?.message || '')
       const stack = String(e?.reason?.stack || '')
-      if (msg.includes('Failed to fetch') && (stack.includes('fullstory') || stack.includes('edge.fullstory.com'))) {
-        e.preventDefault?.()
+      const file = String(e?.filename || '')
+      const fromFS = stack.includes('fullstory') || stack.includes('edge.fullstory.com') || file.includes('fullstory') || file.includes('fs.js')
+      if (msg.includes('Failed to fetch') && fromFS) {
+        e.preventDefault?.(); e.stopImmediatePropagation?.(); return false
       }
     }
-    window.addEventListener('unhandledrejection', suppress)
-    window.addEventListener('error', suppress)
+    window.addEventListener('unhandledrejection', suppress, { capture: true })
+    window.addEventListener('error', suppress, { capture: true })
     return () => {
-      window.removeEventListener('unhandledrejection', suppress)
-      window.removeEventListener('error', suppress)
+      window.removeEventListener('unhandledrejection', suppress, { capture: true } as any)
+      window.removeEventListener('error', suppress, { capture: true } as any)
     }
   }, [])
 
