@@ -114,7 +114,20 @@ export async function POST() {
     'CREATE INDEX IF NOT EXISTS idx_solar_competitor_rankings_competitor ON solar_competitor_rankings(competitor_id)',
     'CREATE INDEX IF NOT EXISTS idx_solar_competitor_rankings_keyword ON solar_competitor_rankings(keyword)',
     'CREATE INDEX IF NOT EXISTS idx_solar_competitor_rankings_position ON solar_competitor_rankings(position)',
-    
+
+    // Presence tracking per area
+    `CREATE TABLE IF NOT EXISTS solar_competitor_presence (
+      id SERIAL PRIMARY KEY,
+      competitor_id VARCHAR(100) NOT NULL,
+      area VARCHAR(200) NOT NULL,
+      first_seen TIMESTAMPTZ DEFAULT NOW(),
+      last_seen TIMESTAMPTZ DEFAULT NOW(),
+      active BOOLEAN DEFAULT true,
+      UNIQUE(competitor_id, area)
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_presence_area ON solar_competitor_presence(area)',
+    'CREATE INDEX IF NOT EXISTS idx_presence_active ON solar_competitor_presence(active)',
+
     'COMMIT'
   ]
 
