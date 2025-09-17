@@ -385,15 +385,23 @@ export default function EnhancedGeoGrid() {
             const comp = a.competitor || a
             const name = (comp.name || '').toString()
             const signals: string[] = []
-            if (comp.isLocal) signals.push('mentions service area')
+            if (comp.isLocal) signals.push('local signals present')
             if (comp.phone) signals.push('phone on site')
             if (comp.address) signals.push('address on site')
             if (Array.isArray(comp.evidence) && comp.evidence.length) {
               const top = [...comp.evidence].sort((x:any,y:any)=> (y.weight||0)-(x.weight||0)).slice(0,2).map((e:any)=>e.reason)
               signals.push(...top)
             }
-            const ranked = Array.isArray(a.rankings) ? a.rankings.filter((r:any)=> r.position && r.position <= 20).length : 0
-            if (ranked>0) signals.push(`${ranked} keywords in top 20`)
+            const rankedItems = Array.isArray(a.rankings) ? a.rankings.filter((r:any)=> r.position && r.position <= 20) : []
+            const ranked = rankedItems.length
+            if (ranked>0) {
+              const samples = rankedItems
+                .slice()
+                .sort((x:any,y:any)=> (x.position||99)-(y.position||99))
+                .slice(0,2)
+                .map((r:any)=> `${r.keyword} (#${r.position})`)
+              signals.push(`${ranked} keywords in top 20${samples.length?`: ${samples.join(', ')}`:''}`)
+            }
             const seen = comp.lastSeen ? new Date(comp.lastSeen) : null
             const seenTxt = seen ? `last seen ${seen.toLocaleDateString()}` : ''
             const conf = typeof comp.confidenceScore === 'number' ? `confidence ${comp.confidenceScore}` : ''
