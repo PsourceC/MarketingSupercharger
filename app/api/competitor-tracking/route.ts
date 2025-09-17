@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
         address: row.address || undefined,
         confidenceScore: typeof row.confidence_score === 'number' ? row.confidence_score : undefined,
         isLocal: !!row.is_local,
-        evidence: (() => { try { return row.evidence ? JSON.parse(row.evidence) : undefined } catch { return undefined } })(),
+        evidence: (() => { try { return typeof row.evidence === 'string' ? JSON.parse(row.evidence) : row.evidence || undefined } catch { return undefined } })(),
         lastSeen: row.last_seen_active ? new Date(row.last_seen_active) : null,
         active: !!row.last_seen_active
       }))
