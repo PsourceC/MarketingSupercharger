@@ -290,7 +290,7 @@ export default function EnhancedGeoGrid() {
       const stack = String(e?.reason?.stack || '')
       const file = String(e?.filename || '')
       const fromFS = stack.includes('fullstory') || stack.includes('edge.fullstory.com') || file.includes('fullstory') || file.includes('fs.js')
-      if (msg.includes('Failed to fetch') && fromFS) {
+      if ((msg.includes('Failed to fetch') || msg.toLowerCase().includes('aborted') || msg.toLowerCase().includes('aborterror')) && fromFS) {
         e.preventDefault?.(); e.stopImmediatePropagation?.(); return false
       }
     }
@@ -324,7 +324,7 @@ export default function EnhancedGeoGrid() {
 
   const refreshCompetitorSummary = async () => {
     try {
-      const res = await fetch('/api/competitor-tracking', { cache: 'no-cache' })
+      const res = await fetchWithTimeout('/api/competitor-tracking', { cache: 'no-cache' })
       const data = await res.json()
       if (res.ok && data?.summary?.topCompetitors) {
         const list = data.summary.topCompetitors.slice(0, 10).map((c: any) => ({
@@ -358,8 +358,8 @@ export default function EnhancedGeoGrid() {
   const loadData = async () => {
     try {
       const [locRes, profRes] = await Promise.all([
-        fetch('/api/locations', { cache: 'no-cache' }),
-        fetch('/api/business', { cache: 'no-cache' })
+        fetchWithTimeout('/api/locations', { cache: 'no-cache' }),
+        fetchWithTimeout('/api/business', { cache: 'no-cache' })
       ])
       if (locRes.ok) {
         const locs = await locRes.json()
