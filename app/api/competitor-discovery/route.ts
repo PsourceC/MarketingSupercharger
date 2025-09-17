@@ -68,7 +68,9 @@ export async function POST() {
 
       const competitors = await service.discoverCompetitors()
 
+      const discoveredIds: string[] = []
       for (const c of competitors) {
+        discoveredIds.push(c.id)
         await query(`
           INSERT INTO solar_competitors (
             id, competitor_name, domain, location, business_type, last_updated,
@@ -92,6 +94,13 @@ export async function POST() {
           c.confidenceScore ?? null, c.isLocal ?? null,
           c.evidence ? JSON.stringify(c.evidence) : null
         ])
+
+        // Presence upsert
+        await query(`
+          INSERT INTO solar_competitor_presence (competitor_id, area, first_seen, last_seen, active)
+          VALUES ($1, $2, NOW(), NOW(), true)
+          ON CONFLICT (competitor_id, area) DO UPDATE SET last_seen = NOW(), active = true
+        `, [c.id, area])
       }
 
       const rankings = await service.trackCompetitorRankings(competitors)
@@ -111,10 +120,19 @@ export async function POST() {
         `, [r.competitorId, r.keyword, r.position, r.url, r.title, r.estimatedTraffic, area, r.lastChecked])
       }
 
+      // Deactivate stale competitors for this area not seen today and older than 30 days
+      await query(`
+        UPDATE solar_competitor_presence
+        SET active = false
+        WHERE area = $1
+          AND competitor_id NOT IN (SELECT UNNEST($2::text[]))
+          AND last_seen < NOW() - INTERVAL '30 days'
+      `, [area, discoveredIds])
+
       results.push({ area, discovered: competitors.length, rankings: rankings.length })
     }
 
-    return NextResponse.json({ ok: true, results })
+    return NextResponse.json({ ok: true, results, policy: { staleDays: 30 } })
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message || String(e) }, { status: 500 })
   }
