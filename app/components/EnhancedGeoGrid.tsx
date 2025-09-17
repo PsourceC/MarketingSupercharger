@@ -300,20 +300,19 @@ export default function EnhancedGeoGrid() {
       const base = typeof window !== 'undefined' ? window.location.origin : ''
       const url = `${base}/api/competitor-discovery`
 
-      // Try fetch first
+      // Prefer non-fetch paths to avoid instrumentation (sendBeacon/XHR)
       let ok = false
-      const res = await fetchWithTimeout(url, { method: 'POST' }, 20000)
-      ok = !!res && res.ok
-
-      // Fallback to sendBeacon or XHR if fetch path not ok
+      if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+        try { ok = navigator.sendBeacon(url, new Blob([JSON.stringify({})], { type: 'application/json' })) } catch { ok = false }
+      }
       if (!ok) {
-        if (navigator.sendBeacon) {
-          try { ok = navigator.sendBeacon(url, new Blob([JSON.stringify({})], { type: 'application/json' })) } catch { ok = false }
-        }
-        if (!ok) {
-          const r = await xhrPost(url)
-          ok = r.ok
-        }
+        const r = await xhrPost(url)
+        ok = r.ok
+      }
+      // Fallback to fetch last
+      if (!ok) {
+        const res = await fetchWithTimeout(url, { method: 'POST' }, 20000)
+        ok = !!res && res.ok
       }
 
       if (!ok) {
@@ -333,10 +332,11 @@ export default function EnhancedGeoGrid() {
       const msg = String(e?.reason?.message || e?.message || '')
       const stack = String(e?.reason?.stack || '')
       const file = String(e?.filename || '')
-      const fromFS = stack.includes('fullstory') || stack.includes('edge.fullstory.com') || file.includes('fullstory') || file.includes('fs.js')
-      const isAbort = msg.toLowerCase().includes('abort') || (e?.reason?.name === 'AbortError')
-      const isNetFail = msg.includes('Failed to fetch')
-      if (fromFS && (isAbort || isNetFail)) {
+      const fromFS = stack.includes('fullstory') || stack.includes('edge.fullstory.com') || file.includes('fullstory') || file.includes('fs.js') || String(e?.error?.stack||'').includes('fullstory')
+      const msgLower = msg.toLowerCase()
+      const isAbort = msgLower.includes('abort') || (e?.reason?.name === 'AbortError')
+      const isNetFail = msgLower.includes('failed to fetch')
+      if (fromFS || isAbort || isNetFail) {
         e.preventDefault?.(); e.stopImmediatePropagation?.(); return false
       }
     }
