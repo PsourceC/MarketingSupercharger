@@ -101,10 +101,33 @@ export async function GET() {
     services['ai-ranking-tracker'] = { status: 'not-setup', message: 'Service not configured' }
   }
 
-  // Check Google Search Console Status (simulate - would need real Google auth check)
-  services['google-search-console'] = { 
-    status: 'not-setup', 
-    message: 'Google authentication not configured' 
+  // Check Google Search Console Status based on stored tokens
+  try {
+    const hasAccessToken = !!process.env.GOOGLE_ACCESS_TOKEN
+    const hasRefreshToken = !!process.env.GOOGLE_REFRESH_TOKEN
+    const hasClient = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
+
+    if (hasAccessToken || hasRefreshToken) {
+      services['google-search-console'] = {
+        status: 'working',
+        message: 'Authenticated with Google Search Console'
+      }
+    } else if (hasClient) {
+      services['google-search-console'] = {
+        status: 'partial',
+        message: 'OAuth client configured. Connect to enable live data.'
+      }
+    } else {
+      services['google-search-console'] = {
+        status: 'not-setup',
+        message: 'Google authentication not configured'
+      }
+    }
+  } catch {
+    services['google-search-console'] = {
+      status: 'not-setup',
+      message: 'Failed to determine Google Search Console status'
+    }
   }
 
   // Check Google My Business Status (env or DB-stored tokens)
