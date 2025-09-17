@@ -239,6 +239,7 @@ export default function EnhancedGeoGrid() {
   const [topCompetitorsList, setTopCompetitorsList] = useState<Array<{ name: string; domain: string; averagePosition: number; visibilityScore: number }>>([])
   const [dataNotice, setDataNotice] = useState<string | null>(null)
   const [useFallbackLegend, setUseFallbackLegend] = useState<boolean>(false)
+  const [compRefreshing, setCompRefreshing] = useState<boolean>(false)
 
   useEffect(() => {
     setMapReady(true)
@@ -538,7 +539,26 @@ export default function EnhancedGeoGrid() {
 
           {showCompetitors && (
             <div className="competitor-legend">
-              <h4>🥊 Competitors</h4>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'0.5rem'}}>
+                <h4 style={{margin:0}}>🥊 Competitors</h4>
+                <div className="legend-actions">
+                  <button
+                    className="small-refresh-btn"
+                    disabled={compRefreshing}
+                    onClick={async ()=>{
+                      try {
+                        setCompRefreshing(true)
+                        setDataNotice('Discovering competitors...')
+                        await fetch('/api/competitor-discovery', { method: 'POST' })
+                        await refreshCompetitorSummary()
+                      } finally {
+                        setCompRefreshing(false)
+                      }
+                    }}
+                    title="Re-discover competitors across service areas"
+                  >{compRefreshing ? '⏳ Updating...' : '🔍 Refresh'}</button>
+                </div>
+              </div>
               {dataNotice && (
                 <div className="data-status-banner">
                   {dataNotice}
@@ -589,37 +609,17 @@ export default function EnhancedGeoGrid() {
             </div>
             <button className="refresh-button" onClick={async ()=>{
               try {
-                const res = await fetch('/api/competitor-tracking', { cache: 'no-cache' })
-                const data = await res.json()
-                if (res.ok && data?.summary?.topCompetitors?.length) {
-                  const list = data.summary.topCompetitors.slice(0, 10).map((c: any) => ({
-                    name: c.name,
-                    domain: c.domain,
-                    averagePosition: c.averagePosition,
-                    visibilityScore: c.visibilityScore
-                  }))
-                  setTopCompetitorsList(list)
-                  const top = data.summary.topCompetitors[0]
-                  setTopCompetitor({ name: top.name, score: top.averagePosition })
-                  const mapNames = competitors.map(c => c.name.toLowerCase())
-                  const topNames = list.map((c: any) => c.name.toLowerCase())
-                  const missingFromTop = mapNames.filter(n => !topNames.includes(n))
-                  if (missingFromTop.length > 0) {
-                    setUseFallbackLegend(true)
-                    setDataNotice('Some map competitors are not in tracking yet. Showing local competitors list.')
-                  } else {
-                    setUseFallbackLegend(false)
-                    setDataNotice(null)
-                  }
-                } else {
-                  setUseFallbackLegend(true)
-                  setDataNotice('Competitor tracking returned no data. Showing local competitors list.')
-                }
+                setCompRefreshing(true)
+                setDataNotice('Discovering competitors...')
+                await fetch('/api/competitor-discovery', { method: 'POST' })
+                await refreshCompetitorSummary()
               } catch {
                 setUseFallbackLegend(true)
-                setDataNotice('Competitor tracking unavailable. Showing local competitors list.')
+                setDataNotice('Competitor discovery failed. Showing local competitors list.')
+              } finally {
+                setCompRefreshing(false)
               }
-            }}>🔍 Refresh Competitors</button>
+            }}>{compRefreshing ? '⏳ Updating...' : '🔍 Refresh Competitors'}</button>
           </div>
         </div>
 
