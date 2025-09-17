@@ -252,17 +252,22 @@ export default function EnhancedGeoGrid() {
     return () => clearInterval(interval)
   }, [])
 
-  // Safe fetch (never throws) to avoid FullStory instrumentation errors
+  // Safe fetch (never throws) with timeout via Promise.race (no AbortController to avoid AbortError)
   const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 15000) => {
+    const timeoutPromise = new Promise<Response>((resolve) => {
+      const t = setTimeout(() => {
+        resolve(new Response(JSON.stringify({ error: 'timeout' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+      }, timeoutMs)
+      // attach handle so GC keeps timer; cleared in race below not necessary since resolved
+    })
+
     try {
-      const controller = new AbortController()
-      const t = setTimeout(() => controller.abort(), timeoutMs)
-      const res = await fetch(input, { ...init, signal: controller.signal, headers: { 'Cache-Control': 'no-cache', ...(init.headers||{}) } })
-      clearTimeout(t)
-      return res
+      const fetchPromise = fetch(input, { ...init, headers: { 'Cache-Control': 'no-cache', ...(init.headers||{}) } })
+        .catch((err: any) => new Response(JSON.stringify({ error: err?.message || 'fetch failed' }), { status: 599, headers: { 'Content-Type': 'application/json' } }))
+
+      return await Promise.race([fetchPromise, timeoutPromise])
     } catch (err: any) {
-      const body = JSON.stringify({ error: err?.message || 'fetch failed' })
-      return new Response(body, { status: 599, headers: { 'Content-Type': 'application/json' } })
+      return new Response(JSON.stringify({ error: err?.message || 'fetch failed' }), { status: 599, headers: { 'Content-Type': 'application/json' } })
     }
   }
 
@@ -526,7 +531,7 @@ export default function EnhancedGeoGrid() {
         {showCompetitors && (
           <>
             <div className="control-group">
-              <label className="control-label">��� Compare With:</label>
+              <label className="control-label">🎯 Compare With:</label>
               <select
                 value={selectedCompetitor}
                 onChange={(e) => setSelectedCompetitor(e.target.value)}
