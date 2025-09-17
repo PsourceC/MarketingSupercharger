@@ -75,19 +75,29 @@ async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> 
     })
   }
 
-  const response = await safeFetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-    cache: 'no-cache',
-    ...options,
-  }, 10000)
+  let response: Response | null = null
+  const attempts = 3
+  for (let i = 0; i < attempts; i++) {
+    const timeout = 12000 + i * 4000
+    response = await safeFetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+      cache: 'no-cache',
+      keepalive: true,
+      ...options,
+    }, timeout)
+    if (response.ok) break
+    // Retry on network/timeouts (599) or 5xx
+    if (response.status !== 599 && response.status < 500) break
+    await new Promise(r => setTimeout(r, 300 * (i + 1)))
+  }
 
-  if (!response.ok) {
+  if (!response || !response.ok) {
     // Bubble a controlled error for service-level fallbacks
-    let msg = 'API call failed'
-    try { const j = await response.json(); msg = j?.error || msg } catch {}
+    let msg = 'timeout'
+    try { if (response) { const j = await response.json(); msg = j?.error || msg } } catch {}
     throw new Error(msg)
   }
 
@@ -106,9 +116,9 @@ export async function fetchBusinessMetrics(): Promise<Metric[]> {
     }
 
     return await apiFetch<Metric[]>('/metrics')
-  } catch (error) {
-    console.error('Failed to fetch business metrics:', error)
-    // Fallback to mock data while APIs are being set up
+  } catch (error: any) {
+    const msg = String(error?.message || '')
+    ;(msg.includes('timeout') ? console.warn : console.error)('Failed to fetch business metrics:', error)
     return getMockMetrics()
   }
 }
@@ -117,8 +127,9 @@ export async function fetchBusinessMetrics(): Promise<Metric[]> {
 export async function fetchLocationPerformance(): Promise<Location[]> {
   try {
     return await apiFetch<Location[]>('/locations')
-  } catch (error) {
-    console.error('Failed to fetch location performance:', error)
+  } catch (error: any) {
+    const msg = String(error?.message || '')
+    ;(msg.includes('timeout') ? console.warn : console.error)('Failed to fetch location performance:', error)
     return getMockLocations()
   }
 }
@@ -127,8 +138,9 @@ export async function fetchLocationPerformance(): Promise<Location[]> {
 export async function fetchPriorityActions(): Promise<PriorityAction[]> {
   try {
     return await apiFetch<PriorityAction[]>('/actions')
-  } catch (error) {
-    console.error('Failed to fetch priority actions:', error)
+  } catch (error: any) {
+    const msg = String(error?.message || '')
+    ;(msg.includes('timeout') ? console.warn : console.error)('Failed to fetch priority actions:', error)
     return getMockActions()
   }
 }
@@ -143,8 +155,9 @@ export async function fetchRecentUpdates(): Promise<DataUpdate[]> {
       ...update,
       timestamp: typeof update.timestamp === 'string' ? new Date(update.timestamp) : update.timestamp
     }))
-  } catch (error) {
-    console.error('Failed to fetch recent updates:', error)
+  } catch (error: any) {
+    const msg = String(error?.message || '')
+    ;(msg.includes('timeout') ? console.warn : console.error)('Failed to fetch recent updates:', error)
     return []
   }
 }
@@ -156,8 +169,9 @@ export async function fetchCurrentRankings(keyword?: string) {
   try {
     const endpoint = keyword ? `/rankings?keyword=${encodeURIComponent(keyword)}` : '/rankings'
     return await apiFetch(endpoint)
-  } catch (error) {
-    console.error('Failed to fetch current rankings:', error)
+  } catch (error: any) {
+    const msg = String(error?.message || '')
+    ;(msg.includes('timeout') ? console.warn : console.error)('Failed to fetch current rankings:', error)
     return null
   }
 }
@@ -166,8 +180,9 @@ export async function fetchCurrentRankings(keyword?: string) {
 export async function fetchGMBData() {
   try {
     return await apiFetch('/gmb')
-  } catch (error) {
-    console.error('Failed to fetch GMB data:', error)
+  } catch (error: any) {
+    const msg = String(error?.message || '')
+    ;(msg.includes('timeout') ? console.warn : console.error)('Failed to fetch GMB data:', error)
     return null
   }
 }
@@ -176,8 +191,9 @@ export async function fetchGMBData() {
 export async function fetchCitationData() {
   try {
     return await apiFetch('/citations')
-  } catch (error) {
-    console.error('Failed to fetch citation data:', error)
+  } catch (error: any) {
+    const msg = String(error?.message || '')
+    ;(msg.includes('timeout') ? console.warn : console.error)('Failed to fetch citation data:', error)
     return {
       citations: [],
       summary: {
@@ -200,8 +216,9 @@ export async function fetchCitationData() {
 export async function fetchCompetitorData() {
   try {
     return await apiFetch('/competitor-tracking')
-  } catch (error) {
-    console.error('Failed to fetch competitor data:', error)
+  } catch (error: any) {
+    const msg = String(error?.message || '')
+    ;(msg.includes('timeout') ? console.warn : console.error)('Failed to fetch competitor data:', error)
     return {
       competitors: [],
       summary: {
@@ -223,8 +240,9 @@ export async function refreshCitationData() {
   try {
     await apiFetch('/citations', { method: 'POST', body: JSON.stringify({ action: 'refresh' }) })
     return true
-  } catch (error) {
-    console.error('Failed to refresh citation data:', error)
+  } catch (error: any) {
+    const msg = String(error?.message || '')
+    ;(msg.includes('timeout') ? console.warn : console.error)('Failed to refresh citation data:', error)
     return false
   }
 }
@@ -234,8 +252,9 @@ export async function refreshCompetitorData() {
   try {
     await apiFetch('/competitor-tracking', { method: 'POST', body: JSON.stringify({ action: 'refresh' }) })
     return true
-  } catch (error) {
-    console.error('Failed to refresh competitor data:', error)
+  } catch (error: any) {
+    const msg = String(error?.message || '')
+    ;(msg.includes('timeout') ? console.warn : console.error)('Failed to refresh competitor data:', error)
     return false
   }
 }
@@ -244,8 +263,9 @@ export async function refreshCompetitorData() {
 export async function fetchReviewData() {
   try {
     return await apiFetch('/reviews')
-  } catch (error) {
-    console.error('Failed to fetch review data:', error)
+  } catch (error: any) {
+    const msg = String(error?.message || '')
+    ;(msg.includes('timeout') ? console.warn : console.error)('Failed to fetch review data:', error)
     return null
   }
 }
@@ -255,8 +275,9 @@ export async function triggerDataRefresh() {
   try {
     await apiFetch('/refresh', { method: 'POST' })
     return true
-  } catch (error) {
-    console.error('Failed to trigger data refresh:', error)
+  } catch (error: any) {
+    const msg = String(error?.message || '')
+    ;(msg.includes('timeout') ? console.warn : console.error)('Failed to trigger data refresh:', error)
     return false
   }
 }
